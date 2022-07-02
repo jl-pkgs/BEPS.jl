@@ -1,0 +1,5 @@
+
+pow = ^
+
+
+export pow;
