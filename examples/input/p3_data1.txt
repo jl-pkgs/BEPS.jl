@@ -1,0 +1,2 @@
+-55.5  -27.5  13  0.7  4  21.8 0.1978  0.0      
+long., lat., LC, CI, soiltxt, soiltemp, soilwater,snow-dp

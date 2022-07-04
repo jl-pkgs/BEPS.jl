@@ -1,0 +1,2 @@
+3.3  1716  3.8663    0.8267    0.0225    0.5887    0.0173    0.0849    1.1938   14.7114   17.2295      
+LAI_yr, ann_NPP,  ccd,  cssd,  csmd,  cfsd,  cfmd,  csm,  cm,  cs,  cp
