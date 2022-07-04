@@ -1,53 +1,94 @@
-module BEPS
+module beps_c
+# using BEPS.beps_c
+# using BEPS_jll
+# export BEPS_jll
 
-using BEPS_jll
-export BEPS_jll
-
-using CEnum
+# using CEnum
+const libbeps = "lib/libbeps.dll"
 
 include("SOIL_c.jl")
 
-function inter_prg(jday, rstep, lai, clumping, parameter, meteo, CosZs, var_o, var_n, soilp, mid_res)
-    ccall((:inter_prg, libbeps), Cvoid, (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil}, Ptr{Results}), 
-    jday, rstep, lai, clumping, parameter, meteo, CosZs, var_o, var_n, soilp, mid_res)
+Value = getindex
+
+# init *Cdouble
+init_dbl() = Ref(0.0) 
+
+function inter_prg(jday, rstep, lai, clumping, parameter, meteo::ClimateData, CosZs, var_o, var_n, soilp::Soil, mid_res::Results)
+    ccall((:inter_prg, libbeps), Cvoid,
+        (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil}, Ptr{Results}),
+        jday, rstep, lai, clumping, parameter, Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res))
 end
 
-function s_coszs(jday, j, lat, lon, CosZs)
-    ccall((:s_coszs, libbeps), Cvoid, (Cshort, Cshort, Cfloat, Cfloat, Ptr{Cdouble}), 
-    jday, j, lat, lon, CosZs)
+function s_coszs(jday::Int, j::Int, lat::T, lon::T) where {T<:Real}
+    ## This version works
+    # CosZs = [0.0]
+    # ccall((:s_coszs, libbeps), Cvoid, (Cshort, Cshort, Cfloat, Cfloat, Ptr{Cdouble}),
+    #     jday, j, lat, lon, CosZs)
+    CosZs = init_dbl()
+    ccall((:s_coszs, libbeps), Cvoid, (Cshort, Cshort, Cfloat, Cfloat, Ptr{Cdouble}),
+        jday, j, lat, lon, CosZs)
+    # Cshort(jday), Cshort(j), Cfloat(lat), Cfloat(lon), CosZs)
+    return Value(CosZs)
 end
 
-function aerodynamic_conductance(canopy_height_o, canopy_height_u, zz, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u, rm, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b)
-    ccall((:aerodynamic_conductance, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), canopy_height_o, canopy_height_u, zz, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u, rm, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b)
+function aerodynamic_conductance(canopy_height_o, canopy_height_u, zz, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u,
+    rm, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b)
+
+    ccall((:aerodynamic_conductance, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
+            Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
+        canopy_height_o, canopy_height_u, zz, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u,
+        rm, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b)
 end
 
-function plantresp(LC, mid_res, lai_yr, lai, temp_air, temp_soil, CosZs)
-    ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Results}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble), LC, mid_res, lai_yr, lai, temp_air, temp_soil, CosZs)
+function plantresp(LC, mid_res::Results, lai_yr, lai, temp_air, temp_soil, CosZs)
+    ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Results}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
+        LC, Ref(mid_res), lai_yr, lai, temp_air, temp_soil, CosZs)
 end
 
 function Vcmax_Jmax(lai_o, clumping, Vcmax0, slope_Vcmax_N, leaf_N, CosZs, Vcmax_sunlit, Vcmax_shaded, Jmax_sunlit, Jmax_shaded)
-    ccall((:Vcmax_Jmax, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), lai_o, clumping, Vcmax0, slope_Vcmax_N, leaf_N, CosZs, Vcmax_sunlit, Vcmax_shaded, Jmax_sunlit, Jmax_shaded)
+    ccall((:Vcmax_Jmax, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
+            Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
+        lai_o, clumping, Vcmax0, slope_Vcmax_N, leaf_N, CosZs,
+        Vcmax_sunlit, Vcmax_shaded, Jmax_sunlit, Jmax_shaded)
 end
 
 function netRadiation(shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai_o_sunlit, lai_o_shaded, lai_u_sunlit, lai_u_shaded, clumping, temp_air, rh, albedo_snow_v, albedo_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g, albedo_v_o, albedo_n_o, albedo_v_u, albedo_n_u, albedo_v_g, albedo_n_g, netRad_o, netRad_u, netRad_g, netRadLeaf_o_sunlit, netRadLeaf_o_shaded, netRadLeaf_u_sunlit, netRadLeaf_u_shaded, netShortRadLeaf_o_sunlit, netShortRadLeaf_o_shaded, netShortRadLeaf_u_sunlit, netShortRadLeaf_u_shaded)
-    ccall((:netRadiation, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai_o_sunlit, lai_o_shaded, lai_u_sunlit, lai_u_shaded, clumping, temp_air, rh, albedo_snow_v, albedo_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g, albedo_v_o, albedo_n_o, albedo_v_u, albedo_n_u, albedo_v_g, albedo_n_g, netRad_o, netRad_u, netRad_g, netRadLeaf_o_sunlit, netRadLeaf_o_shaded, netRadLeaf_u_sunlit, netRadLeaf_u_shaded, netShortRadLeaf_o_sunlit, netShortRadLeaf_o_shaded, netShortRadLeaf_u_sunlit, netShortRadLeaf_u_shaded)
+
+    ccall((:netRadiation, libbeps), Cvoid,
+        (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
+            Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
+            Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
+            Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
+        shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai_o_sunlit, lai_o_shaded, lai_u_sunlit, lai_u_shaded, clumping, temp_air, rh, albedo_snow_v, albedo_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g, albedo_v_o, albedo_n_o, albedo_v_u, albedo_n_u, albedo_v_g, albedo_n_g,
+        netRad_o, netRad_u, netRad_g,
+        netRadLeaf_o_sunlit, netRadLeaf_o_shaded, netRadLeaf_u_sunlit, netRadLeaf_u_shaded,
+        netShortRadLeaf_o_sunlit, netShortRadLeaf_o_shaded, netShortRadLeaf_u_sunlit, netShortRadLeaf_u_shaded)
 end
 
 function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
 end
 
-function readparam(lc, parameter1)
+# √, passed test
+function readparam(lc::Int=1)
+    parameter1 = zeros(Cdouble, 48)
+    # readparam(short lc, double* parameter1)
     ccall((:readparam, libbeps), Cvoid, (Cshort, Ptr{Cdouble}), lc, parameter1)
+    parameter1
+end
+
+function readcoef(lc::Int=1, stxt::Int=1)
+    coef = zeros(Cdouble, 48)
+    ccall((:readcoef, libbeps), Cvoid, (Cshort, Cint, Ptr{Cdouble}), lc, stxt, coef)
+    coef
 end
 
 function lai2(stem_o, stem_u, LC, CosZs, lai_o, clumping, lai_u, lai_o_sunlit, lai_o_shaded, lai_u_sunlit, lai_u_shaded, PAI_o_sunlit, PAI_o_shaded, PAI_u_sunlit, PAI_u_shaded)
+
     ccall((:lai2, libbeps), Cvoid, (Cdouble, Cdouble, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), stem_o, stem_u, LC, CosZs, lai_o, clumping, lai_u, lai_o_sunlit, lai_o_shaded, lai_u_sunlit, lai_u_shaded, PAI_o_sunlit, PAI_o_shaded, PAI_u_sunlit, PAI_u_shaded)
 end
 
-function readcoef(lc, stxt, coef)
-    ccall((:readcoef, libbeps), Cvoid, (Cshort, Cint, Ptr{Cdouble}), lc, stxt, coef)
-end
+
 
 # no prototype is found for this function at beps.h:133:6, please use with caution
 function readhydr_param()
@@ -159,11 +200,14 @@ const CO2_air = 380
 const rho_a = 1.292
 
 # exports
-const PREFIXES = ["CX", "clang_"]
-for name in names(@__MODULE__; all=true), prefix in PREFIXES
-    if startswith(string(name), prefix)
+# const PREFIXES = ["CX", "clang_"]
+# , prefix in PREFIXES
+for name in names(@__MODULE__; all=true)
+    # if startswith(string(name), prefix)
+    if !(string(name) in ["eval", "include"])
         @eval export $name
     end
+    # end
 end
 
 end # module

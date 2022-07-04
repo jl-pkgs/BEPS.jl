@@ -1,11 +1,13 @@
 import Parameters: @with_kw, @with_kw_noshow
 
-zero10() = tuple(zeros(10)...)
+# n double zero
+nzero(n) = tuple(zeros(n)...)
+const NT10 = NTuple{10,Cdouble}
 
 @with_kw mutable struct Soil
     flag::Cint = Cint(0)
     n_layer::Cint = Cint(5)
-    step_period::Cint  = Cint(1)
+    step_period::Cint = Cint(1)
     Zp::Cdouble = Cdouble(0)
     Zsp::Cdouble = Cdouble(0)
     r_rain_g::Cdouble = Cdouble(0)
@@ -15,78 +17,83 @@ zero10() = tuple(zeros(10)...)
     psi_min::Cdouble = Cdouble(0)
     alpha::Cdouble = Cdouble(0)
     f_soilwater::Cdouble = Cdouble(0)
-    d_soil::NTuple{10, Cdouble} = zero10()
-    f_root::NTuple{10, Cdouble} = zero10()
-    dt::NTuple{10, Cdouble} = zero10()
-    thermal_cond::NTuple{10, Cdouble} = zero10()
-    theta_vfc::NTuple{10, Cdouble} = zero10()
-    theta_vwp::NTuple{10, Cdouble} = zero10()
-    fei::NTuple{10, Cdouble} = zero10()
-    Ksat::NTuple{10, Cdouble} = zero10()
-    psi_sat::NTuple{10, Cdouble} = zero10()
-    b::NTuple{10, Cdouble} = zero10()
-    density_soil::NTuple{10, Cdouble} = zero10()
-    f_org::NTuple{10, Cdouble} = zero10()
-    ice_ratio::NTuple{10, Cdouble} = zero10()
-    thetam::NTuple{10, Cdouble} = zero10()
-    thetam_prev::NTuple{10, Cdouble} = zero10()
-    temp_soil_p::NTuple{10, Cdouble} = zero10()
-    temp_soil_c::NTuple{10, Cdouble} = zero10()
-    f_ice::NTuple{10, Cdouble} = zero10()
-    psim::NTuple{10, Cdouble} = zero10()
-    thetab::NTuple{10, Cdouble} = zero10()
-    psib::NTuple{10, Cdouble} = zero10()
-    r_waterflow::NTuple{10, Cdouble} = zero10()
-    km::NTuple{10, Cdouble} = zero10()
-    Kb::NTuple{10, Cdouble} = zero10()
-    KK::NTuple{10, Cdouble} = zero10()
-    Cs::NTuple{10, Cdouble} = zero10()
-    lambda::NTuple{10, Cdouble} = zero10()
-    Ett::NTuple{10, Cdouble} = zero10()
-    G::NTuple{10, Cdouble} = zero10()
+    d_soil::NT10 = nzero(10)
+    f_root::NT10 = nzero(10)
+    dt::NT10 = nzero(10)
+    thermal_cond::NT10 = nzero(10)
+    theta_vfc::NT10 = nzero(10)
+    theta_vwp::NT10 = nzero(10)
+    fei::NT10 = nzero(10)
+    Ksat::NT10 = nzero(10)
+    psi_sat::NT10 = nzero(10)
+    b::NT10 = nzero(10)
+    density_soil::NT10 = nzero(10)
+    f_org::NT10 = nzero(10)
+    ice_ratio::NT10 = nzero(10)
+    thetam::NT10 = nzero(10)
+    thetam_prev::NT10 = nzero(10)
+    temp_soil_p::NT10 = nzero(10)
+    temp_soil_c::NT10 = nzero(10)
+    f_ice::NT10 = nzero(10)
+    psim::NT10 = nzero(10)
+    thetab::NT10 = nzero(10)
+    psib::NT10 = nzero(10)
+    r_waterflow::NT10 = nzero(10)
+    km::NT10 = nzero(10)
+    Kb::NT10 = nzero(10)
+    KK::NT10 = nzero(10)
+    Cs::NT10 = nzero(10)
+    lambda::NT10 = nzero(10)
+    Ett::NT10 = nzero(10)
+    G::NT10 = nzero(10)
+end
+
+dbl() = Cdouble(0)
+
+@with_kw mutable struct ClimateData
+    Srad::Cdouble = 0.0
+    LR::Cdouble = 0.0
+    temp::Cdouble = 0.0
+    rh::Cdouble = 0.0
+    rain::Cdouble = 0.0
+    wind::Cdouble = 0.0
+    dr_o::Cdouble = 0.0
+    df_o::Cdouble = 0.0
+    dr_u::Cdouble = 0.0
+    df_u::Cdouble = 0.0
 end
 
 
-struct ClimateData
-    Srad::Cdouble
-    LR::Cdouble
-    temp::Cdouble
-    rh::Cdouble
-    rain::Cdouble
-    wind::Cdouble
-    dr_o::Cdouble
-    df_o::Cdouble
-    dr_u::Cdouble
-    df_u::Cdouble
+@with_kw mutable struct Results
+    gpp_o_sunlit::Cdouble = 0.0
+    gpp_u_sunlit::Cdouble = 0.0
+    gpp_o_shaded::Cdouble = 0.0
+    gpp_u_shaded::Cdouble = 0.0
+    plant_resp::Cdouble = 0.0
+    npp_o::Cdouble = 0.0
+    npp_u::Cdouble = 0.0
+    GPP::Cdouble = 0.0
+    NPP::Cdouble = 0.0
+    NEP::Cdouble = 0.0
+    soil_resp::Cdouble = 0.0
+    Net_Rad::Cdouble = 0.0
+    SH::Cdouble = 0.0
+    LH::Cdouble = 0.0
+    Trans::Cdouble = 0.0
+    Evap::Cdouble = 0.0
 end
 
-struct Results
-    gpp_o_sunlit::Cdouble
-    gpp_u_sunlit::Cdouble
-    gpp_o_shaded::Cdouble
-    gpp_u_shaded::Cdouble
-    plant_resp::Cdouble
-    npp_o::Cdouble
-    npp_u::Cdouble
-    GPP::Cdouble
-    NPP::Cdouble
-    NEP::Cdouble
-    soil_resp::Cdouble
-    Net_Rad::Cdouble
-    SH::Cdouble
-    LH::Cdouble
-    Trans::Cdouble
-    Evap::Cdouble
+@with_kw mutable struct Cpools
+    Ccd::NTuple{3,Cdouble} = nzero(3)
+    Cssd::NTuple{3,Cdouble} = nzero(3)
+    Csmd::NTuple{3,Cdouble} = nzero(3)
+    Cfsd::NTuple{3,Cdouble} = nzero(3)
+    Cfmd::NTuple{3,Cdouble} = nzero(3)
+    Csm::NTuple{3,Cdouble} = nzero(3)
+    Cm::NTuple{3,Cdouble} = nzero(3)
+    Cs::NTuple{3,Cdouble} = nzero(3)
+    Cp::NTuple{3,Cdouble} = nzero(3)
 end
 
-struct Cpools
-    Ccd::NTuple{3, Cdouble}
-    Cssd::NTuple{3, Cdouble}
-    Csmd::NTuple{3, Cdouble}
-    Cfsd::NTuple{3, Cdouble}
-    Cfmd::NTuple{3, Cdouble}
-    Csm::NTuple{3, Cdouble}
-    Cm::NTuple{3, Cdouble}
-    Cs::NTuple{3, Cdouble}
-    Cp::NTuple{3, Cdouble}
-end
+
+export Soil, ClimateData, Results, Cpools

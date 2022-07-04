@@ -11,6 +11,7 @@ include("c2julia.jl")
 include("Ipaper.jl")
 include("tools.jl")
 
+include("clang/BEPS_c.jl")
 # include("DataType.jl")
 # include("BEPS_helper.jl")
 
