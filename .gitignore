@@ -9,3 +9,5 @@ Manifest.toml
 .vscode
 
 deps
+*/backup
+test
