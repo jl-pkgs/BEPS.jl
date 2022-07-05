@@ -1,5 +1,0 @@
-
-pow = ^
-
-
-export pow;

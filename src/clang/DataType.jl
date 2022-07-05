@@ -1,5 +1,45 @@
 import Parameters: @with_kw, @with_kw_noshow
 
+
+const FW_VERSION = 1
+
+const MAX_LAYERS = 10
+
+const DEPTH_F = 6
+
+const NOERROR = 0
+
+const ERROR = 1
+
+const PI = 3.1415926
+
+const zero = 1.0e-10
+
+const l_sta = 105
+
+const l_end = 105
+
+const p_sta = 101
+
+const p_end = 101
+
+const RTIMES = 24
+
+const step = 3600
+
+const kstep = 360
+
+const kloop = 10
+
+const layer = 5
+
+const depth_f = 6
+
+const CO2_air = 380
+
+const rho_a = 1.292
+
+
 # n double zero
 nzero(n) = tuple(zeros(n)...)
 const NT10 = NTuple{10,Cdouble}
@@ -94,6 +134,27 @@ end
     Cs::NTuple{3,Cdouble} = nzero(3)
     Cp::NTuple{3,Cdouble} = nzero(3)
 end
+
+@with_kw mutable struct Leaf
+    o_sunlit::Cdouble
+    o_shaded::Cdouble
+    u_sunlit::Cdouble
+    u_shaded::Cdouble
+end
+
+function init_leaf_struct(x::Leaf, replacement::Leaf)
+    ccall((:init_leaf_struct, libbeps), Cvoid, (Ptr{Leaf}, Ptr{Leaf}), Ref(x), Ref(replacement))
+end
+
+function init_leaf_dbl(x::Leaf, replacement::Float64)
+    ccall((:init_leaf_dbl, libbeps), Cvoid, (Ptr{Leaf}, Cdouble), x, replacement)
+end
+
+function init_leaf_dbl2(x, overstory, understory)
+    ccall((:init_leaf_dbl2, libbeps), Cvoid, (Ptr{Leaf}, Cdouble, Cdouble), x, overstory, understory)
+end
+
+
 
 
 export Soil, ClimateData, Results, Cpools

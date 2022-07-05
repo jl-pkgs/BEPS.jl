@@ -10,4 +10,5 @@ Manifest.toml
 
 deps
 */backup
-test
+# test
+*/temp
