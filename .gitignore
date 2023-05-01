@@ -12,3 +12,6 @@ deps
 */backup
 # test
 */temp
+
+*debug*
+*.c

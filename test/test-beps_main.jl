@@ -4,7 +4,6 @@ using BEPS.beps_c
 # using DelimitedFiles: readdlm
 # include("main_pkgs.jl")
 
-
 begin
   f = "examples/input/p1_meteo.txt"
   d = fread(f)
@@ -24,6 +23,8 @@ end
 
 @time df_out = besp_main(d, lai, par);
 sum(df_out)
+
+r1 = r2 = Ref(1.0)
 
 # :gpp_o_sunlit => 41704.09054753295
 # :gpp_u_sunlit => 285.1932406544977
