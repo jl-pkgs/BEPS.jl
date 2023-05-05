@@ -55,7 +55,12 @@ function UpdateHeatFlux(p::Soil, Xg_snow, lambda_snow, Tsn0, Tair_annual_mean, p
     Ref(p), Xg_snow, lambda_snow, Tsn0, Tair_annual_mean, peroid_in_seconds)
 end
 
-function UpdateSoilMoisture(p::Soil, peroid_in_seconds)
-  ccall((:UpdateSoilMoisture, libbeps), Cvoid, (Ptr{Soil}, Cdouble),
-    Ref(p), peroid_in_seconds)
+function Update_temp_soil_c(p::Soil, value::Cdouble)
+  ccall((:Update_temp_soil_c, libbeps), Cvoid, (Ptr{Soil}, Cdouble),
+    Ref(p), value)
+end
+
+function Update_G(p::Soil, value::Cdouble)
+  ccall((:Update_G, libbeps), Cvoid, (Ptr{Soil}, Cdouble),
+    Ref(p), value)
 end

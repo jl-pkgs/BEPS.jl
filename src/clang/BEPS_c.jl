@@ -4,13 +4,14 @@ module beps_c
 # export BEPS_jll
 
 # using CEnum
-const libbeps = "lib/libbeps.dll"
+const libbeps = "deps/libbeps.dll"
 
 
 import Base: RefValue, RefArray
 
 TypeRef{T} = Union{Ref{T},RefArray{T,Vector{T},Nothing}}
 
+include("DataType.jl")
 include("helpers.jl")
 include("SOIL_c.jl")
 # include("module/inter_prg.jl")

@@ -424,7 +424,8 @@ function inter_prg_jl(
         Tsm0[kkk-1], Tsn1[kkk-1], Tsn2[kkk-1])
 
     @show soilp.temp_soil_c, Tm[1, kkk]
-    soilp.temp_soil_c[1] = Tm[1, kkk]
+    Update_temp_soil_c(soilp, Tm[1, kkk])
+    # soilp.temp_soil_c[1] = Tm[1, kkk]
 
     # /*****  Snow Pack Stage 3 module by X. Luo  *****/
     snowpack_stage3(Ta, Tsn0[kkk], Tsn0[kkk-1], rho_snow[kkk], Zsp, Zp, Ref(Wg_snow, kkk))
@@ -436,7 +437,8 @@ function inter_prg_jl(
 
     # /*****  Soil water module by L. He  *****/
     soilp.Zsp = Zsp[]
-    soilp.G[1] = G[1][kkk]
+    Update_G(soilp, G[1, kkk])
+    # soilp.G[1] = G[1][kkk]
 
     UpdateHeatFlux(soilp, Xg_snow[kkk], lambda_snow[kkk], Tsn0[kkk], Ta, kstep)
     Soil_Water_Uptake(soilp, Trans_o[kkk], Trans_u[kkk], Evap_soil[kkk])

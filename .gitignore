@@ -8,10 +8,11 @@ Manifest.toml
 
 .vscode
 
-deps
+deps/BEPC.c
 */backup
 # test
 */temp
 
+*.log
 *debug*
 *.c
