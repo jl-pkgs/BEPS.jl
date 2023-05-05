@@ -5,6 +5,14 @@ Boreal Ecosystem Productivity Simulator in Julia
 <!-- badges: start -->
 <!-- badges: end -->
 
+
+## Usage
+```bash
+git clone https://github.com/CUG-hydro/BEPS.jl
+cd BEPS.jl/deps
+git clone https://github.com/CUG-hydro/BEPS.c
+```
+
 ## TODO
 
 - [ ] 土壤类型参数
