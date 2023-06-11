@@ -16,4 +16,6 @@ deps/BEPC.c
 *.log
 *debug*
 *.c
+
 .vdoc.jl
+*.csv

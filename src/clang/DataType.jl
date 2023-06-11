@@ -1,4 +1,5 @@
 import Parameters: @with_kw, @with_kw_noshow
+include("DataType_ET.jl")
 
 
 const FW_VERSION = 1
@@ -124,11 +125,13 @@ end
   NEP::Cdouble = 0.0
   soil_resp::Cdouble = 0.0
   Net_Rad::Cdouble = 0.0
+
   SH::Cdouble = 0.0
   LH::Cdouble = 0.0
   Trans::Cdouble = 0.0
   Evap::Cdouble = 0.0
 end
+
 
 @with_kw mutable struct Cpools
   Ccd::NTuple{3,Cdouble} = nzero(3)
@@ -203,5 +206,7 @@ function init_leaf_dbl2(x, overstory, understory)
 end
 
 
-export Soil, ClimateData, Results, Cpools
+
+export Soil, ClimateData, Cpools, 
+  Results, OutputET
 export LeafRef

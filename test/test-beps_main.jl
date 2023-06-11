@@ -16,7 +16,7 @@ begin
 
   # 2.1  990  3.4124  0.6607  0.0177  0.97491  0.0213  0.0531  0.9715  12.5484  8.8816      
   # LAI_yr, ann_NPP,  ccd,  cssd,  csmd,  cfsd,  cfmd,  csm,  cm,  cs,  cp
-
+  
   # 120.5  30.5  25  0.85  8  2.2  0.4115  0.0      
   # long., lat., LC, CI, soiltxt, Tsoil, soilwater,snow-dp
   ""

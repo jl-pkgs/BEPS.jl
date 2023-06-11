@@ -1,7 +1,3 @@
-include("surface_temperature.jl")
-include("s_coszs.jl")
-include("photosynthesis.jl")
-
 function inter_prg(jday, rstep, 
   lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T, 
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, mid_res::Results) where {T<:Real}
@@ -34,7 +30,7 @@ The inter-module function between main program and modules
 function inter_prg_jl(
   jday::Int, rstep::Int, 
   lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
-  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, mid_res::Results) where {T}
+  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, mid_res::Results, mid_ET::OutputET) where {T}
   
   d_soil = zeros(layer + 1)
   lambda = zeros(layer + 2)
@@ -468,20 +464,15 @@ function inter_prg_jl(
   var_n[19+1] = Wcs_u[kkk]     # the mass of intercepted liquid water and snow, overstory
   var_n[20+1] = Wg_snow[kkk]   # the fraction of ground surface covered by snow and snow mass
 
-  Lv_liquid = (2.501 - 0.00237 * Ta) * 1000000  # The latent heat of water vaporization in j/kg
-
   mid_res.Net_Rad = radiation_o[] + radiation_u[] + radiation_g[]
-  mid_res.LH = Lv_liquid * (Trans_o[kkk] + Eil_o[kkk] + Trans_u[kkk] +
-                            Eil_u[kkk] + Evap_soil[kkk] + Evap_SW[kkk]) +
-               Lv_solid * (EiS_o[kkk] + EiS_u[kkk] + Evap_SS[kkk])
-  #  LH:  total latent heat flux
-
-  mid_res.SH = Qhc_o[kkk] + Qhc_u[kkk] + Qhg[kkk] # SH: total sensible heat flux
-
-  mid_res.Trans = (Trans_o[kkk] + Trans_u[kkk]) * step# total transpiration  mm/step
-  mid_res.Evap = (Eil_o[kkk] + Eil_u[kkk] + Evap_soil[kkk] + Evap_SW[kkk] +
-                  EiS_o[kkk] + EiS_u[kkk] + Evap_SS[kkk]) * step   # total evaporation . mm/step
-
+  
+  OutputET!(mid_ET, 
+    Trans_o, Trans_u, 
+    Eil_o, Eil_u,
+    EiS_o, EiS_u, 
+    Evap_soil, Evap_SW, Evap_SS, Qhc_o, Qhc_u, Qhg, kkk)
+  update_ET!(mid_ET, mid_res, Ta)
+  
   mid_res.gpp_o_sunlit = GPP.o_sunlit   # umol C/m2/s
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded

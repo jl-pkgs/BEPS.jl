@@ -49,16 +49,17 @@ function init_soil!(p_soil::Soil, var_o::Vector,
 end
 
 
-## put struct into a data.frame
+const TypeDF = Union{Results,ClimateData,OutputET}
 
-function Base.getindex(x::T, i::Int) where {T<:Union{Results,ClimateData}}
+## put struct into a data.frame
+function Base.getindex(x::T, i::Int) where {T<:TypeDF}
   key = fieldnames(T)[i]
   getfield(x, key)
 end
 
-Base.length(x::T) where {T<:Union{Results,ClimateData}} = length(fieldnames(T))
+Base.length(x::T) where {T<:TypeDF} = length(fieldnames(T))
 
-function fill_res!(df::DataFrame, Res::T, k::Int) where {T<:Union{Results,ClimateData}}
+function fill_res!(df::DataFrame, Res::T, k::Int) where {T<:TypeDF}
   n = length(Res)
   for i = 1:n
     df[k, i] = Res[i]
