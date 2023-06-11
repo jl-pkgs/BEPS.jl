@@ -116,6 +116,8 @@ function inter_prg_jl(
   Eil_u = zeros(MAX_Loop)
   EiS_u = zeros(MAX_Loop)
 
+  lambda_snow = zeros(MAX_Loop)
+
   Evap_soil = zeros(MAX_Loop)
   Evap_SW = zeros(MAX_Loop)
   Evap_SS = zeros(MAX_Loop)
@@ -423,7 +425,7 @@ function inter_prg_jl(
         Ts0[kkk-1], Tm[2, kkk-1], Tm[1, kkk-1], Tsn0[kkk-1],
         Tsm0[kkk-1], Tsn1[kkk-1], Tsn2[kkk-1])
 
-    @show soilp.temp_soil_c, Tm[1, kkk]
+    # @show soilp.temp_soil_c, Tm[1, kkk]
     Update_temp_soil_c(soilp, Tm[1, kkk])
     # soilp.temp_soil_c[1] = Tm[1, kkk]
 
@@ -480,13 +482,13 @@ function inter_prg_jl(
   mid_res.Evap = (Eil_o[kkk] + Eil_u[kkk] + Evap_soil[kkk] + Evap_SW[kkk] +
                   EiS_o[kkk] + EiS_u[kkk] + Evap_SS[kkk]) * step   # total evaporation . mm/step
 
-  mid_res.gpp_o_sunlit = GPP_o_sunlit   # umol C/m2/s
-  mid_res.gpp_u_sunlit = GPP_u_sunlit
-  mid_res.gpp_o_shaded = GPP_o_shaded
-  mid_res.gpp_u_shaded = GPP_u_shaded
+  mid_res.gpp_o_sunlit = GPP.o_sunlit   # umol C/m2/s
+  mid_res.gpp_u_sunlit = GPP.u_sunlit
+  mid_res.gpp_o_shaded = GPP.o_shaded
+  mid_res.gpp_u_shaded = GPP.u_shaded
   
   # total GPP . gC/m2/step
-  mid_res.GPP = (GPP_o_sunlit + GPP_o_shaded + GPP_u_sunlit + GPP_u_shaded) * 12 * step * 0.000001
+  mid_res.GPP = (GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded) * 12 * step * 0.000001
   # return
   nothing
 end

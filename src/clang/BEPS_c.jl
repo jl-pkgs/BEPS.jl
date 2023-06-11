@@ -14,7 +14,7 @@ TypeRef{T} = Union{Ref{T},RefArray{T,Vector{T},Nothing}}
 include("DataType.jl")
 include("helpers.jl")
 include("SOIL_c.jl")
-# include("module/inter_prg.jl")
+include("module/inter_prg.jl")
 include("beps_main.jl")
 
 

@@ -25,9 +25,9 @@ const p_end = 101
 
 const RTIMES = 24
 
-const step = 3600
+const step = 3600.0
 
-const kstep = 360
+const kstep = 360.0
 
 const kloop = 10
 
@@ -37,7 +37,7 @@ const layer = 5
 
 const depth_f = 6
 
-const CO2_air = 380    # ppm
+const CO2_air = 380.0    # ppm
 
 const rho_a = 1.292    # density of air, kg m-3
 
@@ -45,6 +45,7 @@ const rho_w = 1025.0;  # density of water, kg m-3
 
 const Cpd = 1004.65;
 
+const Lv_solid = 2.83 * 1000000;  # the latent heat of evaporation from solid (snow/ice) at air temperature=Ta, in j+kkk/kg
 
 # n double zero
 nzero(n) = tuple(zeros(n)...)
@@ -182,8 +183,19 @@ function init_leaf_struct(x::Leaf, replacement::LeafRef)
   x.u_shaded = replacement.u_shaded[]
 end
 
+function init_leaf_dbl(x::LeafRef, replacement::Float64)
+  x.o_sunlit[] = replacement
+  x.o_shaded[] = replacement
+  x.u_sunlit[] = replacement
+  x.u_shaded[] = replacement
+end
+
 function init_leaf_dbl(x::Leaf, replacement::Float64)
-  ccall((:init_leaf_dbl, libbeps), Cvoid, (Ptr{Leaf}, Cdouble), Ref(x), replacement)
+  x.o_sunlit = replacement
+  x.o_shaded = replacement
+  x.u_sunlit = replacement
+  x.u_shaded = replacement
+  # ccall((:init_leaf_dbl, libbeps), Cvoid, (Ptr{Leaf}, Cdouble), Ref(x), replacement)
 end
 
 function init_leaf_dbl2(x, overstory, understory)

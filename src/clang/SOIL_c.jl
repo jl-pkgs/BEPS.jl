@@ -1,6 +1,3 @@
-include("DataType.jl")
-
-
 function SoilRootFraction(p::Soil)
   ccall((:SoilRootFraction, libbeps), Cvoid, (Ptr{Soil},), Ref(p))
 end
@@ -63,4 +60,9 @@ end
 function Update_G(p::Soil, value::Cdouble)
   ccall((:Update_G, libbeps), Cvoid, (Ptr{Soil}, Cdouble),
     Ref(p), value)
+end
+
+function UpdateSoilMoisture(p::Soil, peroid_in_seconds::Cdouble)
+    ccall((:UpdateSoilMoisture, libbeps), Cvoid, (Ptr{Soil}, Cdouble), 
+      Ref(p), peroid_in_seconds)
 end
