@@ -1,11 +1,45 @@
 pow = ^
 
 # kPa deg-1
-cal_slope(Ta::Float64) = 2503.0 / pow((Ta + 237.3), 2) * exp(17.27 * Ta / (Ta + 237.3))
+cal_slope(Ta::Real) = 2503.0 / pow((Ta + 237.3), 2) * exp(17.27 * Ta / (Ta + 237.3))
 
 # kPa
-cal_es(Ta::Float64) = 0.61078 * exp(17.3 * Ta / (237.3 + Ta))
+cal_es(Ta::Real) = 0.61078 * exp(17.3 * Ta / (237.3 + Ta))
 
+cal_lambda(Ta::Real) = (2.501 - 0.00237 * Ta) * 1000000
+
+ea2q(ea::Real, Pa::Real=101.35) = 0.622 * ea / (Pa - 0.378 * ea)
+
+function RH2q(Ta::Real, RH::Real)
+  es = cal_es(Ta)
+  ea = es * RH / 100
+  ea2q(ea)
+end
+
+cal_cp(q::Real) = 1004.65 * (1 + 0.84 * q)
+
+function cal_cp(Ta::Real, RH::Real)
+  q = RH2q(Ta, RH)
+  cal_cp(q)
+end 
+
+
+function meteo_pack_jl(Ta::Real, RH::Real)
+  rho_a = 1.292 # ρ_air, kg/m3
+
+  es = cal_es(Ta)
+  ea = es * RH / 100
+  vpd = es - ea
+
+  q = ea2q(ea)
+  cp = 1004.65 * (1 + 0.84 * q)
+  
+  slope = cal_slope(Ta) # slope of es
+  psy = 0.066            # psychrometer γ, kPa/C, 
+  # lambda = cal_lambda(Ta) # J kg-1
+  # psy = cp * 101.13 / (0.622 * lambda)
+  (; rho_a, cp, vpd, slope, psy, es, ea, q)
+end
 
 
 function update_Gw!(Gw::Leaf, Gs_new::Leaf, Ga_o, Ga_u, Gb_o, Gb_u)
@@ -38,4 +72,4 @@ function update_Gc!(Gc::Leaf, Gs_new::LeafRef, Ga_o, Ga_u, Gb_o, Gb_u)
 end
 
 
-export cal_slope, cal_es
+export meteo_pack_jl, cal_slope, cal_es

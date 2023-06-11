@@ -123,10 +123,16 @@ function Leaf_Temperature(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh
   Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
 end
 
-function sensible_heat(tempL, temp_g, temp_air, rh_air, Gheat, Gheat_g, LAI, SH_o, SH_u, SH_g)
-  ccall((:sensible_heat, libbeps), Cvoid, (Leaf, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Leaf, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), tempL, temp_g, temp_air, rh_air, Gheat, Gheat_g, LAI, SH_o, SH_u, SH_g)
-end
+function sensible_heat(tempL::Leaf, temp_g::Cdouble, temp_air::Cdouble, rh_air::Cdouble,
+  Gheat::Leaf, Gheat_g::Cdouble, LAI::Leaf,
+  SH_o, SH_u, SH_g)
 
+  ccall((:sensible_heat, libbeps), Cvoid,
+    (Leaf, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Leaf,
+      Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
+    tempL, temp_g, temp_air, rh_air, Gheat, Gheat_g, LAI,
+    SH_o, SH_u, SH_g)
+end
 
 
 function latent_heat!(leleaf::Leaf, Gw::Leaf, VPD_air, slope, Tc_old::Leaf, temp_air, rho_a, Cp_ca, psychrometer)

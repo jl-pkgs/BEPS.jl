@@ -23,11 +23,11 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
   var_n = zeros(41)
   v2last = zeros(41)
 
-  # if version == "julia"
+  if version == "julia"
     fun = inter_prg_jl
-  # elseif version == "c"
-  #   fun = inter_prg
-  # end
+  elseif version == "c"
+    fun = inter_prg_c
+  end
 
   for jday = 1:365
     if mod(jday, 50) == 0

@@ -1,5 +1,4 @@
 import Parameters: @with_kw, @with_kw_noshow
-include("DataType_ET.jl")
 
 
 const FW_VERSION = 1
@@ -206,6 +205,7 @@ function init_leaf_dbl2(x, overstory, understory)
 end
 
 
+include("DataType_ET.jl")
 
 export Soil, ClimateData, Cpools, 
   Results, OutputET

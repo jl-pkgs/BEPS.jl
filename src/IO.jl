@@ -10,6 +10,12 @@ function Base.sum(df::DataFrame)
   list(keys, vals)
 end
 
+function Base.max(df::DataFrame)
+  vals = [maximum(df[!, c]) for c in names(df)]
+  keys = names(df)
+  list(keys, vals)
+end
+
 fread(f) = DataFrame(CSV.File(f))
 fwrite(df, file) = begin
   # dirname(file) |> check_dir

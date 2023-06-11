@@ -1,12 +1,15 @@
-function inter_prg(jday, rstep, 
-  lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T, 
-  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, mid_res::Results) where {T<:Real}
+using Printf
 
-  ccall((:inter_prg, libbeps), Cvoid,
+function inter_prg_c(jday, rstep, 
+  lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T, 
+  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, 
+  mid_res::Results, mid_ET::OutputET) where {T<:Real}
+
+  ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
-      Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil}, Ptr{Results}),
+      Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil}, Ptr{Results}, Ptr{OutputET}),
     jday, rstep, lai, clumping, parameter,
-    Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res))
+    Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res), Ref(mid_ET))
 end
 
 
@@ -108,15 +111,15 @@ function inter_prg_jl(
   Trans_o = zeros(MAX_Loop)
   Trans_u = zeros(MAX_Loop)
   Eil_o = zeros(MAX_Loop)
-  EiS_o = zeros(MAX_Loop)
   Eil_u = zeros(MAX_Loop)
+  EiS_o = zeros(MAX_Loop)
   EiS_u = zeros(MAX_Loop)
-
-  lambda_snow = zeros(MAX_Loop)
 
   Evap_soil = zeros(MAX_Loop)
   Evap_SW = zeros(MAX_Loop)
   Evap_SS = zeros(MAX_Loop)
+
+  lambda_snow = zeros(MAX_Loop)
 
   # # parameters for Vcmax-Nitrogen calculations
   Kn = 0.3  #0.713/2.4
@@ -187,6 +190,15 @@ function inter_prg_jl(
   wind_sp = meteo.wind
   precip = meteo.rain / step  # precipitation in meters
   Ta = meteo.temp
+
+  VPS_air = cal_es(Ta)  # to estimate saturated water vapor pressure in kpa
+  e_a10 = VPS_air * rh_air / 100                      # to be used for module photosynthesis
+  VPD_air = VPS_air - e_a10                              # water vapor deficit at the reference height
+
+  q_ca = 0.622 * e_a10 / (101.35 - 0.378 * e_a10)      # in g/g, unitless
+  Cp_ca = Cpd * (1 + 0.84 * q_ca)
+
+  slope = cal_slope(Ta)
 
   if (Ks <= 0)
     alpha_v_o = 0
@@ -266,15 +278,6 @@ function inter_prg_jl(
     end  # to be used for module photosynthesis
 
     GH_o = Qhc_o[kkk-1]# to be used as the init. for module aerodynamic_conductance
-
-    VPS_air = cal_es(Ta)  # to estimate saturated water vapor pressure in kpa
-    e_a10 = VPS_air * rh_air / 100                      # to be used for module photosynthesis
-    VPD_air = VPS_air - e_a10                              # water vapor deficit at the reference height
-
-    q_ca = 0.622 * e_a10 / (101.35 - 0.378 * e_a10)      # in g/g, unitless
-    Cp_ca = Cpd * (1 + 0.84 * q_ca)
-
-    slope = cal_slope(Ta)
 
     init_leaf_dbl(Ci_old, 0.7 * CO2_air)
     init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
@@ -404,24 +407,23 @@ function inter_prg_jl(
     
     Cs[1, kkk] = soilp.Cs[1]  # added
     Cs[2, kkk] = soilp.Cs[1]
-    Tc_u[kkk] = Tcu# added
+    Tc_u[kkk] = Tcu           # added
     lambda[2] = soilp.lambda[1]
     d_soil[2] = soilp.d_soil[1]
     
-    Tm[2, kkk-1] = soilp.temp_soil_p[2] # first place is temp_soil_p[0]?
     Tm[1, kkk-1] = soilp.temp_soil_p[1]
+    Tm[2, kkk-1] = soilp.temp_soil_p[2] # first place is temp_soil_p[0]?
     G[2, kkk] = soilp.G[1]
 
     ## 二维数组`Ref`如何处理？
     Ts0[kkk], Tm[1, kkk], Tsn0[kkk], Tsm0[kkk], Tsn1[kkk], Tsn2[kkk], G[1, kkk] = 
-      surface_temperature(Ta, rh_air, Zsp[], Zp[],
+      surface_temperature_jl(Ta, rh_air, Zsp[], Zp[],
         Cs[2, kkk], Cs[1, kkk], Gheat_g, d_soil[2], rho_snow[kkk], Tc_u[kkk],
         radiation_g[], Evap_soil[kkk], Evap_SW[kkk], Evap_SS[kkk],
         lambda[2], Xg_snow[kkk], G[2, kkk],
         Ts0[kkk-1], Tm[2, kkk-1], Tm[1, kkk-1], Tsn0[kkk-1],
         Tsm0[kkk-1], Tsn1[kkk-1], Tsn2[kkk-1])
 
-    # @show soilp.temp_soil_c, Tm[1, kkk]
     Update_temp_soil_c(soilp, Tm[1, kkk])
     # soilp.temp_soil_c[1] = Tm[1, kkk]
 
@@ -432,7 +434,13 @@ function inter_prg_jl(
     sensible_heat(Tc_new, Ts0[kkk], Ta, rh_air,
       Gh, Gheat_g, PAI, 
       Ref(Qhc_o, kkk), Ref(Qhc_u, kkk), Ref(Qhg, kkk))
-
+    
+    # println("===========================")
+    # println("kkk = $kkk")
+    # @printf("Ts0 = %f, Tm = %f, Tsno = %f, Tsm0 = %f, Tsn1 = %f, Tsn2 = %f, G = %f\n",
+    #   Ts0[kkk], Tm[1, kkk], Tsn0[kkk], Tsm0[kkk], Tsn1[kkk], Tsn2[kkk], G[1, kkk])
+    # @printf("Ta = %f, Gg = %f, QHs = %f, %f, %f\n", Ta, Gheat_g, Qhc_o[kkk], Qhc_u[kkk], Qhg[kkk])
+    
     # /*****  Soil water module by L. He  *****/
     soilp.Zsp = Zsp[]
     Update_G(soilp, G[1, kkk])
@@ -448,7 +456,7 @@ function inter_prg_jl(
     Zp[] = soilp.Zp
   end  # The end of kkk loop
 
-  kkk = kloop # the last step
+  kkk = kloop + 1# the last step
   Tsn1[kkk] = clamp(Tsn1[kkk], -40.0, 40.0)
   Tsn2[kkk] = clamp(Tsn2[kkk], -40.0, 40.0)
   
@@ -472,7 +480,7 @@ function inter_prg_jl(
     EiS_o, EiS_u, 
     Evap_soil, Evap_SW, Evap_SS, Qhc_o, Qhc_u, Qhg, kkk)
   update_ET!(mid_ET, mid_res, Ta)
-  
+
   mid_res.gpp_o_sunlit = GPP.o_sunlit   # umol C/m2/s
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded
