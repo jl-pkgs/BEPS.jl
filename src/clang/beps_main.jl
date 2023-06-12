@@ -8,7 +8,8 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
   meteo = ClimateData()
   mid_res = Results()
   mid_ET = OutputET()
-  
+  Ra = Radiation()
+
   parameter = readparam(par.landcover)      # n = 48
   # coef = readcoef(par.landcover, par.soil_type) # n = 48, soil respiration module
 
@@ -50,7 +51,9 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
       CosZs = s_coszs(jday, rstep - 1, par.lat, par.lon) # cos_solar zenith angle
       # /***** start simulation modules *****/
       
-      fun(jday, rstep - 1, _lai, par.clumping, parameter, meteo, CosZs, var_o, var_n, p_soil, mid_res, mid_ET)
+      fun(jday, rstep - 1, _lai, par.clumping, parameter, meteo, CosZs, var_o, var_n, p_soil, 
+        Ra,
+        mid_res, mid_ET)
       # inter_prg_jl(jday, rstep - 1, _lai, par.clumping, parameter, meteo, CosZs, var_o, var_n, p_soil, mid_res)
       # Store updated variables array in temp array
       v2last .= var_n

@@ -1,38 +1,39 @@
-pow = ^
+# pow = ^
+pow(x::FT, y)::FT = x^y
 
-function cal_Rln_out(emiss::Real, T::Real)
+function cal_Rln(emiss::FT, T::FT)
   sb_constant = 5.67 / 100000000    # stephen-boltzman constant
   emiss * sb_constant * (T + 273.15)^4
 end
 
 # kPa deg-1
-cal_slope(Ta::Real) = 2503.0 / pow((Ta + 237.3), 2) * exp(17.27 * Ta / (Ta + 237.3))
+cal_slope(Ta::FT)::FT = 2503.0 / pow((Ta + 237.3), 2) * exp(17.27 * Ta / (Ta + 237.3))
 
 # kPa
-cal_es(Ta::Real) = 0.61078 * exp(17.3 * Ta / (237.3 + Ta))
+cal_es(Ta::FT)::FT = 0.61078 * exp(17.3 * Ta / (237.3 + Ta))
 
-cal_ea(Ta::Real, RH::Real) = cal_es(Ta) * RH / 100
+cal_ea(Ta::FT, RH::FT)::FT = cal_es(Ta) * RH / 100
 
-cal_lambda(Ta::Real) = (2.501 - 0.00237 * Ta) * 1000000
+cal_lambda(Ta::FT)::FT = (2.501 - 0.00237 * Ta) * 1000000
 
-ea2q(ea::Real, Pa::Real=101.35) = 0.622 * ea / (Pa - 0.378 * ea)
+ea2q(ea::FT, Pa::FT=101.35)::FT = 0.622 * ea / (Pa - 0.378 * ea)
 
-function RH2q(Ta::Real, RH::Real)
+function RH2q(Ta::FT, RH::FT)::FT
   es = cal_es(Ta)
   ea = es * RH / 100
   ea2q(ea)
 end
 
 
-cal_cp(q::Real) = 1004.65 * (1 + 0.84 * q)
+cal_cp(q::FT)::FT = 1004.65 * (1 + 0.84 * q)
 
-function cal_cp(Ta::Real, RH::Real)
+function cal_cp(Ta::FT, RH::FT)::FT
   q = RH2q(Ta, RH)
   cal_cp(q)
 end 
 
 
-function meteo_pack_jl(Ta::Real, RH::Real)
+function meteo_pack_jl(Ta::FT, RH::FT)
   rho_a = 1.292 # ρ_air, kg/m3
 
   es = cal_es(Ta)

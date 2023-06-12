@@ -3,6 +3,8 @@ import Parameters: @with_kw, @with_kw_noshow
 Value = getindex
 Value! = setindex!
 
+const FT = Cdouble
+
 init_dbl() = Ref(0.0)
 dbl() = Cdouble(0)
 

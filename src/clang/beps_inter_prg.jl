@@ -3,6 +3,7 @@ using Printf
 function inter_prg_c(jday, rstep, 
   lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T, 
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, 
+  Ra::Radiation,
   mid_res::Results, mid_ET::OutputET) where {T<:Real}
 
   ccall((:inter_prg_c, libbeps), Cvoid,
@@ -33,33 +34,35 @@ The inter-module function between main program and modules
 function inter_prg_jl(
   jday::Int, rstep::Int, 
   lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
-  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, mid_res::Results, mid_ET::OutputET) where {T}
+  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, 
+  Ra::Radiation,
+  mid_res::Results, mid_ET::OutputET) where {T}
   
   d_soil = zeros(layer + 1)
   lambda = zeros(layer + 2)
 
-  Cc_new    = Leaf()
-  Cs_old    = Leaf()
-  Cs_new    = Leaf()
-  Ci_old    = Leaf()
-  Tc_old    = Leaf()
-  Tc_new    = Leaf()
-  Gs_old    = Leaf()
-  Gc        = Leaf() # total conductance for CO2 from the intercellular space of the leaves to the reference height above the canopy
-  Gh        = Leaf() # total conductance for heat transfer from the leaf surface to the reference height above the canopy
-  Gw        = Leaf() # total conductance for water from the intercellular space of the leaves to the reference height above the canopy
-  Gww       = Leaf() # total conductance for water from the surface of the leaves to the reference height above the canopy
+  Cc_new = Leaf()
+  Cs_old = Leaf()
+  Cs_new = Leaf()
+  Ci_old = Leaf()
+  Tc_old = Leaf()
+  Tc_new = Leaf()
+  Gs_old = Leaf()
+  Gc     = Leaf() # total conductance for CO2 from the intercellular space of the leaves to the reference height above the canopy
+  Gh     = Leaf() # total conductance for heat transfer from the leaf surface to the reference height above the canopy
+  Gw     = Leaf() # total conductance for water from the intercellular space of the leaves to the reference height above the canopy
+  Gww    = Leaf() # total conductance for water from the surface of the leaves to the reference height above the canopy
   
-  Gs_new    = LeafRef()
-  Ac        = LeafRef()
-  Ci_new    = LeafRef()
+  Gs_new = LeafRef()
+  Ac     = LeafRef()
+  Ci_new = LeafRef()
 
-  radiation = Leaf()
-  R         = Leaf()
-  Rln       = Leaf()
+  Rn     = Leaf()
+  Rns    = Leaf()
+  Rnl    = Leaf()
   
-  leleaf    = Leaf()
-  GPP       = Leaf()
+  leleaf = Leaf()
+  GPP    = Leaf()
 
   ra_o = 0.0
   ra_u = 0.0
@@ -242,7 +245,7 @@ function inter_prg_jl(
   # /*****  Vcmax Jmax module by L. He  *****/
   # /*****  Ten time intervals in a hourly time step.6min or 360s per loop  ******/
   # for(kkk = 1;kkk <= kloop;kkk++)
-  for kkk = 2:kloop+1
+  @inbounds for kkk = 2:kloop+1
     # /*****  Snow pack stage 1 by X. Luo  *****/
     snowpack_stage1(Ta, precip, 
       Wcs_o[kkk-1], Wcs_u[kkk-1], Wg_snow[kkk-1],
@@ -313,14 +316,15 @@ function inter_prg_jl(
       Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) / (PAI.u_sunlit + PAI.u_shaded)
 
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
-      radiation_o, radiation_u, radiation_g = netRadiation_jl(Ks, CosZs, Tco, Tcu, temp_grd, 
+      radiation_o, radiation_u, radiation_g = netRadiation_c(Ks, CosZs, Tco, Tcu, temp_grd, 
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
         clumping, Ta, rh_air, alpha_v_sw[kkk], alpha_n_sw[kkk],
         percentArea_snow_o, percentArea_snow_u,
         Xg_snow[kkk], 
         alpha_v_o, alpha_n_o, alpha_v_u, alpha_n_u, 
-        alpha_v_g, alpha_n_g,
-        radiation, R, Rln)
+        alpha_v_g, alpha_n_g, 
+        
+        Rn, Rns, Rnl, Ra)
 
       # /*****  Photosynthesis module by B. Chen  *****/
       # conductance for water
@@ -328,7 +332,7 @@ function inter_prg_jl(
       latent_heat!(leleaf, Gw, VPD_air, slope, Tc_old, Ta, rho_a, Cp_ca, psychrometer)
 
       if (CosZs > 0)
-        photosynthesis(Tc_old, R, Ci_old, leleaf, 
+        photosynthesis(Tc_old, Rns, Ci_old, leleaf, 
           Ta, e_a10, f_soilwater, b_h2o, m_h2o, 
           Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded, 
           Gs_new, Ac, Ci_new)
@@ -352,7 +356,7 @@ function inter_prg_jl(
       Leaf_Temperatures(Ta, slope, psychrometer, VPD_air, Cp_ca,
         Gw, Gww, Gh,
         Xcs_o[kkk], Xcl_o[kkk], Xcs_u[kkk], Xcl_u[kkk],
-        radiation, Tc_new)
+        Rn, Tc_new)
 
       H_o_sunlit = (Tc_new.o_sunlit - Ta) * rho_a * Cp_ca * Gh.o_sunlit
       H_o_shaded = (Tc_new.o_shaded - Ta) * rho_a * Cp_ca * Gh.o_shaded
