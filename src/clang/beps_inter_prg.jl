@@ -59,13 +59,13 @@ function inter_prg_jl(
   leleaf    = Leaf()
   GPP       = Leaf()
 
-  ra_o = init_dbl()
-  ra_u = init_dbl()
-  ra_g = init_dbl()
-  Ga_o = init_dbl()
-  Gb_o = init_dbl()
-  Ga_u = init_dbl()
-  Gb_u = init_dbl()
+  ra_o = 0.0
+  ra_u = 0.0
+  ra_g = 0.0
+  Ga_o = 0.0
+  Gb_o = 0.0
+  Ga_u = 0.0
+  Gb_u = 0.0
 
   radiation_o = init_dbl()
   radiation_u = init_dbl()
@@ -292,16 +292,19 @@ function inter_prg_jl(
       num = num + 1
 
       # /***** Aerodynamic_conductance module by G.Mo  *****/
-      aerodynamic_conductance(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
-        lai_o + stem_o, lai_u + stem_u, 
-        ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u)
+      # rm, G_o_a, G_o_b, G_u_a, G_u_b, ra_g = aerodynamic_conductance_jl(canopy_height_o::T, canopy_height_u::T, 
+      # zz::T, clumping::T,
+      # temp_air::T, wind_sp::T, SH_o_p::T, lai_o::T)
+      ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u = 
+        aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
+          lai_o + stem_o, lai_u + stem_u)
 
       init_leaf_dbl2(Gh, 
-        1.0 / (1.0 / Ga_o[] + 0.5 / Gb_o[]), 
-        1.0 / (1.0 / Ga_u[] + 0.5 / Gb_u[]))
+        1.0 / (1.0 / Ga_o + 0.5 / Gb_o), 
+        1.0 / (1.0 / Ga_u + 0.5 / Gb_u))
       init_leaf_dbl2(Gww,
-        1.0 / (1.0 / Ga_o[] + 1.0 / Gb_o[] + 100),
-        1.0 / (1.0 / Ga_u[] + 1.0 / Gb_u[] + 100))
+        1.0 / (1.0 / Ga_o + 1.0 / Gb_o + 100),
+        1.0 / (1.0 / Ga_u + 1.0 / Gb_u + 100))
 
       # temperatures of overstorey and understorey canopies
       Tco = (Tc_old.o_sunlit * PAI.o_sunlit + Tc_old.o_shaded * PAI.o_shaded) / (PAI.o_sunlit + PAI.o_shaded)
@@ -318,13 +321,13 @@ function inter_prg_jl(
 
       # /*****  Photosynthesis module by B. Chen  *****/
       # conductance for water
-      update_Gw!(Gw, Gs_old, Ga_o[], Ga_u[], Gb_o[], Gb_u[])
+      update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u)
       latent_heat!(leleaf, Gw, VPD_air, slope, Tc_old, Ta, rho_a, Cp_ca, psychrometer)
 
       if (CosZs > 0)
         photosynthesis(Tc_old, R, Ci_old, leleaf, 
           Ta, e_a10, f_soilwater, b_h2o, m_h2o, 
-          Gb_o[], Gb_u[], Vcmax_sunlit, Vcmax_shaded, 
+          Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded, 
           Gs_new, Ac, Ci_new)
       else
         init_leaf_dbl(Gs_new, 0.0001);
@@ -339,8 +342,8 @@ function inter_prg_jl(
       init_leaf_struct(Cs_old, Cs_new)
       init_leaf_struct(Gs_old, Gs_new)
 
-      update_Gw!(Gw, Gs_new, Ga_o[], Ga_u[], Gb_o[], Gb_u[])
-      update_Gc!(Gc, Gs_new, Ga_o[], Ga_u[], Gb_o[], Gb_u[])
+      update_Gw!(Gw, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
+      update_Gc!(Gc, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
 
       # /***** Leaf temperatures module by L. He  *****/
       Leaf_Temperatures(Ta, slope, psychrometer, VPD_air, Cp_ca,
@@ -388,7 +391,7 @@ function inter_prg_jl(
     snowpack_stage2(EiS_o[kkk], EiS_u[kkk], Ref(Wcs_o, kkk), Ref(Wcs_u, kkk))
 
     # /*****  Evaporation from soil module by X. Luo  *****/
-    Gheat_g = 1 / ra_g[]
+    Gheat_g = 1 / ra_g
     mass_water_g = Ref(rho_w * Zp[])
     
     evaporation_soil(temp_grd, Ts0[kkk-1], rh_air, radiation_g[], Gheat_g, 

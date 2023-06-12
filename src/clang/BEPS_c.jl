@@ -24,17 +24,6 @@ Value! = setindex!
 
 init_dbl() = Ref(0.0)
 
-
-function aerodynamic_conductance(canopy_height_o, canopy_height_u, zz, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u,
-  rm::TypeRef, ra_u::TypeRef, ra_g::TypeRef,
-  G_o_a::TypeRef, G_o_b::TypeRef, G_u_a::TypeRef, G_u_b::TypeRef)
-
-  ccall((:aerodynamic_conductance, libbeps), Cvoid,
-    (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    canopy_height_o, canopy_height_u, zz, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u,
-    rm, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b)
-end
-
 # function plantresp(LC, mid_res::Results, lai_yr, lai, temp_air, temp_soil, CosZs)
 #     ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Results}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
 #         LC, Ref(mid_res), lai_yr, lai, temp_air, temp_soil, CosZs)
@@ -109,6 +98,7 @@ function netRadiation(shortRad_global, CosZs, temp_o, temp_u, temp_g,
     shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai, clumping, temp_air, rh, albedo_snow_v, albedo_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g,
     albedo_v_o, albedo_n_o, albedo_v_u, albedo_n_u, albedo_v_g, albedo_n_g,
     netRad_o, netRad_u, netRad_g, Ref(netRadLeaf), Ref(netShortRadLeaf))
+  
 end
 
 function Leaf_Temperatures(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs_o, Xcl_o, Xcs_u, Xcl_u, radiation::Leaf, Tc::Leaf)

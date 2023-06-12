@@ -1,0 +1,111 @@
+```{julia}
+using BEPS
+using BEPS.beps_c
+# using Ipaper
+
+f = "examples/input/p1_meteo.txt"
+d = fread(f)
+lai = readdlm("examples/input/p1_lai.txt")[:]
+
+par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
+  soil_type=8, Tsoil=2.2, soilwater=0.4115, snowdepth=0)
+```
+
+```{julia}
+# @time df_c = besp_main(d, lai, par; version="c");
+# sum(df_c)
+@time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+@time df_c, df_ET_c = besp_main(d, lai, par; version="c");
+
+sum(df_jl)
+sum(df_c)
+
+df_diff = abs.(df_jl .- df_c)
+# df_diff = abs.(df_ET_jl .- df_ET_c)
+# fwrite(df_diff, "a-3.csv")
+max(df_diff)
+```
+
+```{julia}
+## C版本的结果
+# :gpp_o_sunlit => 41704.09054753295
+# :gpp_u_sunlit => 285.1932406544977
+# :gpp_o_shaded => 12720.54113242912
+# :gpp_u_shaded => 135.13475998737647
+# :plant_resp => 0.0
+# :npp_o => 0.0
+# :npp_u => 0.0
+# :GPP => 2369.3022582020903
+# :NPP => 0.0
+# :NEP => 0.0
+# :soil_resp => 0.0
+# :Net_Rad => 1.299620168997007e6
+# :SH => 232161.16420363513
+# :LH => 811896.0668881282
+# :Trans => 444.02437414775443
+# :Evap => 748.8880942489606
+
+## sum
+:gpp_o_sunlit => 0.0002343150940907193
+:gpp_u_sunlit => 0.05115824940432174
+:gpp_o_shaded => 1.4900267617763002e-5
+:gpp_u_shaded => 1.0758724368703184e-7
+:plant_resp   => 0.0
+:npp_o        => 0.0
+:npp_u        => 0.0
+:GPP          => 0.0022203403965193147
+:NPP          => 0.0
+:NEP          => 0.0
+:soil_resp    => 0.0
+:Net_Rad      => 0.003708570688994328
+:SH           => 0.12619010825226695
+:LH           => 2.5288028670446403
+:Trans        => 0.0035486520015893166
+:Evap         => 0.0009524622286666777
+
+## max
+ :gpp_o_sunlit => 0.00021630367300851105
+ :gpp_u_sunlit => 0.0005586954093889651
+ :gpp_o_shaded => 9.06128597910616e-6
+ :gpp_u_shaded => 1.7276561885964936e-8
+   :plant_resp => 0.0
+        :npp_o => 0.0
+        :npp_u => 0.0
+          :GPP => 2.4137032993143404e-5
+          :NPP => 0.0
+          :NEP => 0.0
+    :soil_resp => 0.0
+      :Net_Rad => 0.002326329983901587
+           :SH => 0.029240292020906722
+           :LH => 0.07646965953554741
+        :Trans => 1.6816338803168907e-5
+         :Evap => 0.00012368929687477104
+```
+
+
+# Test about
+
+```{julia}
+canopyh_o = 2.0
+canopyh_u = 0.2
+height_wind_sp = 2.0
+clumping = 0.8
+Ta = 20.0
+wind_sp = 2.
+GH_o = 100.0
+pai_o = 4.0
+pai_u = 2.0
+
+ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
+  aerodynamic_conductance_c(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
+    pai_o, pai_u)
+r1 = (; ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u)
+
+ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
+  aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
+    pai_o, pai_u)
+r2 = (; ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u)
+
+@show r1
+@show r2;
+```

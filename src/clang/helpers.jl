@@ -3,8 +3,11 @@ pow = ^
 # kPa deg-1
 cal_slope(Ta::Real) = 2503.0 / pow((Ta + 237.3), 2) * exp(17.27 * Ta / (Ta + 237.3))
 
+
 # kPa
 cal_es(Ta::Real) = 0.61078 * exp(17.3 * Ta / (237.3 + Ta))
+
+cal_ea(Ta::Real, RH::Real) = cal_es(Ta) * RH / 100
 
 cal_lambda(Ta::Real) = (2.501 - 0.00237 * Ta) * 1000000
 
@@ -15,6 +18,7 @@ function RH2q(Ta::Real, RH::Real)
   ea = es * RH / 100
   ea2q(ea)
 end
+
 
 cal_cp(q::Real) = 1004.65 * (1 + 0.84 * q)
 
