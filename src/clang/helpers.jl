@@ -1,8 +1,12 @@
 pow = ^
 
+function cal_Rln_out(emiss::Real, T::Real)
+  sb_constant = 5.67 / 100000000    # stephen-boltzman constant
+  emiss * sb_constant * (T + 273.15)^4
+end
+
 # kPa deg-1
 cal_slope(Ta::Real) = 2503.0 / pow((Ta + 237.3), 2) * exp(17.27 * Ta / (Ta + 237.3))
-
 
 # kPa
 cal_es(Ta::Real) = 0.61078 * exp(17.3 * Ta / (237.3 + Ta))

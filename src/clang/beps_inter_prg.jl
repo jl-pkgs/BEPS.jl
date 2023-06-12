@@ -56,6 +56,8 @@ function inter_prg_jl(
 
   radiation = Leaf()
   R         = Leaf()
+  Rln       = Leaf()
+  
   leleaf    = Leaf()
   GPP       = Leaf()
 
@@ -67,9 +69,9 @@ function inter_prg_jl(
   Ga_u = 0.0
   Gb_u = 0.0
 
-  radiation_o = init_dbl()
-  radiation_u = init_dbl()
-  radiation_g = init_dbl()
+  radiation_o = 0.
+  radiation_u = 0.
+  radiation_g = 0.
 
   Tco = 0.0
   Tcu = 0.0
@@ -201,10 +203,10 @@ function inter_prg_jl(
   slope = cal_slope(Ta)
 
   if (Ks <= 0)
-    alpha_v_o = 0
-    alpha_n_o = 0
-    alpha_v_u = 0
-    alpha_n_u = 0
+    alpha_v_o = 0.
+    alpha_n_o = 0.
+    alpha_v_u = 0.
+    alpha_n_u = 0.
   else
     alpha_v_o = parameter[22+1]
     alpha_n_o = parameter[23+1]
@@ -311,13 +313,14 @@ function inter_prg_jl(
       Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) / (PAI.u_sunlit + PAI.u_shaded)
 
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
-      netRadiation(Ks, CosZs, Tco, Tcu, temp_grd, 
+      radiation_o, radiation_u, radiation_g = netRadiation_jl(Ks, CosZs, Tco, Tcu, temp_grd, 
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
         clumping, Ta, rh_air, alpha_v_sw[kkk], alpha_n_sw[kkk],
         percentArea_snow_o, percentArea_snow_u,
-        Xg_snow[kkk], alpha_v_o, alpha_n_o, alpha_v_u, alpha_n_u, alpha_v_g, alpha_n_g,
-        radiation_o, radiation_u, radiation_g,
-        radiation, R)
+        Xg_snow[kkk], 
+        alpha_v_o, alpha_n_o, alpha_v_u, alpha_n_u, 
+        alpha_v_g, alpha_n_g,
+        radiation, R, Rln)
 
       # /*****  Photosynthesis module by B. Chen  *****/
       # conductance for water
@@ -475,7 +478,7 @@ function inter_prg_jl(
   var_n[19+1] = Wcs_u[kkk]     # the mass of intercepted liquid water and snow, overstory
   var_n[20+1] = Wg_snow[kkk]   # the fraction of ground surface covered by snow and snow mass
 
-  mid_res.Net_Rad = radiation_o[] + radiation_u[] + radiation_g[]
+  mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
   
   OutputET!(mid_ET, 
     Trans_o, Trans_u, 

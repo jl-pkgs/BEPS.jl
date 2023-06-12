@@ -11,18 +11,12 @@ import Base: RefValue, RefArray
 
 TypeRef{T} = Union{Ref{T},RefArray{T,Vector{T},Nothing}}
 
-include("DataType.jl")
+include("DataType/DataType.jl")
 include("helpers.jl")
 include("SOIL_c.jl")
 include("module/module.jl")
 include("beps_inter_prg.jl")
 include("beps_main.jl")
-
-
-Value = getindex
-Value! = setindex!
-
-init_dbl() = Ref(0.0)
 
 # function plantresp(LC, mid_res::Results, lai_yr, lai, temp_air, temp_soil, CosZs)
 #     ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Results}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
@@ -35,7 +29,6 @@ function Vcmax_Jmax(lai_o, clumping, Vcmax0, slope_Vcmax_N, leaf_N, CosZs, Vcmax
     lai_o, clumping, Vcmax0, slope_Vcmax_N, leaf_N, CosZs,
     Vcmax_sunlit, Vcmax_shaded, Jmax_sunlit, Jmax_shaded)
 end
-
 
 
 # function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
@@ -82,23 +75,6 @@ end
 function lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI::Leaf, PAI::Leaf)
   ccall((:lai2, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Leaf}, Ptr{Leaf}),
     clumping, CosZs, stem_o, stem_u, lai_o, lai_u, Ref(LAI), Ref(PAI))
-end
-
-function netRadiation(shortRad_global, CosZs, temp_o, temp_u, temp_g,
-  lai_o, lai_u, lai_os, lai_us, lai, clumping, temp_air, rh,
-  albedo_snow_v, albedo_snow_n,
-  percentArea_snow_o, percentArea_snow_u, percent_snow_g,
-  albedo_v_o, albedo_n_o, albedo_v_u, albedo_n_u, albedo_v_g, albedo_n_g,
-  netRad_o::TypeRef, netRad_u::TypeRef, netRad_g::TypeRef,
-  netRadLeaf::Leaf, netShortRadLeaf::Leaf)
-
-  ccall((:netRadiation, libbeps), Cvoid,
-    (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
-      Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Leaf}, Ptr{Leaf}),
-    shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai, clumping, temp_air, rh, albedo_snow_v, albedo_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g,
-    albedo_v_o, albedo_n_o, albedo_v_u, albedo_n_u, albedo_v_g, albedo_n_g,
-    netRad_o, netRad_u, netRad_g, Ref(netRadLeaf), Ref(netShortRadLeaf))
-  
 end
 
 function Leaf_Temperatures(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs_o, Xcl_o, Xcs_u, Xcl_u, radiation::Leaf, Tc::Leaf)

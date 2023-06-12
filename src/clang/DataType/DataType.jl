@@ -1,51 +1,10 @@
 import Parameters: @with_kw, @with_kw_noshow
 
+Value = getindex
+Value! = setindex!
 
-const FW_VERSION = 1
-
-const MAX_LAYERS = 10
-
-const DEPTH_F = 6
-
-const NOERROR = 0
-
-const ERROR = 1
-
-const PI = 3.1415926
-
-const zero = 1.0e-10
-
-const l_sta = 105
-
-const l_end = 105
-
-const p_sta = 101
-
-const p_end = 101
-
-const RTIMES = 24
-
-const step = 3600.0
-
-const kstep = 360.0
-
-const kloop = 10
-
-const MAX_Loop = 11
-
-const layer = 5
-
-const depth_f = 6
-
-const CO2_air = 380.0    # ppm
-
-const rho_a = 1.292    # density of air, kg m-3
-
-const rho_w = 1025.0;  # density of water, kg m-3
-
-const Cpd = 1004.65;
-
-const Lv_solid = 2.83 * 1000000;  # the latent heat of evaporation from solid (snow/ice) at air temperature=Ta, in j+kkk/kg
+init_dbl() = Ref(0.0)
+dbl() = Cdouble(0)
 
 # n double zero
 nzero(n) = tuple(zeros(n)...)
@@ -95,7 +54,6 @@ const NT10 = NTuple{10,Cdouble}
   G::NT10 = nzero(10)
 end
 
-dbl() = Cdouble(0)
 
 @with_kw mutable struct ClimateData
   Srad::Cdouble = 0.0
@@ -145,67 +103,9 @@ end
 end
 
 
-@with_kw mutable struct Leaf
-  o_sunlit::Cdouble = 0.0
-  o_shaded::Cdouble = 0.0
-  u_sunlit::Cdouble = 0.0
-  u_shaded::Cdouble = 0.0
-end
-
-@with_kw mutable struct LeafRef{T}
-  o_sunlit::T = Ref(0.0)
-  o_shaded::T = Ref(0.0)
-  u_sunlit::T = Ref(0.0)
-  u_shaded::T = Ref(0.0)
-end
-
-function multiply!(Z::Leaf, X::Leaf, Y::Leaf)
-  Z.o_sunlit = X.o_sunlit * Y.o_sunlit
-  Z.o_shaded = X.o_shaded * Y.o_shaded
-  Z.u_sunlit = X.u_sunlit * Y.u_sunlit
-  Z.u_shaded = X.u_shaded * Y.u_shaded
-end
-
-function multiply!(Z::Leaf, X::LeafRef, Y::Leaf)
-  Z.o_sunlit = X.o_sunlit[] * Y.o_sunlit
-  Z.o_shaded = X.o_shaded[] * Y.o_shaded
-  Z.u_sunlit = X.u_sunlit[] * Y.u_sunlit
-  Z.u_shaded = X.u_shaded[] * Y.u_shaded
-end
-
-
-function init_leaf_struct(x::Leaf, replacement::Leaf)
-  ccall((:init_leaf_struct, libbeps), Cvoid, (Ptr{Leaf}, Ptr{Leaf}), Ref(x), Ref(replacement))
-end
-
-function init_leaf_struct(x::Leaf, replacement::LeafRef)
-  x.o_sunlit = replacement.o_sunlit[]
-  x.o_shaded = replacement.o_shaded[]
-  x.u_sunlit = replacement.u_sunlit[]
-  x.u_shaded = replacement.u_shaded[]
-end
-
-function init_leaf_dbl(x::LeafRef, replacement::Float64)
-  x.o_sunlit[] = replacement
-  x.o_shaded[] = replacement
-  x.u_sunlit[] = replacement
-  x.u_shaded[] = replacement
-end
-
-function init_leaf_dbl(x::Leaf, replacement::Float64)
-  x.o_sunlit = replacement
-  x.o_shaded = replacement
-  x.u_sunlit = replacement
-  x.u_shaded = replacement
-  # ccall((:init_leaf_dbl, libbeps), Cvoid, (Ptr{Leaf}, Cdouble), Ref(x), replacement)
-end
-
-function init_leaf_dbl2(x, overstory, understory)
-  ccall((:init_leaf_dbl2, libbeps), Cvoid, (Ptr{Leaf}, Cdouble, Cdouble), Ref(x), overstory, understory)
-end
-
-
-include("DataType_ET.jl")
+include("Constant.jl")
+include("Leaf.jl")
+include("OutputET.jl")
 
 export Soil, ClimateData, Cpools, 
   Results, OutputET

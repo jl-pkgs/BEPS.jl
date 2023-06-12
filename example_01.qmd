@@ -27,6 +27,12 @@ max(df_diff)
 ```
 
 ```{julia}
+# using ProfileView
+@profview df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+```
+
+
+```{julia}
 ## C版本的结果
 # :gpp_o_sunlit => 41704.09054753295
 # :gpp_u_sunlit => 285.1932406544977
