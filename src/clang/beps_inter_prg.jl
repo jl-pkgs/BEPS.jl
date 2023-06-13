@@ -40,6 +40,7 @@ function inter_prg_jl(
 
   # var = var2
   # var = InterTempVars()
+  init_vars!(var)
 
   d_soil = zeros(layer + 1)
   lambda = zeros(layer + 2)
@@ -294,7 +295,7 @@ function inter_prg_jl(
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
           Ta, e_a10, f_soilwater, b_h2o, m_h2o,
           Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
-          Gs_new, Ac, Ci_new; version="julia")
+          Gs_new, Ac, Ci_new; version="c")
       else
         init_leaf_dbl(Gs_new, 0.0001)
         init_leaf_dbl(Ac, 0.0)
