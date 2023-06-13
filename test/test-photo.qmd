@@ -1,0 +1,25 @@
+# `photosynthesis`
+
+```{julia}
+using Test
+
+temp_leaf_p = 16.0
+rad_leaf = 378.15760935295305
+e_air = 0.9879918003910609
+g_lb_w = 0.025
+vc_opt = 124.13532190023277
+f_soilwater = 0.9514687124755321
+b_h2o = 0.0175
+m_h2o = 8.0
+cii = 266.0
+temp_leaf_c = 16.5
+LH_leaf = 68.04830184404008
+
+r1 = photosynthesis_c(temp_leaf_p, rad_leaf, e_air, g_lb_w, vc_opt, f_soilwater, b_h2o, m_h2o, cii, temp_leaf_c, LH_leaf)
+
+r2 = photosynthesis_jl(temp_leaf_p, rad_leaf, e_air, g_lb_w, vc_opt, f_soilwater, b_h2o, m_h2o, cii, temp_leaf_c, LH_leaf)
+
+@test maximum(abs.(r1 .- r2)) <= 1e-10
+```
+
+# 

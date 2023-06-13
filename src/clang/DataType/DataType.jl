@@ -12,6 +12,17 @@ dbl() = Cdouble(0)
 nzero(n) = tuple(zeros(n)...)
 const NT10 = NTuple{10,Cdouble}
 
+
+@with_kw mutable struct TSoil
+  T_ground::Cdouble = 0.
+  T_any0::Cdouble = 0.
+  T_soil0::Cdouble = 0.0
+  T_snow::Cdouble = 0.0
+  T_snow1::Cdouble = 0.
+  T_snow2::Cdouble = 0.
+  G::Cdouble = 0.
+end
+
 @with_kw mutable struct Soil
   flag::Cint = Cint(0)
   n_layer::Cint = Cint(5)
@@ -108,6 +119,7 @@ end
 include("Constant.jl")
 include("Leaf.jl")
 include("OutputET.jl")
+include("InterTempVars.jl")
 
 export Soil, ClimateData, Cpools, 
   Results, OutputET

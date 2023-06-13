@@ -20,15 +20,19 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
 sum(df_jl)
 sum(df_c)
 
-df_diff = abs.(df_jl .- df_c)
+df_diff = abs.(df_jl .- df_c) 
+df_diff_perc = abs.(df_jl .- df_c) ./ df_c .* 100
 # df_diff = abs.(df_ET_jl .- df_ET_c)
 # fwrite(df_diff, "a-3.csv")
+max(df_diff_perc)
 max(df_diff)
 ```
 
 ```{julia}
 # using ProfileView
+@time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 @profview df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+@profview_allocs df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 ```
 
 

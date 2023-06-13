@@ -9,6 +9,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
+  var = InterTempVars()
 
   parameter = readparam(par.landcover)      # n = 48
   # coef = readcoef(par.landcover, par.soil_type) # n = 48, soil respiration module
@@ -30,6 +31,8 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
     fun = inter_prg_c
   end
 
+  debug=false
+
   for jday = 1:365
     if mod(jday, 50) == 0
       @show jday
@@ -38,6 +41,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
 
     for rstep = 1:24
       k = (jday - 1) * 24 + rstep
+      # debug = k == 2072
       flag = (jday == 1 && rstep == 1) ? 0 : 1
 
       fill_meteo!(meteo, d, k)
@@ -53,7 +57,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
       
       fun(jday, rstep - 1, _lai, par.clumping, parameter, meteo, CosZs, var_o, var_n, p_soil, 
         Ra,
-        mid_res, mid_ET)
+        mid_res, mid_ET, var; debug)
       # inter_prg_jl(jday, rstep - 1, _lai, par.clumping, parameter, meteo, CosZs, var_o, var_n, p_soil, mid_res)
       # Store updated variables array in temp array
       v2last .= var_n

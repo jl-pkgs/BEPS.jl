@@ -36,21 +36,21 @@ function surface_temperature_jl(T_air::T, rh_air::T, depth_snow::T, depth_water:
   T_soil1_last::T, T_any0_last::T, T_snow_last::T,
   T_soil0_last::T, T_snow1_last::T, T_snow2_last::T) where {T<:Real}
 
-  length_step = kstep
-  cp_ice = 2228.261  # specific heat of ice
-  latent_water = cal_lambda(T_air) # J kg-1
-  latent_snow = 2.83 * 1000000
+  length_step::T = kstep
+  cp_ice::T = 2228.261  # specific heat of ice
+  latent_water::T = cal_lambda(T_air) # J kg-1
+  latent_snow::T = 2.83 * 1000000
 
-  density_air = rho_a
-  cp_air = cal_cp(T_air, rh_air)
+  density_air::T = rho_a
+  cp_air::T = cal_cp(T_air, rh_air)
 
-  ra_g = 1 / Gheat_g  # aerodynamic resistance of heat
+  ra_g::T = 1. / Gheat_g  # aerodynamic resistance of heat
 
   # thermal conductivity of snow
-  lambda_snow = 0.021 + 4.2 * density_snow / 10000 + 2.2 * density_snow^3 * 1e-9
+  lambda_snow::T = 0.021 + 4.2 * density_snow / 10000 + 2.2 * density_snow^3 * 1e-9
 
   # available energy on ground for
-  Gg = netRad_g - evapo_snow_g * latent_snow - (evapo_water_g + evapo_soil) * latent_water
+  Gg::T = netRad_g - evapo_snow_g * latent_snow - (evapo_water_g + evapo_soil) * latent_water
 
   T_ground, T_any0, T_snow, T_soil0, T_snow1, T_snow2 = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   heat_flux = 0.0
@@ -141,3 +141,4 @@ function surface_temperature_jl(T_air::T, rh_air::T, depth_snow::T, depth_water:
 
   return T_ground, T_any0, T_snow, T_soil0, T_snow1, T_snow2, heat_flux
 end
+

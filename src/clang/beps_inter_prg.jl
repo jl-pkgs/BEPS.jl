@@ -1,10 +1,10 @@
 using Printf
 
-function inter_prg_c(jday, rstep, 
-  lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T, 
-  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, 
+function inter_prg_c(jday, rstep,
+  lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
+  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil,
   Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET) where {T<:Real}
+  mid_res::Results, mid_ET::OutputET, var2::InterTempVars; kw...) where {T<:Real}
 
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
@@ -32,12 +32,15 @@ The inter-module function between main program and modules
 - `mid_res`   : results struct
 """
 function inter_prg_jl(
-  jday::Int, rstep::Int, 
+  jday::Int, rstep::Int,
   lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
-  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil, 
+  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil,
   Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET) where {T}
-  
+  mid_res::Results, mid_ET::OutputET, var::InterTempVars; debug=false, kw...) where {T}
+
+  # var = var2
+  # var = InterTempVars()
+
   d_soil = zeros(layer + 1)
   lambda = zeros(layer + 2)
 
@@ -48,21 +51,21 @@ function inter_prg_jl(
   Tc_old = Leaf()
   Tc_new = Leaf()
   Gs_old = Leaf()
-  Gc     = Leaf() # total conductance for CO2 from the intercellular space of the leaves to the reference height above the canopy
-  Gh     = Leaf() # total conductance for heat transfer from the leaf surface to the reference height above the canopy
-  Gw     = Leaf() # total conductance for water from the intercellular space of the leaves to the reference height above the canopy
-  Gww    = Leaf() # total conductance for water from the surface of the leaves to the reference height above the canopy
-  
-  Gs_new = LeafRef()
-  Ac     = LeafRef()
-  Ci_new = LeafRef()
+  Gc = Leaf() # total conductance for CO2 from the intercellular space of the leaves to the reference height above the canopy
+  Gh = Leaf() # total conductance for heat transfer from the leaf surface to the reference height above the canopy
+  Gw = Leaf() # total conductance for water from the intercellular space of the leaves to the reference height above the canopy
+  Gww = Leaf() # total conductance for water from the surface of the leaves to the reference height above the canopy
 
-  Rn     = Leaf()
-  Rns    = Leaf()
-  Rnl    = Leaf()
-  
+  Gs_new = Leaf()
+  Ac = Leaf()
+  Ci_new = Leaf()
+
+  Rn = Leaf()
+  Rns = Leaf()
+  Rnl = Leaf()
+
   leleaf = Leaf()
-  GPP    = Leaf()
+  GPP = Leaf()
 
   ra_o = 0.0
   ra_u = 0.0
@@ -72,65 +75,18 @@ function inter_prg_jl(
   Ga_u = 0.0
   Gb_u = 0.0
 
-  radiation_o = 0.
-  radiation_u = 0.
-  radiation_g = 0.
+  radiation_o = 0.0
+  radiation_u = 0.0
+  radiation_g = 0.0
 
   Tco = 0.0
   Tcu = 0.0
-  Tc_u = zeros(MAX_Loop)
-  Ts0 = zeros(MAX_Loop)
-  Tsn0 = zeros(MAX_Loop)
-  Tsm0 = zeros(MAX_Loop)
-  Tsn1 = zeros(MAX_Loop)
-  Tsn2 = zeros(MAX_Loop)
-
-  Qhc_o = zeros(MAX_Loop)
-  Qhc_u = zeros(MAX_Loop)
-  Qhg = zeros(MAX_Loop)
-
-  Wcl_o = zeros(MAX_Loop)
-  Wcs_o = zeros(MAX_Loop) # the masses of liquid and snow on the canopy
-
-  Xcl_o = zeros(MAX_Loop)
-  Xcs_o = zeros(MAX_Loop) # the fraction of rain and snow on the canopy
-
-  Wcl_u = zeros(MAX_Loop)
-  Wcs_u = zeros(MAX_Loop) # the masses of rain and snow on the canopy
-  Wg_snow = zeros(MAX_Loop)
-
-  Xcl_u = zeros(MAX_Loop)
-  Xcs_u = zeros(MAX_Loop) # the fraction of rain and snow on the canopy
-
-  Ac_snow_o = zeros(MAX_Loop)
-  Ac_snow_u = zeros(MAX_Loop)
-
-  Xg_snow = zeros(MAX_Loop)
-  rho_snow = zeros(MAX_Loop)
-
-  alpha_v_sw = zeros(MAX_Loop)
-  alpha_n_sw = zeros(MAX_Loop)
-
-  r_rain_g = zeros(MAX_Loop)
-
-  Trans_o = zeros(MAX_Loop)
-  Trans_u = zeros(MAX_Loop)
-  Eil_o = zeros(MAX_Loop)
-  Eil_u = zeros(MAX_Loop)
-  EiS_o = zeros(MAX_Loop)
-  EiS_u = zeros(MAX_Loop)
-
-  Evap_soil = zeros(MAX_Loop)
-  Evap_SW = zeros(MAX_Loop)
-  Evap_SS = zeros(MAX_Loop)
-
-  lambda_snow = zeros(MAX_Loop)
 
   # # parameters for Vcmax-Nitrogen calculations
   Kn = 0.3  #0.713/2.4
   G_theta = 0.5
   psychrometer = 0.066
-  
+
   # double K,Vcmax0,Vcmax_sunlit,Vcmax_shaded,expr1,expr2,expr3;
   # double slope_Vcmax_N, leaf_N,Jmax_sunlit,Jmax_shaded;
 
@@ -206,10 +162,10 @@ function inter_prg_jl(
   slope = cal_slope(Ta)
 
   if (Ks <= 0)
-    alpha_v_o = 0.
-    alpha_n_o = 0.
-    alpha_v_u = 0.
-    alpha_n_u = 0.
+    alpha_v_o = 0.0
+    alpha_n_o = 0.0
+    alpha_v_u = 0.0
+    alpha_n_u = 0.0
   else
     alpha_v_o = parameter[22+1]
     alpha_n_o = parameter[23+1]
@@ -217,21 +173,22 @@ function inter_prg_jl(
     alpha_n_u = parameter[23+1]
   end
 
+  
   # Ground surface temperature
-  Ts0[1] = clamp(var_o[3+1], Ta - 2.0, Ta + 2.0)
-  Tsn0[1] = clamp(var_o[4+1], Ta - 2.0, Ta + 2.0)
-  Tsm0[1] = clamp(var_o[5+1], Ta - 2.0, Ta + 2.0)
-  Tsn1[1] = clamp(var_o[6+1], Ta - 2.0, Ta + 2.0)
-  Tsn2[1] = clamp(var_o[7+1], Ta - 2.0, Ta + 2.0)
+  var.Ts0[1] = clamp(var_o[3+1], Ta - 2.0, Ta + 2.0)
+  var.Tsn0[1] = clamp(var_o[4+1], Ta - 2.0, Ta + 2.0)
+  var.Tsm0[1] = clamp(var_o[5+1], Ta - 2.0, Ta + 2.0)
+  var.Tsn1[1] = clamp(var_o[6+1], Ta - 2.0, Ta + 2.0)
+  var.Tsn2[1] = clamp(var_o[7+1], Ta - 2.0, Ta + 2.0)
 
-  Qhc_o[1] = var_o[11+1]
-  Wcl_o[1] = var_o[15+1]
-  Wcs_o[1] = var_o[16+1]   # /* the mass of intercepted liquid water and snow, overstory */
+  var.Qhc_o[1] = var_o[11+1]
+  var.Wcl_o[1] = var_o[15+1]
+  var.Wcs_o[1] = var_o[16+1]   # /* the mass of intercepted liquid water and snow, overstory */
 
   # the evaporation rate of rain and snow--in kg/m^2/s, understory
-  Wcl_u[1] = var_o[18+1]
-  Wcs_u[1] = var_o[19+1]   # /* the mass of intercepted liquid water and snow, overstory */
-  Wg_snow[1] = var_o[20+1]  # /* thr fraction of ground surface covered in snow and snow mass */
+  var.Wcl_u[1] = var_o[18+1]
+  var.Wcs_u[1] = var_o[19+1]   # /* the mass of intercepted liquid water and snow, overstory */
+  var.Wg_snow[1] = var_o[20+1]  # /* thr fraction of ground surface covered in snow and snow mass */
 
   Zsp = Ref(soilp.Zsp)
   Zp = Ref(soilp.Zp)
@@ -240,31 +197,35 @@ function inter_prg_jl(
     Zp[] = 0
   end
 
-  init_leaf_dbl(Tc_old, Ta - 0.5);
-  
+  init_leaf_dbl(Tc_old, Ta - 0.5)
+
+  # Cs = zeros(layer + 2, MAX_Loop)
+  # Tm = zeros(layer + 2, MAX_Loop)
+  # G = zeros(layer + 2, MAX_Loop)
+
   # /*****  Vcmax Jmax module by L. He  *****/
   # /*****  Ten time intervals in a hourly time step.6min or 360s per loop  ******/
   # for(kkk = 1;kkk <= kloop;kkk++)
   @inbounds for kkk = 2:kloop+1
     # /*****  Snow pack stage 1 by X. Luo  *****/
-    snowpack_stage1(Ta, precip, 
-      Wcs_o[kkk-1], Wcs_u[kkk-1], Wg_snow[kkk-1],
-      Ref(Wcs_o, kkk), Ref(Wcs_u, kkk), Ref(Wg_snow, kkk), 
+    snowpack_stage1(Ta, precip,
+      var.Wcs_o[kkk-1], var.Wcs_u[kkk-1], var.Wg_snow[kkk-1],
+      Ref(var.Wcs_o, kkk), Ref(var.Wcs_u, kkk), Ref(var.Wg_snow, kkk),
       lai_o, lai_u, clumping,
-      Ref(Ac_snow_o, kkk), Ref(Ac_snow_u, kkk), 
-      Ref(Xcs_o, kkk), Ref(Xcs_u, kkk), Ref(Xg_snow, kkk),
-      Ref(rho_snow, kkk), Zsp,
-      Ref(alpha_v_sw, kkk), Ref(alpha_n_sw, kkk))
+      Ref(var.Ac_snow_o, kkk), Ref(var.Ac_snow_u, kkk),
+      Ref(var.Xcs_o, kkk), Ref(var.Xcs_u, kkk), Ref(var.Xg_snow, kkk),
+      Ref(var.rho_snow, kkk), Zsp,
+      Ref(var.alpha_v_sw, kkk), Ref(var.alpha_n_sw, kkk))
 
     # /*****  Rain fall stage 1 by X. Luo  *****/
-    rainfall_stage1(Ta, precip, Wcl_o[kkk-1], Wcl_u[kkk-1],
-      lai_o, lai_u, clumping, 
-      Ref(Wcl_o, kkk), Ref(Wcl_u, kkk), Ref(Xcl_o, kkk),
-      Ref(Xcl_u, kkk), Ref(r_rain_g, kkk))
+    rainfall_stage1(Ta, precip, var.Wcl_o[kkk-1], var.Wcl_u[kkk-1],
+      lai_o, lai_u, clumping,
+      Ref(var.Wcl_o, kkk), Ref(var.Wcl_u, kkk), Ref(var.Xcl_o, kkk),
+      Ref(var.Xcl_u, kkk), Ref(var.r_rain_g, kkk))
 
     # Old version
-    # if(thetam[0][kkk-1]<soilp.theta_vwp[1]*0.5) alpha_g = alpha_dry;
-    # else alpha_g = (thetam[0][kkk-1]-soilp.theta_vwp[1]*0.5)/(soilp.fei[1]-soilp.theta_vwp[1]*0.5) * (alpha_sat - alpha_dry) + alpha_dry;
+    # if(thetam[0][kkk-1]<soilp.theta_vwp[1]*0.5) var.alpha_g = alpha_dry;
+    # else var.alpha_g = (thetam[0][kkk-1]-soilp.theta_vwp[1]*0.5)/(soilp.fei[1]-soilp.theta_vwp[1]*0.5) * (alpha_sat - alpha_dry) + alpha_dry;
     if (soilp.thetam_prev[2] < soilp.theta_vwp[2] * 0.5)
       alpha_g = alpha_dry
     else
@@ -282,16 +243,16 @@ function inter_prg_jl(
       f_soilwater = 1.0
     end  # to be used for module photosynthesis
 
-    GH_o = Qhc_o[kkk-1]# to be used as the init. for module aerodynamic_conductance
+    GH_o = var.Qhc_o[kkk-1]# to be used as the init. for module aerodynamic_conductance
 
     init_leaf_dbl(Ci_old, 0.7 * CO2_air)
     init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
 
-    percentArea_snow_o = Ac_snow_o[kkk] / lai_o / 2
-    percentArea_snow_u = Ac_snow_u[kkk] / lai_u / 2
+    percentArea_snow_o = var.Ac_snow_o[kkk] / lai_o / 2
+    percentArea_snow_u = var.Ac_snow_u[kkk] / lai_u / 2
 
     temp_grd = Ta   # ground temperature substituted by air temperature
-    
+
     num = 0
     while true # iteration for BWB equation until results converge
       num = num + 1
@@ -300,12 +261,12 @@ function inter_prg_jl(
       # rm, G_o_a, G_o_b, G_u_a, G_u_b, ra_g = aerodynamic_conductance_jl(canopy_height_o::T, canopy_height_u::T, 
       # zz::T, clumping::T,
       # temp_air::T, wind_sp::T, SH_o_p::T, lai_o::T)
-      ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u = 
+      ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
         aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
           lai_o + stem_o, lai_u + stem_u)
 
-      init_leaf_dbl2(Gh, 
-        1.0 / (1.0 / Ga_o + 0.5 / Gb_o), 
+      init_leaf_dbl2(Gh,
+        1.0 / (1.0 / Ga_o + 0.5 / Gb_o),
         1.0 / (1.0 / Ga_u + 0.5 / Gb_u))
       init_leaf_dbl2(Gww,
         1.0 / (1.0 / Ga_o + 1.0 / Gb_o + 100),
@@ -316,15 +277,13 @@ function inter_prg_jl(
       Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) / (PAI.u_sunlit + PAI.u_shaded)
 
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
-      radiation_o, radiation_u, radiation_g = netRadiation_c(Ks, CosZs, Tco, Tcu, temp_grd, 
+      radiation_o, radiation_u, radiation_g = netRadiation_jl(Ks, CosZs, Tco, Tcu, temp_grd,
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
-        clumping, Ta, rh_air, alpha_v_sw[kkk], alpha_n_sw[kkk],
+        clumping, Ta, rh_air, var.alpha_v_sw[kkk], var.alpha_n_sw[kkk],
         percentArea_snow_o, percentArea_snow_u,
-        Xg_snow[kkk], 
-        alpha_v_o, alpha_n_o, alpha_v_u, alpha_n_u, 
-        alpha_v_g, alpha_n_g, 
-        
-        Rn, Rns, Rnl, Ra)
+        var.Xg_snow[kkk],
+        alpha_v_o, alpha_n_o, alpha_v_u, alpha_n_u,
+        alpha_v_g, alpha_n_g, Rn, Rns, Rnl, Ra)
 
       # /*****  Photosynthesis module by B. Chen  *****/
       # conductance for water
@@ -332,17 +291,17 @@ function inter_prg_jl(
       latent_heat!(leleaf, Gw, VPD_air, slope, Tc_old, Ta, rho_a, Cp_ca, psychrometer)
 
       if (CosZs > 0)
-        photosynthesis(Tc_old, Rns, Ci_old, leleaf, 
-          Ta, e_a10, f_soilwater, b_h2o, m_h2o, 
-          Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded, 
-          Gs_new, Ac, Ci_new)
+        photosynthesis(Tc_old, Rns, Ci_old, leleaf,
+          Ta, e_a10, f_soilwater, b_h2o, m_h2o,
+          Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
+          Gs_new, Ac, Ci_new; version="julia")
       else
-        init_leaf_dbl(Gs_new, 0.0001);
-        init_leaf_dbl(Ac, 0.0);
+        init_leaf_dbl(Gs_new, 0.0001)
+        init_leaf_dbl(Ac, 0.0)
         init_leaf_dbl(Ci_new, CO2_air * 0.7)
 
         init_leaf_dbl(Cs_new, CO2_air)               # not used
-        init_leaf_dbl(Cc_new, CO2_air * 0.7 * 0.8);  # not used
+        init_leaf_dbl(Cc_new, CO2_air * 0.7 * 0.8)  # not used
       end
 
       init_leaf_struct(Ci_old, Ci_new)
@@ -355,16 +314,16 @@ function inter_prg_jl(
       # /***** Leaf temperatures module by L. He  *****/
       Leaf_Temperatures(Ta, slope, psychrometer, VPD_air, Cp_ca,
         Gw, Gww, Gh,
-        Xcs_o[kkk], Xcl_o[kkk], Xcs_u[kkk], Xcl_u[kkk],
+        var.Xcs_o[kkk], var.Xcl_o[kkk], var.Xcs_u[kkk], var.Xcl_u[kkk],
         Rn, Tc_new)
 
       H_o_sunlit = (Tc_new.o_sunlit - Ta) * rho_a * Cp_ca * Gh.o_sunlit
       H_o_shaded = (Tc_new.o_shaded - Ta) * rho_a * Cp_ca * Gh.o_shaded
       GH_o = H_o_sunlit * PAI.o_sunlit + H_o_shaded * PAI.o_shaded  # for next num aerodynamic conductance calculation
 
-      if (abs(Tc_new.o_sunlit - Tc_old.o_sunlit) < 0.02 && 
+      if (abs(Tc_new.o_sunlit - Tc_old.o_sunlit) < 0.02 &&
           abs(Tc_new.o_shaded - Tc_old.o_shaded) < 0.02 &&
-          abs(Tc_new.u_sunlit - Tc_old.u_sunlit) < 0.02 && 
+          abs(Tc_new.u_sunlit - Tc_old.u_sunlit) < 0.02 &&
           abs(Tc_new.u_shaded - Tc_old.u_shaded) < 0.02)
         break # break the iteration if results converge
       else
@@ -377,125 +336,131 @@ function inter_prg_jl(
       end
     end# end of while
     multiply!(GPP, Ac, LAI)
-    
+
     # /*****  Transpiration module by X. Luo  *****/
     transpiration(
       Tc_new, Ta, rh_air,
       Gw, LAI,
-      Ref(Trans_o, kkk), Ref(Trans_u, kkk))
+      Ref(var.Trans_o, kkk), Ref(var.Trans_u, kkk))
 
     # /*****  Evaporation and sublimation from canopy by X. Luo  *****/
     evaporation_canopy(
       Tc_new, Ta, rh_air,
       Gww, PAI,
-      Xcl_o[kkk], Xcl_u[kkk], Xcs_o[kkk], Xcs_u[kkk],
-      Ref(Eil_o, kkk), Ref(Eil_u, kkk), Ref(EiS_o, kkk), Ref(EiS_u, kkk))
+      var.Xcl_o[kkk], var.Xcl_u[kkk], var.Xcs_o[kkk], var.Xcs_u[kkk],
+      Ref(var.Eil_o, kkk), Ref(var.Eil_u, kkk), Ref(var.EiS_o, kkk), Ref(var.EiS_u, kkk))
 
     # /*****  Rainfall stage 2 by X. Luo  *****/
-    rainfall_stage2(Eil_o[kkk], Eil_u[kkk], Ref(Wcl_o, kkk), Ref(Wcl_u, kkk))
+    rainfall_stage2(var.Eil_o[kkk], var.Eil_u[kkk], Ref(var.Wcl_o, kkk), Ref(var.Wcl_u, kkk))
 
     # /*****  Snow pack stage 2 by X. Luo  *****/
-    snowpack_stage2(EiS_o[kkk], EiS_u[kkk], Ref(Wcs_o, kkk), Ref(Wcs_u, kkk))
+    snowpack_stage2(var.EiS_o[kkk], var.EiS_u[kkk], Ref(var.Wcs_o, kkk), Ref(var.Wcs_u, kkk))
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g
     mass_water_g = Ref(rho_w * Zp[])
-    
-    evaporation_soil(temp_grd, Ts0[kkk-1], rh_air, radiation_g[], Gheat_g, 
-      Ref(Xg_snow, kkk), Zp, Zsp, mass_water_g, Ref(Wg_snow, kkk), # Ref
-      rho_snow[kkk], soilp.thetam_prev[1], soilp.fei[1],
-      Ref(Evap_soil, kkk), Ref(Evap_SW, kkk), Ref(Evap_SS, kkk))
+
+    evaporation_soil(temp_grd, var.Ts0[kkk-1], rh_air, radiation_g, Gheat_g,
+      Ref(var.Xg_snow, kkk), Zp, Zsp, mass_water_g, Ref(var.Wg_snow, kkk), # Ref
+      var.rho_snow[kkk], soilp.thetam_prev[1], soilp.fei[1],
+      Ref(var.Evap_soil, kkk), Ref(var.Evap_SW, kkk), Ref(var.Evap_SS, kkk))
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
     UpdateSoilThermalConductivity(soilp)
     Update_Cs(soilp)
 
     # /*****  Surface temperature by X. Luo  *****/
-    Cs = zeros(layer + 2, MAX_Loop)
-    Tm = zeros(layer + 2, MAX_Loop)
-    G = zeros(layer + 2, MAX_Loop)
+    var.Cs .= 0.
+    var.Tm .= 0.0
+    var.G .= 0.
     
-    Cs[1, kkk] = soilp.Cs[1]  # added
-    Cs[2, kkk] = soilp.Cs[1]
-    Tc_u[kkk] = Tcu           # added
+    var.Cs[1, kkk] = soilp.Cs[1]  # added
+    var.Cs[2, kkk] = soilp.Cs[1]
+    var.Tc_u[kkk] = Tcu           # added
     lambda[2] = soilp.lambda[1]
     d_soil[2] = soilp.d_soil[1]
-    
-    Tm[1, kkk-1] = soilp.temp_soil_p[1]
-    Tm[2, kkk-1] = soilp.temp_soil_p[2] # first place is temp_soil_p[0]?
-    G[2, kkk] = soilp.G[1]
+
+    var.Tm[1, kkk-1] = soilp.temp_soil_p[1]
+    var.Tm[2, kkk-1] = soilp.temp_soil_p[2] # first place is temp_soil_p[0]?
+    var.G[2, kkk] = soilp.G[1]
 
     ## 二维数组`Ref`如何处理？
-    Ts0[kkk], Tm[1, kkk], Tsn0[kkk], Tsm0[kkk], Tsn1[kkk], Tsn2[kkk], G[1, kkk] = 
+    var.Ts0[kkk], var.Tm[1, kkk], var.Tsn0[kkk], var.Tsm0[kkk], 
+    var.Tsn1[kkk], var.Tsn2[kkk], var.G[1, kkk] =
       surface_temperature_jl(Ta, rh_air, Zsp[], Zp[],
-        Cs[2, kkk], Cs[1, kkk], Gheat_g, d_soil[2], rho_snow[kkk], Tc_u[kkk],
-        radiation_g[], Evap_soil[kkk], Evap_SW[kkk], Evap_SS[kkk],
-        lambda[2], Xg_snow[kkk], G[2, kkk],
-        Ts0[kkk-1], Tm[2, kkk-1], Tm[1, kkk-1], Tsn0[kkk-1],
-        Tsm0[kkk-1], Tsn1[kkk-1], Tsn2[kkk-1])
+        var.Cs[2, kkk], var.Cs[1, kkk], Gheat_g, d_soil[2], var.rho_snow[kkk], var.Tc_u[kkk],
+        radiation_g, var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk],
+        lambda[2], var.Xg_snow[kkk],
+        var.G[2, kkk],
+        
+        var.Ts0[kkk-1], var.Tm[2, kkk-1], var.Tm[1, kkk-1], var.Tsn0[kkk-1],
+        var.Tsm0[kkk-1], var.Tsn1[kkk-1], var.Tsn2[kkk-1])
 
-    Update_temp_soil_c(soilp, Tm[1, kkk])
-    # soilp.temp_soil_c[1] = Tm[1, kkk]
+    Update_temp_soil_c(soilp, var.Tm[1, kkk])
+    # soilp.temp_soil_c[1] = var.Tm[1, kkk]
 
     # /*****  Snow Pack Stage 3 module by X. Luo  *****/
-    snowpack_stage3(Ta, Tsn0[kkk], Tsn0[kkk-1], rho_snow[kkk], Zsp, Zp, Ref(Wg_snow, kkk))
+    snowpack_stage3(Ta, var.Tsn0[kkk], var.Tsn0[kkk-1], var.rho_snow[kkk], Zsp, Zp, Ref(var.Wg_snow, kkk))
 
     # /*****  Sensible heat flux module by X. Luo  *****/
-    sensible_heat(Tc_new, Ts0[kkk], Ta, rh_air,
-      Gh, Gheat_g, PAI, 
-      Ref(Qhc_o, kkk), Ref(Qhc_u, kkk), Ref(Qhg, kkk))
-    
+    sensible_heat(Tc_new, var.Ts0[kkk], Ta, rh_air,
+      Gh, Gheat_g, PAI,
+      Ref(var.Qhc_o, kkk), Ref(var.Qhc_u, kkk), Ref(var.Qhg, kkk))
+
     # println("===========================")
     # println("kkk = $kkk")
-    # @printf("Ts0 = %f, Tm = %f, Tsno = %f, Tsm0 = %f, Tsn1 = %f, Tsn2 = %f, G = %f\n",
-    #   Ts0[kkk], Tm[1, kkk], Tsn0[kkk], Tsm0[kkk], Tsn1[kkk], Tsn2[kkk], G[1, kkk])
-    # @printf("Ta = %f, Gg = %f, QHs = %f, %f, %f\n", Ta, Gheat_g, Qhc_o[kkk], Qhc_u[kkk], Qhg[kkk])
-    
+    # @printf("var.Ts0 = %f, var.Tm = %f, Tsno = %f, var.Tsm0 = %f, var.Tsn1 = %f, var.Tsn2 = %f, var.G = %f\n",
+    #   var.Ts0[kkk], var.Tm[1, kkk], var.Tsn0[kkk], var.Tsm0[kkk], var.Tsn1[kkk], var.Tsn2[kkk], var.G[1, kkk])
+    # @printf("Ta = %f, Gg = %f, QHs = %f, %f, %f\n", Ta, Gheat_g, var.Qhc_o[kkk], var.Qhc_u[kkk], var.Qhg[kkk])
+
     # /*****  Soil water module by L. He  *****/
     soilp.Zsp = Zsp[]
-    Update_G(soilp, G[1, kkk])
+    Update_G(soilp, var.G[1, kkk])
     # soilp.G[1] = G[1][kkk]
 
-    UpdateHeatFlux(soilp, Xg_snow[kkk], lambda_snow[kkk], Tsn0[kkk], Ta, kstep)
-    Soil_Water_Uptake(soilp, Trans_o[kkk], Trans_u[kkk], Evap_soil[kkk])
+    UpdateHeatFlux(soilp, var.Xg_snow[kkk], var.lambda_snow[kkk], var.Tsn0[kkk], Ta, kstep)
+    Soil_Water_Uptake(soilp, var.Trans_o[kkk], var.Trans_u[kkk], var.Evap_soil[kkk])
 
-    soilp.r_rain_g = r_rain_g[kkk]
+    soilp.r_rain_g = var.r_rain_g[kkk]
     soilp.Zp = Zp[]
 
     UpdateSoilMoisture(soilp, kstep)
     Zp[] = soilp.Zp
   end  # The end of kkk loop
 
+  # if debug
+  #   @show Gs_new, Ac, Ci_new
+  # end
   kkk = kloop + 1# the last step
-  Tsn1[kkk] = clamp(Tsn1[kkk], -40.0, 40.0)
-  Tsn2[kkk] = clamp(Tsn2[kkk], -40.0, 40.0)
-  
-  var_n[3+1] = Ts0[kkk]        # To: The temperature of ground surface
-  var_n[4+1] = Tsn0[kkk]       # To: The temperature of ground surface
-  var_n[5+1] = Tsm0[kkk]
-  var_n[6+1] = Tsn1[kkk]       # To: The temperature of ground surface
-  var_n[7+1] = Tsn2[kkk]       # To: The temperature of ground surface
-  var_n[11+1] = Qhc_o[kkk]
-  var_n[15+1] = Wcl_o[kkk]
-  var_n[16+1] = Wcs_o[kkk]     # the mass of intercepted liquid water and snow, overstory
-  var_n[18+1] = Wcl_u[kkk]
-  var_n[19+1] = Wcs_u[kkk]     # the mass of intercepted liquid water and snow, overstory
-  var_n[20+1] = Wg_snow[kkk]   # the fraction of ground surface covered by snow and snow mass
+  var.Tsn1[kkk] = clamp(var.Tsn1[kkk], -40.0, 40.0)
+  var.Tsn2[kkk] = clamp(var.Tsn2[kkk], -40.0, 40.0)
+
+  var_n[3+1] = var.Ts0[kkk]        # To: The temperature of ground surface
+  var_n[4+1] = var.Tsn0[kkk]       # To: The temperature of ground surface
+  var_n[5+1] = var.Tsm0[kkk]
+  var_n[6+1] = var.Tsn1[kkk]       # To: The temperature of ground surface
+  var_n[7+1] = var.Tsn2[kkk]       # To: The temperature of ground surface
+  var_n[11+1] = var.Qhc_o[kkk]
+  var_n[15+1] = var.Wcl_o[kkk]
+  var_n[16+1] = var.Wcs_o[kkk]     # the mass of intercepted liquid water and snow, overstory
+  var_n[18+1] = var.Wcl_u[kkk]
+  var_n[19+1] = var.Wcs_u[kkk]     # the mass of intercepted liquid water and snow, overstory
+  var_n[20+1] = var.Wg_snow[kkk]   # the fraction of ground surface covered by snow and snow mass
 
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
-  
-  OutputET!(mid_ET, 
-    Trans_o, Trans_u, 
-    Eil_o, Eil_u,
-    EiS_o, EiS_u, 
-    Evap_soil, Evap_SW, Evap_SS, Qhc_o, Qhc_u, Qhg, kkk)
+
+  OutputET!(mid_ET,
+    var.Trans_o, var.Trans_u,
+    var.Eil_o, var.Eil_u,
+    var.EiS_o, var.EiS_u,
+    var.Evap_soil, var.Evap_SW, var.Evap_SS, var.Qhc_o, var.Qhc_u, var.Qhg, kkk)
   update_ET!(mid_ET, mid_res, Ta)
 
   mid_res.gpp_o_sunlit = GPP.o_sunlit   # umol C/m2/s
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded
   mid_res.gpp_u_shaded = GPP.u_shaded
-  
+
   # total GPP . gC/m2/step
   mid_res.GPP = (GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded) * 12 * step * 0.000001
   # return
