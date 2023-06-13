@@ -19,3 +19,4 @@ deps/BEPC.c
 
 .vdoc.jl
 *.csv
+*.html

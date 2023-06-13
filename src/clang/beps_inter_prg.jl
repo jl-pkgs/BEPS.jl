@@ -4,7 +4,7 @@ function inter_prg_c(jday, rstep,
   lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil,
   Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET, var2::InterTempVars; kw...) where {T<:Real}
+  mid_res::Results, mid_ET::OutputET, var::InterTempVars; debug=false, kw...) where {T<:Real}
 
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
@@ -174,7 +174,7 @@ function inter_prg_jl(
     alpha_n_u = parameter[23+1]
   end
 
-  
+
   # Ground surface temperature
   var.Ts0[1] = clamp(var_o[3+1], Ta - 2.0, Ta + 2.0)
   var.Tsn0[1] = clamp(var_o[4+1], Ta - 2.0, Ta + 2.0)
@@ -191,6 +191,7 @@ function inter_prg_jl(
   var.Wcs_u[1] = var_o[19+1]   # /* the mass of intercepted liquid water and snow, overstory */
   var.Wg_snow[1] = var_o[20+1]  # /* thr fraction of ground surface covered in snow and snow mass */
 
+  mass_water_g = Ref(0.0)
   Zsp = Ref(soilp.Zsp)
   Zp = Ref(soilp.Zp)
 
@@ -295,7 +296,7 @@ function inter_prg_jl(
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
           Ta, e_a10, f_soilwater, b_h2o, m_h2o,
           Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
-          Gs_new, Ac, Ci_new; version="c")
+          Gs_new, Ac, Ci_new; version="julia")
       else
         init_leaf_dbl(Gs_new, 0.0001)
         init_leaf_dbl(Ac, 0.0)
@@ -359,7 +360,7 @@ function inter_prg_jl(
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g
-    mass_water_g = Ref(rho_w * Zp[])
+    mass_water_g[] = rho_w * Zp[]
 
     evaporation_soil(temp_grd, var.Ts0[kkk-1], rh_air, radiation_g, Gheat_g,
       Ref(var.Xg_snow, kkk), Zp, Zsp, mass_water_g, Ref(var.Wg_snow, kkk), # Ref
@@ -371,10 +372,10 @@ function inter_prg_jl(
     Update_Cs(soilp)
 
     # /*****  Surface temperature by X. Luo  *****/
-    var.Cs .= 0.
+    var.Cs .= 0.0
     var.Tm .= 0.0
-    var.G .= 0.
-    
+    var.G .= 0.0
+
     var.Cs[1, kkk] = soilp.Cs[1]  # added
     var.Cs[2, kkk] = soilp.Cs[1]
     var.Tc_u[kkk] = Tcu           # added
@@ -386,16 +387,15 @@ function inter_prg_jl(
     var.G[2, kkk] = soilp.G[1]
 
     ## 二维数组`Ref`如何处理？
-    var.Ts0[kkk], var.Tm[1, kkk], var.Tsn0[kkk], var.Tsm0[kkk], 
-    var.Tsn1[kkk], var.Tsn2[kkk], var.G[1, kkk] =
+    var.G[1, kkk], var.Ts0[kkk], var.Tm[1, kkk], var.Tsm0[kkk],
+    var.Tsn0[kkk], var.Tsn1[kkk], var.Tsn2[kkk] =
       surface_temperature_jl(Ta, rh_air, Zsp[], Zp[],
         var.Cs[2, kkk], var.Cs[1, kkk], Gheat_g, d_soil[2], var.rho_snow[kkk], var.Tc_u[kkk],
         radiation_g, var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk],
         lambda[2], var.Xg_snow[kkk],
-        var.G[2, kkk],
-        
-        var.Ts0[kkk-1], var.Tm[2, kkk-1], var.Tm[1, kkk-1], var.Tsn0[kkk-1],
-        var.Tsm0[kkk-1], var.Tsn1[kkk-1], var.Tsn2[kkk-1])
+
+        var.G[2, kkk], var.Ts0[kkk-1], var.Tm[2, kkk-1], var.Tm[1, kkk-1], var.Tsm0[kkk-1], 
+        var.Tsn0[kkk-1], var.Tsn1[kkk-1], var.Tsn2[kkk-1])
 
     Update_temp_soil_c(soilp, var.Tm[1, kkk])
     # soilp.temp_soil_c[1] = var.Tm[1, kkk]
@@ -403,10 +403,10 @@ function inter_prg_jl(
     # /*****  Snow Pack Stage 3 module by X. Luo  *****/
     snowpack_stage3(Ta, var.Tsn0[kkk], var.Tsn0[kkk-1], var.rho_snow[kkk], Zsp, Zp, Ref(var.Wg_snow, kkk))
 
-    # /*****  Sensible heat flux module by X. Luo  *****/
-    sensible_heat(Tc_new, var.Ts0[kkk], Ta, rh_air,
-      Gh, Gheat_g, PAI,
-      Ref(var.Qhc_o, kkk), Ref(var.Qhc_u, kkk), Ref(var.Qhg, kkk))
+    # /*****  Sensible heat flux module by X. Luo  *****/    
+    var.Qhc_o[kkk], var.Qhc_u[kkk], var.Qhg[kkk] =
+      sensible_heat(Tc_new, var.Ts0[kkk], Ta, rh_air,
+        Gh, Gheat_g, PAI)
 
     # println("===========================")
     # println("kkk = $kkk")

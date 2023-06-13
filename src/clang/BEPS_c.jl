@@ -89,17 +89,6 @@ function Leaf_Temperature(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh
   Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
 end
 
-function sensible_heat(tempL::Leaf, temp_g::Cdouble, temp_air::Cdouble, rh_air::Cdouble,
-  Gheat::Leaf, Gheat_g::Cdouble, LAI::Leaf,
-  SH_o, SH_u, SH_g)
-
-  ccall((:sensible_heat, libbeps), Cvoid,
-    (Leaf, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Leaf,
-      Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    tempL, temp_g, temp_air, rh_air, Gheat, Gheat_g, LAI,
-    SH_o, SH_u, SH_g)
-end
-
 
 function latent_heat!(leleaf::Leaf, Gw::Leaf, VPD_air, slope, Tc_old::Leaf, temp_air, rho_a, Cp_ca, psychrometer)
   leleaf.o_sunlit = Gw.o_sunlit * (VPD_air + slope * (Tc_old.o_sunlit - temp_air)) * rho_a * Cp_ca / psychrometer
@@ -119,15 +108,6 @@ end
 
 # end of leaf struct
 
-function evaporation_soil(temp_air, temp_g, rh_air, netRad_g, Gheat_g, 
-  percent_snow_g::TypeRef, depth_water::TypeRef, depth_snow::TypeRef, mass_water_g::TypeRef, mass_snow_g::TypeRef,
-  density_snow, swc_g, porosity_g, 
-  evapo_soil::TypeRef, evapo_water_g::TypeRef, evapo_snow_g::TypeRef)
-
-  ccall((:evaporation_soil, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cdouble, Cdouble, Cdouble, 
-  Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), 
-  temp_air, temp_g, rh_air, netRad_g, Gheat_g, percent_snow_g, depth_water, depth_snow, mass_water_g, mass_snow_g, density_snow, swc_g, porosity_g, evapo_soil, evapo_water_g, evapo_snow_g)
-end
 
 function rainfall_stage1(temp_air, precipitation, mass_water_o_last, mass_water_u_last, lai_o, lai_u, clumping, mass_water_o, mass_water_u, percent_water_o, percent_water_u, precipitation_g)
   ccall((:rainfall_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), temp_air, precipitation, mass_water_o_last, mass_water_u_last, lai_o, lai_u, clumping, mass_water_o, mass_water_u, percent_water_o, percent_water_u, precipitation_g)

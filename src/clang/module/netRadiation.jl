@@ -41,7 +41,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   # calculate albedo of canopy in this step
   albedo_v_os::FT = albedo_v_o * (1.0 - percArea_snow_o) + albedo_snow_v * percArea_snow_o  # visible, overstory
   albedo_n_os::FT = albedo_n_o * (1.0 - percArea_snow_o) + albedo_snow_n * percArea_snow_o  # near infrared
-  albedo_v_us::FT = albedo_v_u * (1.0 - percArea_snow_u) + albedo_snow_v * percArea_snow_u  # , understory
+  albedo_v_us::FT = albedo_v_u * (1.0 - percArea_snow_u) + albedo_snow_v * percArea_snow_u  # understory
   albedo_n_us::FT = albedo_n_u * (1.0 - percArea_snow_u) + albedo_snow_n * percArea_snow_u
 
   albedo_o::FT = 0.5 * (albedo_v_os + albedo_n_os)

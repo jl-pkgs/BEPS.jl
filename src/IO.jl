@@ -11,10 +11,10 @@ function Base.sum(df::DataFrame)
 end
 
 
-import NaNStatistics: nanmaximum
+# import NaNStatistics: nanmaximum
 
 function Base.max(df::DataFrame)
-  vals = [nanmaximum(df[!, c]) for c in names(df)]
+  vals = [maximum(df[!, c]) for c in names(df)]
   keys = names(df)
   list(keys, vals)
 end

@@ -24,7 +24,7 @@ df_diff = abs.(df_jl .- df_c)
 df_diff_perc = abs.(df_jl .- df_c) ./ df_c .* 100
 # df_diff = abs.(df_ET_jl .- df_ET_c)
 # fwrite(df_diff, "a-3.csv")
-max(df_diff_perc)
+max(df_diff_perc) # SH, 1.5%的误差
 max(df_diff)
 ```
 

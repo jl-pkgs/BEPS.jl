@@ -22,4 +22,21 @@ r2 = photosynthesis_jl(temp_leaf_p, rad_leaf, e_air, g_lb_w, vc_opt, f_soilwater
 @test maximum(abs.(r1 .- r2)) <= 1e-10
 ```
 
-# 
+# `sensible_heat`
+
+```{julia}
+T_leaf = Leaf(20.0)
+T_ground = 15.0
+T_air = 22.0
+rh_air = 80.0
+
+Gheat = Leaf(100.)
+Gheat_g = 120.0
+lai = Leaf(2.0)
+
+r1 = sensible_heat(T_leaf, T_ground, T_air, rh_air,
+  Gheat, Gheat_g, lai)
+
+r2 = sensible_heat_jl(T_leaf, T_ground, T_air, rh_air,
+  Gheat, Gheat_g, lai)
+```

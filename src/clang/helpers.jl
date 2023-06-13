@@ -41,7 +41,7 @@ function meteo_pack_jl(Ta::FT, RH::FT)
   vpd = es - ea
 
   q = ea2q(ea)
-  cp = 1004.65 * (1 + 0.84 * q)
+  cp = cal_cp(q)
   
   slope = cal_slope(Ta) # slope of es
   psy = 0.066            # psychrometer γ, kPa/C, 

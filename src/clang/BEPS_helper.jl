@@ -1,21 +1,26 @@
 using DataFrames: DataFrame
 
 
-function fill_meteo!(meteo::ClimateData, d::DataFrame, k::Int=1)
-  meteo.Srad = d.rad[k]
-  meteo.temp = d.tem[k]
-  meteo.rain = d.pre[k] / 1000 # m to mm
-  meteo.wind = d.wind[k]
-  meteo.LR = -200.0 #  -200.0 means no measured long-wave radiation, the value will be calculated later
-
-  tem = meteo.temp
-  hum = d.hum[k]
-
+function hum2RH(hum::FT, tem::FT)::FT
   # Vapour pressure in mbar
-  es = 0.46 * hum * (tem + 273.16) / 100
-  esd = 6.1078 * exp((17.269 * tem) / (237.3 + tem))
-  meteo.rh = clamp(es / esd * 100, 0.0, 100.0) # relative humidity, %
-  nothing
+  ea = 0.46 * hum * (tem + 273.16) / 100
+  es = 6.1078 * exp((17.269 * tem) / (237.3 + tem))
+  clamp(ea / es * 100, 0.0, 100.0)
+end
+
+function fill_meteo!(meteo::ClimateData,
+  rad::FT, tem::FT, pre::FT, wind::FT, hum::FT)
+
+  meteo.Srad = rad
+  meteo.temp = tem
+  meteo.rain = pre / 1000 # m to mm
+  meteo.wind = wind
+  meteo.LR = -200.0 #  -200.0 means no measured long-wave radiation, the value will be 
+  meteo.rh = hum2RH(hum, tem)
+end
+
+function fill_meteo!(meteo::ClimateData, d::DataFrame, k::Int=1)
+  fill_meteo!(meteo, d.rad[k], d.tem[k], d.pre[k], d.wind[k], d.hum[k])
 end
 
 
@@ -52,16 +57,16 @@ end
 const TypeDF = Union{Results,ClimateData,OutputET}
 
 ## put struct into a data.frame
-function Base.getindex(x::T, i::Int) where {T<:TypeDF}
-  key = fieldnames(T)[i]
-  getfield(x, key)
+function Base.getindex(x::T, i::Int)::FT where {T<:TypeDF}
+  # key = fieldnames(T)[i]
+  getfield(x, i)
 end
 
-Base.length(x::T) where {T<:TypeDF} = length(fieldnames(T))
+Base.length(x::T) where {T<:TypeDF} = fieldcount(T)
 
 function fill_res!(df::DataFrame, Res::T, k::Int) where {T<:TypeDF}
   n = length(Res)
-  for i = 1:n
+  for i in 1:n
     df[k, i] = Res[i]
   end
   nothing

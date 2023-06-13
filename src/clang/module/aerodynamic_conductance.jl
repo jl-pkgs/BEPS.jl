@@ -117,11 +117,11 @@ function windProfile_factor(canopy_height_u, canopy_height_o, gamma, k=1.0)
   exp(-gamma * (1 - canopy_height_u * k / canopy_height_o))
 end
 
-function cal_Nu(u::FT, nu_lower::FT)
+function cal_Nu(u::FT, nu_lower::FT)::FT
   # lw::T = 0.3 # leaf characteristic width =0.3 for BS
   # sigma::T = 5 # shelter factor =5 for BS
   # Re = (ud * lw / sigma) / nu_lower
-  Re = (u * 0.1) / nu_lower # Reynold's number
-  Nu = 1.0 * Re^0.5 # Nusselt number
+  Re::FT = (u * 0.1) / nu_lower # Reynold's number
+  Nu::FT = 1.0 * Re^0.5 # Nusselt number
   Nu
 end
