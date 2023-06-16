@@ -86,7 +86,7 @@ function inter_prg_jl(
   # # parameters for Vcmax-Nitrogen calculations
   Kn = 0.3  #0.713/2.4
   G_theta = 0.5
-  psychrometer = 0.066
+  gamma = 0.066
 
   # double K,Vcmax0,Vcmax_sunlit,Vcmax_shaded,expr1,expr2,expr3;
   # double slope_Vcmax_N, leaf_N,Jmax_sunlit,Jmax_shaded;
@@ -260,9 +260,6 @@ function inter_prg_jl(
       num = num + 1
 
       # /***** Aerodynamic_conductance module by G.Mo  *****/
-      # rm, G_o_a, G_o_b, G_u_a, G_u_b, ra_g = aerodynamic_conductance_jl(canopy_height_o::T, canopy_height_u::T, 
-      # zz::T, clumping::T,
-      # temp_air::T, wind_sp::T, SH_o_p::T, lai_o::T)
       ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
         aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
           lai_o + stem_o, lai_u + stem_u)
@@ -290,7 +287,7 @@ function inter_prg_jl(
       # /*****  Photosynthesis module by B. Chen  *****/
       # conductance for water
       update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u)
-      latent_heat!(leleaf, Gw, VPD_air, slope, Tc_old, Ta, rho_a, Cp_ca, psychrometer)
+      latent_heat!(leleaf, Gw, VPD_air, slope, Tc_old, Ta, rho_a, Cp_ca, gamma)
 
       if (CosZs > 0)
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
@@ -302,7 +299,7 @@ function inter_prg_jl(
         init_leaf_dbl(Ac, 0.0)
         init_leaf_dbl(Ci_new, CO2_air * 0.7)
 
-        init_leaf_dbl(Cs_new, CO2_air)               # not used
+        init_leaf_dbl(Cs_new, CO2_air)              # not used
         init_leaf_dbl(Cc_new, CO2_air * 0.7 * 0.8)  # not used
       end
 
@@ -314,7 +311,7 @@ function inter_prg_jl(
       update_Gc!(Gc, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
 
       # /***** Leaf temperatures module by L. He  *****/
-      Leaf_Temperatures(Ta, slope, psychrometer, VPD_air, Cp_ca,
+      Leaf_Temperatures(Ta, slope, gamma, VPD_air, Cp_ca,
         Gw, Gww, Gh,
         var.Xcs_o[kkk], var.Xcl_o[kkk], var.Xcs_u[kkk], var.Xcl_u[kkk],
         Rn, Tc_new)
@@ -340,10 +337,7 @@ function inter_prg_jl(
     multiply!(GPP, Ac, LAI)
 
     # /*****  Transpiration module by X. Luo  *****/
-    transpiration(
-      Tc_new, Ta, rh_air,
-      Gw, LAI,
-      Ref(var.Trans_o, kkk), Ref(var.Trans_u, kkk))
+    var.Trans_o[kkk], var.Trans_u[kkk] = transpiration_jl(Tc_new, Ta, rh_air, Gw, LAI)
 
     # /*****  Evaporation and sublimation from canopy by X. Luo  *****/
     evaporation_canopy(
@@ -405,7 +399,7 @@ function inter_prg_jl(
 
     # /*****  Sensible heat flux module by X. Luo  *****/    
     var.Qhc_o[kkk], var.Qhc_u[kkk], var.Qhg[kkk] =
-      sensible_heat(Tc_new, var.Ts0[kkk], Ta, rh_air,
+      sensible_heat_jl(Tc_new, var.Ts0[kkk], Ta, rh_air,
         Gh, Gheat_g, PAI)
 
     # println("===========================")
@@ -429,9 +423,6 @@ function inter_prg_jl(
     Zp[] = soilp.Zp
   end  # The end of kkk loop
 
-  # if debug
-  #   @show Gs_new, Ac, Ci_new
-  # end
   kkk = kloop + 1# the last step
   var.Tsn1[kkk] = clamp(var.Tsn1[kkk], -40.0, 40.0)
   var.Tsn2[kkk] = clamp(var.Tsn2[kkk], -40.0, 40.0)
@@ -466,4 +457,4 @@ function inter_prg_jl(
   mid_res.GPP = (GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded) * 12 * step * 0.000001
   # return
   nothing
-end
+end 

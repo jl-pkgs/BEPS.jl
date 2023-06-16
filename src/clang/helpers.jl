@@ -38,16 +38,16 @@ function meteo_pack_jl(Ta::FT, RH::FT)
 
   es = cal_es(Ta)
   ea = es * RH / 100
-  vpd = es - ea
+  VPD = es - ea
 
   q = ea2q(ea)
   cp = cal_cp(q)
   
   slope = cal_slope(Ta) # slope of es
-  psy = 0.066            # psychrometer γ, kPa/C, 
+  gamma = 0.066            # psychrometer γ, kPa/C, 
   # lambda = cal_lambda(Ta) # J kg-1
   # psy = cp * 101.13 / (0.622 * lambda)
-  (; rho_a, cp, vpd, slope, psy, es, ea, q)
+  (; rho_a, cp, VPD, slope, gamma, es, ea, q)
 end
 
 

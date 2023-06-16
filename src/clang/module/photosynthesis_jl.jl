@@ -1,4 +1,4 @@
-function photosynthesis_jl(temp_leaf_p::Cdouble, Rsn_leaf::Cdouble, e_air::Cdouble, 
+@fastmath function photosynthesis_jl(temp_leaf_p::Cdouble, Rsn_leaf::Cdouble, e_air::Cdouble, 
   g_lb_w::Cdouble, vc_opt::Cdouble,
   f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble, 
   cii::Cdouble,
@@ -262,7 +262,7 @@ end
 
 
 
-function SFC_VPD(temp_leaf_K::Float64, leleafpt::Float64,
+@fastmath function SFC_VPD(temp_leaf_K::Float64, leleafpt::Float64,
   fact_latent::Float64, bound_vapor::Float64, rhova_kg::Float64)::Float64
 
   es_leaf = ES(temp_leaf_K)
@@ -273,7 +273,7 @@ function SFC_VPD(temp_leaf_K::Float64, leleafpt::Float64,
   return rhum_leaf
 end
 
-function TEMP_FUNC(rate::Float64, eact::Float64, tprime::Float64, tref::Float64, t_lk::Float64)::Float64
+@fastmath function TEMP_FUNC(rate::Float64, eact::Float64, tprime::Float64, tref::Float64, t_lk::Float64)::Float64
   rate * exp(tprime * eact / (tref * rugc * t_lk))
 end
 

@@ -1,3 +1,14 @@
+# 需要确定的参数
+
+- `landcover` : 
+- `soil_type` : 
+- `clumping`  : 
+
+> 这两个是初始变量
+
+- `soilwater` : 
+- `snowdepth` : 
+
 ```{julia}
 using BEPS
 using BEPS.beps_c
@@ -30,8 +41,8 @@ max(df_diff)
 
 ```{julia}
 # using ProfileView
-@time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
-@profview df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+# @time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+# @profview df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 @profview_allocs df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 ```
 

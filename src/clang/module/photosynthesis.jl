@@ -21,7 +21,7 @@ end
 
 
 function photosynthesis(Tc_old::Leaf, R::Leaf, Ci_old::Leaf, leleaf::Leaf,
-  temp_air::Cdouble, ea::Cdouble, f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble,
+  Ta::Cdouble, ea::Cdouble, f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble,
   Gb_o::Cdouble, Gb_u::Cdouble, Vcmax_sunlit::Cdouble, Vcmax_shaded::Cdouble,
   # output
   Gs_new::Leaf, Ac::Leaf, Ci_new::Leaf; version = "c")
@@ -35,20 +35,20 @@ function photosynthesis(Tc_old::Leaf, R::Leaf, Ci_old::Leaf, leleaf::Leaf,
   Gs_new.o_sunlit, Ac.o_sunlit, Ci_new.o_sunlit =
     fun(Tc_old.o_sunlit, R.o_sunlit, ea, Gb_o, Vcmax_sunlit, f_soilwater, b_h2o, m_h2o,
       Ci_old.o_sunlit,
-      temp_air, leleaf.o_sunlit)
+      Ta, leleaf.o_sunlit)
 
   Gs_new.o_shaded, Ac.o_shaded, Ci_new.o_shaded =
     fun(Tc_old.o_shaded, R.o_shaded, ea, Gb_o, Vcmax_shaded, f_soilwater, b_h2o, m_h2o,
       Ci_old.o_shaded,
-      temp_air, leleaf.o_shaded)
+      Ta, leleaf.o_shaded)
 
   Gs_new.u_sunlit, Ac.u_sunlit, Ci_new.u_sunlit =
     fun(Tc_old.u_sunlit, R.u_sunlit, ea, Gb_u, Vcmax_sunlit, f_soilwater, b_h2o, m_h2o,
       Ci_old.u_sunlit,
-      temp_air, leleaf.u_sunlit)
+      Ta, leleaf.u_sunlit)
 
   Gs_new.u_shaded, Ac.u_shaded, Ci_new.u_shaded =
     fun(Tc_old.u_shaded, R.u_shaded, ea, Gb_u, Vcmax_shaded, f_soilwater, b_h2o, m_h2o,
       Ci_old.u_shaded,
-      temp_air, leleaf.u_shaded)
+      Ta, leleaf.u_shaded)
 end
