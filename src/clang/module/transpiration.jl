@@ -12,7 +12,7 @@ end
 
 function transpiration_jl(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, lai::Leaf)
   T = Leaf() # transpiration
-  
+
   met = meteo_pack_jl(Ta, RH)
   ρₐ = rho_a
   cp = met.cp     # specific heat of moist air above canopy
@@ -20,7 +20,8 @@ function transpiration_jl(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, 
   Δ = met.slope
   γ = met.gamma  # psychrometer constant
   λ = cal_lambda(Ta)
-
+  
+  # Luo, 2018, JGR-Biogeosciences
   T.o_sunlit = (VPD + Δ * (T_leaf.o_sunlit - Ta)) * ρₐ * cp * Gtrans.o_sunlit / γ
   T.o_shaded = (VPD + Δ * (T_leaf.o_shaded - Ta)) * ρₐ * cp * Gtrans.o_shaded / γ
   T.u_sunlit = (VPD + Δ * (T_leaf.u_sunlit - Ta)) * ρₐ * cp * Gtrans.u_sunlit / γ

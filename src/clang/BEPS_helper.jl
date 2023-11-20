@@ -8,6 +8,13 @@ function hum2RH(hum::FT, tem::FT)::FT
   clamp(ea / es * 100, 0.0, 100.0)
 end
 
+"""
+Srad: W m-2
+temp: degC
+rain: m
+wind: m/s
+hum: specific humidity, q
+"""
 function fill_meteo!(meteo::ClimateData,
   rad::FT, tem::FT, pre::FT, wind::FT, hum::FT)
 

@@ -1,6 +1,6 @@
-@fastmath function photosynthesis_jl(temp_leaf_p::Cdouble, Rsn_leaf::Cdouble, e_air::Cdouble, 
+@fastmath function photosynthesis_jl(temp_leaf_p::Cdouble, Rsn_leaf::Cdouble, e_air::Cdouble,
   g_lb_w::Cdouble, vc_opt::Cdouble,
-  f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble, 
+  f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble,
   cii::Cdouble,
   T_leaf::Cdouble, LH_leaf::Cdouble)
 
@@ -8,53 +8,53 @@
   aphoto::Cdouble = 0.0
   ci::Cdouble = 0.0
 
-  g_lb_c::Cdouble = 0.              # leaf laminar boundary layer condunctance to CO2 (mol m-2 s-1)
-  rh_leaf::Cdouble = 0.             # relative humidity at leaf surface (0-1)
-  temp_leaf_K::Cdouble = 0.         # leaf temperature (K)
-  gs_co2_mole::Cdouble = 0.         # stomatal conductance to CO2 (mol m-2 s-1)
-  gs_h2o_mole::Cdouble = 0.         # stomatal conductance to h2o (mol m-2 s-1)
-  bc::Cdouble = 0.                  # temporary variable
-  cs::Cdouble = 0.                  # CO2 concentration at leaf surface (ppm)
-  b_co2::Cdouble = 0.      # the intercept term in BWB model (mol CO2 m-2 s-1): b_h2o/1.6
-  m_co2::Cdouble = 0.      # the slope in BWB model: m_h2o/1.6
-  gammac::Cdouble = 0.     # CO2 compensation point (ppm)
-  jmopt::Cdouble = 0.      # the maximum potential electron transport rate at 25 deg C (umol m-2 s-1)
-  jmax::Cdouble = 0.       # the maximum potential electron transport rate (umol m-2 s-1)
-  vcmax::Cdouble = 0.      # the maximum velocities of carboxylation of Rubisco (umol m-2 s-1)
-  km_co2::Cdouble = 0.     # Michaelis-Menten constant for CO2 (µmol mol-1)
-  km_o2::Cdouble = 0.      # Michaelis-Menten constant for O2 (mmol mol-1)
-  tau::Cdouble = 0.        # the specifity of Rubisco for CO2 compared with O2
-  resp_ld::Cdouble = 0.    # leaf dark respiration (umol m-2 s-1)
-  resp_ld25::Cdouble = 0.  # leaf dark respiration at 25 deg C (umol m-2 s-1)
-  j_photon::Cdouble = 0.  # the flux of electrons through the thylakoid membrane (umol m-2 s-1)
-  alpha_ps::Cdouble = 0.
-  beta_ps::Cdouble = 0.
-  gamma_ps::Cdouble = 0.
-  theta_ps::Cdouble = 0.
-  denom::Cdouble = 0.
-  p_cubic::Cdouble = 0.
-  q_cubic::Cdouble = 0.
-  r_cubic::Cdouble = 0.
-  Qroot::Cdouble = 0.
-  Rroot::Cdouble = 0.
+  g_lb_c::Cdouble = 0.0              # leaf laminar boundary layer condunctance to CO2 (mol m-2 s-1)
+  rh_leaf::Cdouble = 0.0             # relative humidity at leaf surface (0-1)
+  temp_leaf_K::Cdouble = 0.0         # leaf temperature (K)
+  gs_co2_mole::Cdouble = 0.0         # stomatal conductance to CO2 (mol m-2 s-1)
+  gs_h2o_mole::Cdouble = 0.0         # stomatal conductance to h2o (mol m-2 s-1)
+  bc::Cdouble = 0.0                  # temporary variable
+  cs::Cdouble = 0.0                  # CO2 concentration at leaf surface (ppm)
+  b_co2::Cdouble = 0.0      # the intercept term in BWB model (mol CO2 m-2 s-1): b_h2o/1.6
+  m_co2::Cdouble = 0.0      # the slope in BWB model: m_h2o/1.6
+  gammac::Cdouble = 0.0     # CO2 compensation point (ppm)
+  jmopt::Cdouble = 0.0      # the maximum potential electron transport rate at 25 deg C (umol m-2 s-1)
+  jmax::Cdouble = 0.0       # the maximum potential electron transport rate (umol m-2 s-1)
+  vcmax::Cdouble = 0.0      # the maximum velocities of carboxylation of Rubisco (umol m-2 s-1)
+  km_co2::Cdouble = 0.0     # Michaelis-Menten constant for CO2 (µmol mol-1)
+  km_o2::Cdouble = 0.0      # Michaelis-Menten constant for O2 (mmol mol-1)
+  tau::Cdouble = 0.0        # the specifity of Rubisco for CO2 compared with O2
+  resp_ld::Cdouble = 0.0    # leaf dark respiration (umol m-2 s-1)
+  resp_ld25::Cdouble = 0.0  # leaf dark respiration at 25 deg C (umol m-2 s-1)
+  j_photon::Cdouble = 0.0  # the flux of electrons through the thylakoid membrane (umol m-2 s-1)
+  alpha_ps::Cdouble = 0.0
+  beta_ps::Cdouble = 0.0
+  gamma_ps::Cdouble = 0.0
+  theta_ps::Cdouble = 0.0
+  denom::Cdouble = 0.0
+  p_cubic::Cdouble = 0.0
+  q_cubic::Cdouble = 0.0
+  r_cubic::Cdouble = 0.0
+  Qroot::Cdouble = 0.0
+  Rroot::Cdouble = 0.0
 
   # double root1, root2, root3;
   # double root_min = 0, root_max = 0, root_mid = 0;
-  ang_L::Cdouble = 0.
-  j_sucrose::Cdouble = 0.        # net photosynthesis rate limited by sucrose synthesis (umol m-2 s-1)
+  ang_L::Cdouble = 0.0
+  j_sucrose::Cdouble = 0.0        # net photosynthesis rate limited by sucrose synthesis (umol m-2 s-1)
   # double wc, wj, psguess;  # gross photosynthesis rate limited by light (umol m-2 s-1)
   # double Aquad, Bquad, Cquad;
   # double b_ps, a_ps, e_ps, d_ps;
-  product::Cdouble = 0.
-  ps_1::Cdouble = 0.
-  delta_1::Cdouble = 0.
-  r3q::Cdouble = 0.
-  tprime25::Cdouble = 0.
+  product::Cdouble = 0.0
+  ps_1::Cdouble = 0.0
+  delta_1::Cdouble = 0.0
+  r3q::Cdouble = 0.0
+  tprime25::Cdouble = 0.0
 
   ca::Cdouble = CO2_air                    # atmospheric co2 concentration (ppm)
   iphoton::Cdouble = 4.55 * 0.5 * Rsn_leaf # incident photosynthetic photon flux density (PPFD) umol m-2 s-1
   if (2 * iphoton < 1)
-    iphoton = 0.
+    iphoton = 0.0
   end
 
   temp_leaf_K = T_leaf + 273.13
@@ -235,14 +235,14 @@
   Cquad = a_ps * ps_1 - a_ps * d_ps * denom - e_ps * resp_ld * ps_1 - resp_ld * b_ps * denom
 
   product = Bquad * Bquad - 4.0 * Aquad * Cquad
-  if (product >= 0)
+  if (product >= 0.0)
     #	*aphoto = (-Bquad + sqrt(product)) / (2.0 * Aquad);
     aphoto = (-Bquad - sqrt(product)) / (2.0 * Aquad)
   end
 
 
   @label OUTDAT
-  aphoto = max(0, aphoto)
+  aphoto = max(0.0, aphoto)
 
   cs = ca - aphoto / g_lb_c
 

@@ -1,0 +1,66 @@
+# clumping index
+
+```{julia}
+using GriddingMachine
+using GriddingMachine.Collector;
+using GriddingMachine.Collector: lai_collection;
+using GriddingMachine.Requestor;
+
+# clumping_index_collection()
+f = query_collection(Collector.clumping_index_collection(), "240X_1Y_V1");
+
+# "CI_240X_1Y_V1"
+l = request_LUT("CI_240X_1Y_V1", 30, 120);
+gpp_mpi, _ = request_LUT("GPP_MPI_RS_2X_8D_2019_V1", 40.0329, -105.5464);
+
+# query_collection(soil_color_collection())
+# data_path_1 = query_collection(Collector.vcmax_collection(), "2X_1Y_V2");
+
+# p1 = query_collection(Collector.soil_texture_collection());
+# vars = ["SWCR_120X_1Y_V1", "SWCS_120X_1Y_V1", "VGA_120X_1Y_V1", 
+#    "VGN_120X_1Y_V1", "KSAT_100X_1Y_V2"]
+# for v in vars
+#   p2 = query_collection(Collector.soil_hydraulics_collection(), v);
+# end
+
+# p3 = query_collection(Collector.soil_color_collection());
+# data_path_1 = query_collection(lai_collection());
+# data_path_1 = query_collection(lai_collection(), "MODIS_20X_8D_2020_V1");
+# data_path_3 = query_collection("SWCR_120X_1Y_V1");
+```
+
+- `biomass_collection`
+- `canopy_height_collection`
+- `clumping_index_collection`
+- `elevation_collection`
+- `gpp_collection`
+- `lai_collection`
+- `land_mask_collection`
+- `leaf_nitrogen_collection`
+- `leaf_phosphorus_collection`
+- `pft_collection`
+- `sif_collection`
+- `sil_collection`
+- `sla_collection`
+- `soil_color_collection`
+- `soil_hydraulics_collection`
+- `surface_area_collection`
+- `tree_density_collection`
+- `vcmax_collection`
+- `wood_density_collection`
+
+## 获取站点数据
+
+> GriddingMachine: 存在bug
+
+```{julia}
+using GriddingMachine.Requestor;
+# load FLUXCOM and VPM GPPs and TROPOMI DC SIF
+
+gpp_mpi, _ = request_LUT("GPP_MPI_RS_2X_8D_2019_V1",40.0329,-105.5464);
+
+gpP_vpm, _ = request_LUT("GPP_VPM_12X_8D_2019_V2",40.0329,-105.5464);
+sif_dc, _ = request_LUT("SIF_TR0P0MI_740DC_12X_8D_2019_V1",40.0329,-105.5464);
+```
+
+> 上传到GEE是一个更好的选择
