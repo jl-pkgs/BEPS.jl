@@ -1,0 +1,14 @@
+# 采用GEE准备输入数据
+
+
+```{julia}
+using EarthEngine
+# Initialize()
+
+dem = EE.Image("USGS/SRTMGL1_003")
+xy = Point(86.9250, 27.9881)
+
+value = get(first(sample(dem, xy, 30)), "elevation")
+println(getInfo(value))
+# should print: 8729
+```
