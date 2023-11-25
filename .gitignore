@@ -14,7 +14,7 @@ deps/BEPC.c
 */temp
 
 *.log
-*debug*
+# *debug*
 *.c
 
 .vdoc.jl

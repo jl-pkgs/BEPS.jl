@@ -15,7 +15,24 @@
 - 9: `sandy clay`
 - 10: `silty clay`
 - 11: `clay`
-- default:
+- default (12): silt
+
+**表1. USDA土壤类型分类**
+
+| Value | Color Value | Description | Longname        | BEPS |
+| :---- | :---------- | :---------- | --------------- | ---- |
+| 1     | #d5c36b     | Cl          | clay            | 11   |
+| 2     | #b96947     | SiCl        | silty clay      | 10   |
+| 3     | #9d3706     | SaCl        | sandy clay      | 9    |
+| 4     | #ae868f     | ClLo        | clay loam       | 7    |
+| 5     | #f86714     | SiClLo      | silty clay loam | 8    |
+| 6     | #46d143     | SaClLo      | sandy clay loam | 6    |
+| 7     | #368f20     | Lo          | loam            | 4    |
+| 8     | #3e5a14     | SiLo        | silt loam       | 5    |
+| 9     | #ffd557     | SaLo        | sandy loam      | 3    |
+| 10    | #fff72e     | Si          | silt            | 12   |
+| 11    | #ff5a9d     | LoSa        | loamy sand      | 2    |
+| 12    | #ff005b     | Sa          | sand            | 1    |
 
 
 ## 1.2. 方案2：提供中间变量数据

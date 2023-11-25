@@ -13,7 +13,7 @@ ee.Initialize()
 
 # %%
 # Define the function to extract points from an image (internal)
-def image_extract_points(img, points, proj=None):
+def image_extract_points(img, points, proj=None, set_date=False):
   if proj == None: proj = img.projection().getInfo()
   options = {
       'collection': points,
@@ -22,10 +22,14 @@ def image_extract_points(img, points, proj=None):
       'crsTransform': proj['transform'],
       'tileScale': 16
   }
-  return img.reduceRegions(**options).map(
-      lambda feature: ee.Feature(None).copyProperties(feature)
-          .set('date', ee.Date(img.get('system:time_start')).format('yyyy-MM-dd'))
-  )
+  date = ee.Date(img.get('system:time_start')).format('yyyy-MM-dd')
+
+  def tidy_props(f):
+    f = ee.Feature(None).copyProperties(f)
+    if set_date: f = f.set('date', date)
+    return f
+  
+  return img.reduceRegions(**options).map(tidy_props)
 
 def shp2df(fc, outfile=None):
   data = fc.getInfo().get('features')
@@ -39,12 +43,15 @@ def shp2df(fc, outfile=None):
 points = ee.FeatureCollection("users/kongdd/shp/flux-212")
 points = points.select(["site", "IGBP"])
 
-img = ee.Image("OpenLandMap/SOL/SOL_SAND-WFRACTION_USDA-3A1A1A_M/v02")
+img = "OpenLandMap/SOL/SOL_SAND-WFRACTION_USDA-3A1A1A_M/v02"
+img = "users/kongdd/BEPS/CI_240X_1Y_V1"
+img = ee.Image(img)
+
 proj = img.projection().getInfo()
 
-# import geemap
-r = image_extract_points(img, points, proj)
-df = shp2df(r, "temp.csv")
+r = image_extract_points(img, points)
+r.getInfo()
+df = shp2df(r, "flux212_ClampingIndex.csv")
 df
 
 # %%
@@ -58,7 +65,7 @@ def export_image(img, task, prefix=""):
         image=img,
         description=task,
         folder="gee",
-        crs='EPSG:4326',
+        crs=proj['crs'],
         crsTransform=proj['transform'],
         maxPixels=1e13,
         fileNamePrefix=task,
@@ -68,7 +75,7 @@ def export_image(img, task, prefix=""):
 # Define the function to extract points from an image collection
 def col_extract_points(col, task, points):
     proj = col.first().select(0).projection().getInfo()
-    res = col.map(lambda img: image_extract_points(img, points, proj)).flatten()
+    res = col.map(lambda img: image_extract_points(img, points, proj, set_date=True)).flatten()
     
     ee.batch.Export.table.toDrive(
         collection=res,
