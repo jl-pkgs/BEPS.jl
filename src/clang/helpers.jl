@@ -1,9 +1,13 @@
 # pow = ^
 pow(x::FT, y)::FT = x^y
 
-function cal_Rln(emiss::FT, T::FT)
+function blackbody(T::FT)
   sb_constant = 5.67 / 100000000    # stephen-boltzman constant
-  emiss * sb_constant * (T + 273.15)^4
+  sb_constant * (T + 273.15)^4
+end
+
+function cal_Rln(emiss::FT, T::FT)
+  emiss * blackbody(T)
 end
 
 # kPa deg-1
@@ -81,4 +85,4 @@ function update_Gc!(Gc::Leaf, Gs_new::LeafRef, Ga_o, Ga_u, Gb_o, Gb_u)
 end
 
 
-export meteo_pack_jl, cal_slope, cal_es
+export meteo_pack_jl, cal_slope, cal_es, blackbody

@@ -1,9 +1,9 @@
 function netRadiation_c(shortRad_global, CosZs,
   temp_o, temp_u, temp_g,
-  lai_o, lai_u, lai_os, lai_us, lai::Leaf, clumping, temp_air, rh,
-  albedo_snow_v, albedo_snow_n,
+  lai_o, lai_u, lai_os, lai_us, lai::Leaf, Ω, temp_air, rh,
+  α_snow_v, α_snow_n,
   percentArea_snow_o, percentArea_snow_u, percent_snow_g,
-  albedo_v_o, albedo_n_o, albedo_v_u, albedo_n_u, albedo_v_g, albedo_n_g,
+  α_v_o, α_n_o, α_v_u, α_n_u, α_v_g, α_n_g,
   # netRad_o::TypeRef, netRad_u::TypeRef, netRad_g::TypeRef,
   netRadLeaf::Leaf, netShortRadLeaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
 
@@ -14,8 +14,8 @@ function netRadiation_c(shortRad_global, CosZs,
   ccall((:netRadiation, libbeps), Cvoid,
     (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Leaf}, Ptr{Leaf}),
-    shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai, clumping, temp_air, rh, albedo_snow_v, albedo_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g,
-    albedo_v_o, albedo_n_o, albedo_v_u, albedo_n_u, albedo_v_g, albedo_n_g,
+    shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai, Ω, temp_air, rh, α_snow_v, α_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g,
+    α_v_o, α_n_o, α_v_u, α_n_u, α_v_g, α_n_g,
     netRad_o, netRad_u, netRad_g, Ref(netRadLeaf), Ref(netShortRadLeaf))
 
   netRad_o[], netRad_u[], netRad_g[]
@@ -27,30 +27,30 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   temp_o::FT, temp_u::FT, temp_g::FT,
   lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
   lai::Leaf,
-  clumping::FT, temp_air::FT, rh::FT,
-  albedo_snow_v::FT, albedo_snow_n::FT,
+  Ω::FT, temp_air::FT, rh::FT,
+  α_snow_v::FT, α_snow_n::FT,
   percArea_snow_o::FT, percArea_snow_u::FT, perc_snow_g::FT,
-  albedo_v_o::FT, albedo_n_o::FT, albedo_v_u::FT, albedo_n_u::FT,
-  albedo_v_g::FT, albedo_n_g::FT,
+  α_v_o::FT, α_n_o::FT, α_v_u::FT, α_n_u::FT,
+  α_v_g::FT, α_n_g::FT,
   # Rn_o::FT, Rn_u::FT, Rn_g::FT,
   Rn_Leaf::Leaf,
   Rns_Leaf::Leaf,
   Rnl_Leaf::Leaf, Ra::Radiation)
   # Rnl_Leaf::Leaf = Leaf()
 
-  # calculate albedo of canopy in this step
-  albedo_v_os::FT = albedo_v_o * (1.0 - percArea_snow_o) + albedo_snow_v * percArea_snow_o  # visible, overstory
-  albedo_n_os::FT = albedo_n_o * (1.0 - percArea_snow_o) + albedo_snow_n * percArea_snow_o  # near infrared
-  albedo_v_us::FT = albedo_v_u * (1.0 - percArea_snow_u) + albedo_snow_v * percArea_snow_u  # understory
-  albedo_n_us::FT = albedo_n_u * (1.0 - percArea_snow_u) + albedo_snow_n * percArea_snow_u
+  # calculate α of canopy in this step
+  α_v_os::FT = α_v_o * (1.0 - percArea_snow_o) + α_snow_v * percArea_snow_o  # visible, overstory
+  α_n_os::FT = α_n_o * (1.0 - percArea_snow_o) + α_snow_n * percArea_snow_o  # near infrared
+  α_v_us::FT = α_v_u * (1.0 - percArea_snow_u) + α_snow_v * percArea_snow_u  # understory
+  α_n_us::FT = α_n_u * (1.0 - percArea_snow_u) + α_snow_n * percArea_snow_u
 
-  albedo_o::FT = 0.5 * (albedo_v_os + albedo_n_os)
-  albedo_u::FT = 0.5 * (albedo_v_us + albedo_n_us)
+  α_o::FT = 0.5 * (α_v_os + α_n_os)
+  α_u::FT = 0.5 * (α_v_us + α_n_us)
 
-  # calculate albedo of ground in this step
-  albedo_v_gs::FT = albedo_v_g * (1.0 - perc_snow_g) + albedo_snow_v * perc_snow_g
-  albedo_n_gs::FT = albedo_n_g * (1.0 - perc_snow_g) + albedo_snow_n * perc_snow_g
-  albedo_g::FT = 0.5 * (albedo_v_gs + albedo_n_gs)
+  # calculate α of ground in this step
+  α_v_gs::FT = α_v_g * (1.0 - perc_snow_g) + α_snow_v * perc_snow_g
+  α_n_gs::FT = α_n_g * (1.0 - perc_snow_g) + α_snow_n * perc_snow_g
+  α_g::FT = 0.5 * (α_v_gs + α_n_gs)
 
   # separate global solar radiation into direct and diffuse one
   if (CosZs < 0.001)  # solar zenith angle small, all diffuse radiation
@@ -70,33 +70,34 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Ra.Rs_dir = Rs_global - Ra.Rs_df  # Luo2018, A3
 
   # fraction at each layer of canopy, direct and diffuse. use Leaf only lai here
-  gap_o_dir::FT = exp(-0.5 * clumping * lai_o / CosZs)
-  gap_u_dir::FT = exp(-0.5 * clumping * lai_u / CosZs)
+  
+  τ_o_dir::FT = exp(-0.5 * Ω * lai_o / CosZs)
+  τ_u_dir::FT = exp(-0.5 * Ω * lai_u / CosZs)
 
   # indicators to describe leaf distribution angles in canopy. slightly related with LAI
   cosQ_o::FT = 0.537 + 0.025 * lai_o  # Luo2018, A10, a representative zenith angle for diffuse radiation transmission
   cosQ_u::FT = 0.537 + 0.025 * lai_u
 
-  gap_o_df::FT = exp(-0.5 * clumping * lai_o / cosQ_o)
-  gap_os_df::FT = exp(-0.5 * clumping * lai_os / cosQ_o)  # considering stem
+  τ_o_df::FT = exp(-0.5 * Ω * lai_o / cosQ_o)
+  τ_os_df::FT = exp(-0.5 * Ω * lai_os / cosQ_o)  # considering stem
 
-  gap_u_df::FT = exp(-0.5 * clumping * lai_u / cosQ_u)
-  gap_us_df::FT = exp(-0.5 * clumping * lai_us / cosQ_u)
+  τ_u_df::FT = exp(-0.5 * Ω * lai_u / cosQ_u)
+  τ_us_df::FT = exp(-0.5 * Ω * lai_us / cosQ_u)
 
-  # emissivity of each part
+  # ϵivity of each part
   ea = cal_ea(temp_air, rh)
-  emiss_air = 1.0 - exp(-(pow(ea * 10.0, (temp_air + 273.15) / 1200.0)))
-  emiss_air = clamp(emiss_air, 0.7, 1.0)
+  ϵ_air = 1.0 - exp(-(pow(ea * 10.0, (temp_air + 273.15) / 1200.0)))
+  ϵ_air = clamp(ϵ_air, 0.7, 1.0)
 
-  emiss_o = 0.98
-  emiss_u = 0.98
-  emiss_g = 0.96
+  ϵ_o = 0.98
+  ϵ_u = 0.98
+  ϵ_g = 0.96
 
   if Rs_global > zero && CosZs > zero
     # net short direct radiation on canopy and ground
-    Ra.Rns_o_dir = Ra.Rs_dir * ((1.0 - albedo_o) - (1.0 - albedo_u) * gap_o_dir)  # dir into dif_under
-    Ra.Rns_u_dir = Ra.Rs_dir * gap_o_dir * ((1.0 - albedo_u) - (1.0 - albedo_g) * gap_u_dir)
-    Ra.Rns_g_dir = Ra.Rs_dir * gap_o_dir * gap_u_dir * (1.0 - albedo_g)
+    Ra.Rns_o_dir = Ra.Rs_dir * ((1.0 - α_o) - (1.0 - α_u) * τ_o_dir)  # dir into dif_under
+    Ra.Rns_u_dir = Ra.Rs_dir * τ_o_dir * ((1.0 - α_u) - (1.0 - α_g) * τ_u_dir)
+    Ra.Rns_g_dir = Ra.Rs_dir * τ_o_dir * τ_u_dir * (1.0 - α_g)
   else
     Ra.Rns_o_dir = 0.0
     Ra.Rns_u_dir = 0.0
@@ -105,11 +106,11 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
 
   if Rs_global > zero && CosZs > zero
     # net short diffuse radiation on canopy and ground
-    Ra.Rns_o_df = Ra.Rs_df * ((1.0 - albedo_o) - (1.0 - albedo_u) * gap_o_df) +
-               0.21 * clumping * Ra.Rs_dir * (1.1 - 0.1 * lai_o) * exp(-CosZs)  # A8
-    Ra.Rns_u_df = Ra.Rs_df * gap_o_df * ((1.0 - albedo_u) - (1.0 - albedo_g) * gap_u_df) +
-               0.21 * clumping * Ra.Rs_dir * gap_o_dir * (1.1 - 0.1 * lai_u) * exp(-CosZs)  # A9
-    Ra.Rns_g_df = Ra.Rs_df * gap_o_df * gap_u_df * (1.0 - albedo_g)
+    Ra.Rns_o_df = Ra.Rs_df * ((1.0 - α_o) - (1.0 - α_u) * τ_o_df) +
+               0.21 * Ω * Ra.Rs_dir * (1.1 - 0.1 * lai_o) * exp(-CosZs)  # A8
+    Ra.Rns_u_df = Ra.Rs_df * τ_o_df * ((1.0 - α_u) - (1.0 - α_g) * τ_u_df) +
+               0.21 * Ω * Ra.Rs_dir * τ_o_dir * (1.1 - 0.1 * lai_u) * exp(-CosZs)  # A9
+    Ra.Rns_g_df = Ra.Rs_df * τ_o_df * τ_u_df * (1.0 - α_g)
   else
     Ra.Rns_o_df = 0.0
     Ra.Rns_u_df = 0.0
@@ -122,21 +123,21 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Rns_g = Ra.Rns_g_dir + Ra.Rns_g_df
 
   # 计算植被和地面的净长波辐射
-  Rl_air = cal_Rln(emiss_air, temp_air)
-  Rl_o = cal_Rln(emiss_o, temp_o)
-  Rl_u = cal_Rln(emiss_u, temp_u)
-  Rl_g = cal_Rln(emiss_g, temp_g)
+  Rl_air = cal_Rln(ϵ_air, temp_air)
+  Rl_o = cal_Rln(ϵ_o, temp_o)
+  Rl_u = cal_Rln(ϵ_u, temp_u)
+  Rl_g = cal_Rln(ϵ_g, temp_g)
 
-  Rnl_o = (emiss_o * (Rl_air + Rl_u * (1.0 - gap_u_df) + Rl_g * gap_u_df) - 2 * Rl_o) *
-          (1.0 - gap_o_df) +
-          emiss_o * (1.0 - emiss_u) * (1.0 - gap_u_df) * (Rl_air * gap_o_df + Rl_o * (1.0 - gap_o_df))
+  Rnl_o = (ϵ_o * (Rl_air + Rl_u * (1.0 - τ_u_df) + Rl_g * τ_u_df) - 2 * Rl_o) *
+          (1.0 - τ_o_df) +
+          ϵ_o * (1.0 - ϵ_u) * (1.0 - τ_u_df) * (Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df))
 
-  Rnl_u = (emiss_u * (Rl_air * gap_o_df + Rl_o * (1.0 - gap_o_df) + Rl_g) - 2 * Rl_u) * (1.0 - gap_u_df) +
-          (1.0 - emiss_g) * ((Rl_air * gap_o_df + Rl_o * (1.0 - gap_o_df)) * gap_u_df + Rl_u * (1.0 - gap_u_df)) +
-          emiss_u * (1.0 - emiss_o) * (Rl_u * (1.0 - gap_u_df) + Rl_g * gap_u_df) * (1.0 - gap_o_df)
+  Rnl_u = (ϵ_u * (Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df) + Rl_g) - 2 * Rl_u) * (1.0 - τ_u_df) +
+          (1.0 - ϵ_g) * ((Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df)) * τ_u_df + Rl_u * (1.0 - τ_u_df)) +
+          ϵ_u * (1.0 - ϵ_o) * (Rl_u * (1.0 - τ_u_df) + Rl_g * τ_u_df) * (1.0 - τ_o_df)
 
-  Rnl_g = emiss_g * ((Rl_air * gap_o_df + Rl_o * (1.0 - gap_o_df)) * gap_u_df + Rl_u * (1.0 - gap_u_df)) -
-          Rl_g + (1.0 - emiss_u) * Rl_g * (1.0 - gap_u_df)
+  Rnl_g = ϵ_g * ((Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df)) * τ_u_df + Rl_u * (1.0 - τ_u_df)) -
+          Rl_g + (1.0 - ϵ_u) * Rl_g * (1.0 - τ_u_df)
 
   # 计算植被和地面的总净辐射
   Rn_o = Rns_o + Rnl_o
@@ -148,9 +149,9 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
     Rs_o_dir = min(Rs_o_dir, 0.7 * 1362)
     Rs_u_dir = Rs_o_dir
 
-    Rs_o_df = (Ra.Rs_df - Ra.Rs_df * gap_os_df) / lai_os + 0.07 * Ra.Rs_dir * (1.1 - 0.1 * lai_os) * exp(-CosZs)
-    Rs_u_df = (Ra.Rs_df * gap_o_df - Ra.Rs_df * gap_o_df * gap_us_df) / lai_us +
-              0.05 * Ra.Rs_dir * gap_o_dir * (1.1 - 0.1 * lai_us) * exp(-CosZs)
+    Rs_o_df = (Ra.Rs_df - Ra.Rs_df * τ_os_df) / lai_os + 0.07 * Ra.Rs_dir * (1.1 - 0.1 * lai_os) * exp(-CosZs)
+    Rs_u_df = (Ra.Rs_df * τ_o_df - Ra.Rs_df * τ_o_df * τ_us_df) / lai_us +
+              0.05 * Ra.Rs_dir * τ_o_dir * (1.1 - 0.1 * lai_us) * exp(-CosZs)
   else
     Rs_o_dir = 0.0
     Rs_u_dir = 0.0
@@ -158,20 +159,19 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
     Rs_u_df = 0.0
   end
 
-  
   # overstorey sunlit leaves
-  Rns_Leaf.o_sunlit = (Rs_o_dir + Rs_o_df) * (1.0 - albedo_o)
+  Rns_Leaf.o_sunlit = (Rs_o_dir + Rs_o_df) * (1.0 - α_o)
   Rnl_Leaf.o_sunlit = lai.o_sunlit > 0.0 ? Rnl_o / lai_os : Rnl_o
 
   # overstorey shaded leaf
-  Rns_Leaf.o_shaded = Rs_o_df * (1.0 - albedo_o) # diffuse
+  Rns_Leaf.o_shaded = Rs_o_df * (1.0 - α_o) # diffuse
   Rnl_Leaf.o_shaded = lai.o_shaded > 0.0 ? Rnl_o / lai_os : Rnl_o
 
   # understorey sunlit leaf
-  Rns_Leaf.u_sunlit = (Rs_u_dir + Rs_u_df) * (1.0 - albedo_u)
+  Rns_Leaf.u_sunlit = (Rs_u_dir + Rs_u_df) * (1.0 - α_u)
   Rnl_Leaf.u_sunlit = lai.u_sunlit > 0.0 ? Rnl_u / lai_us : Rnl_u
 
-  Rns_Leaf.u_shaded = Rs_u_df * (1.0 - albedo_u)
+  Rns_Leaf.u_shaded = Rs_u_df * (1.0 - α_u)
   Rnl_Leaf.u_shaded = lai.u_shaded > 0.0 ? Rnl_u / lai_us : Rnl_u
 
   Rn_Leaf.o_sunlit = Rns_Leaf.o_sunlit + Rnl_Leaf.o_sunlit
