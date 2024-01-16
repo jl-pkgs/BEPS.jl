@@ -12,7 +12,6 @@
 ```{julia}
 using BEPS
 # import RTableTools: fread
-# using BEPS.clang
 # d = fread("examples/input/p1_meteo")
 d = deserialize("data/p1_meteo")
 lai = readdlm("examples/input/p1_lai.txt")[:]
@@ -23,8 +22,6 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
 ```
 
 ```{julia}
-# @time df_c = besp_main(d, lai, par; version="c");
-# sum(df_c)
 @time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 @time df_c, df_ET_c = besp_main(d, lai, par; version="c");
 

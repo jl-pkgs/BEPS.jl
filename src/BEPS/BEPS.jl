@@ -10,8 +10,13 @@ include("sensible_heat.jl")
 include("surface_temperature.jl")
 include("transpiration.jl")
 
+include("netRadiation.jl")
+include("photosynthesis.jl")
+
 export s_coszs, lai2, readparam, readcoef
 export aerodynamic_conductance_jl, 
   sensible_heat_jl,
   surface_temperature_jl,
-  transpiration_jl
+  transpiration_jl, 
+  netRadiation_jl, 
+  photosynthesis_jl

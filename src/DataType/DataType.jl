@@ -6,7 +6,7 @@ Value! = setindex!
 const FT = Cdouble
 
 init_dbl() = Ref(0.0)
-dbl() = Cdouble(0)
+# dbl() = Cdouble(0)
 
 
 
@@ -29,4 +29,4 @@ export
   InterTempVars,
   OutputET, Radiation
 
-export FT, init_dbl, dbl
+export FT, init_dbl

@@ -15,7 +15,7 @@ import BEPS: libbeps
 # include("helpers.jl")
 include("../DataType/Constant.jl")
 include("SOIL_c.jl")
-include("module/module.jl")
+include("module.jl")
 # include("beps_inter_prg.jl")
 # include("beps_main.jl")
 # include("debug_Rln.jl")

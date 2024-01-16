@@ -258,10 +258,6 @@ end
 
 
 
-
-
-
-
 @fastmath function SFC_VPD(temp_leaf_K::Float64, leleafpt::Float64,
   fact_latent::Float64, bound_vapor::Float64, rhova_kg::Float64)::Float64
 

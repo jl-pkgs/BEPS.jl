@@ -1,6 +1,3 @@
-include("photosynthesis_jl.jl")
-
-
 function photosynthesis_c(temp_leaf_p::Cdouble, rad_leaf::Cdouble, e_air::Cdouble, 
   g_lb_w::Cdouble, vc_opt::Cdouble,
   f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble, 

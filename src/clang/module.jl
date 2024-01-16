@@ -9,12 +9,36 @@ export photosynthesis,
   sensible_heat_c
 
 # include("s_coszs.jl")
+include("evaporation_soil.jl")
 include("photosynthesis.jl")
 # include("surface_temperature.jl")
-include("netRadiation.jl")
-include("evaporation_soil.jl")
+# include("netRadiation.jl")
 # include("sensible_heat.jl")
 # include("transpiration.jl")
+
+function netRadiation(shortRad_global, CosZs,
+  temp_o, temp_u, temp_g,
+  lai_o, lai_u, lai_os, lai_us, lai::Leaf, Ω, temp_air, rh,
+  α_snow_v, α_snow_n,
+  percentArea_snow_o, percentArea_snow_u, percent_snow_g,
+  α_v_o, α_n_o, α_v_u, α_n_u, α_v_g, α_n_g,
+  # netRad_o::TypeRef, netRad_u::TypeRef, netRad_g::TypeRef,
+  Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
+
+  netRad_o = init_dbl()
+  netRad_u = init_dbl()
+  netRad_g = init_dbl()
+
+  ccall((:netRadiation, libbeps), Cvoid,
+    (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
+      Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Leaf}, Ptr{Leaf}),
+    shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai, Ω, temp_air, rh, α_snow_v, α_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g,
+    α_v_o, α_n_o, α_v_u, α_n_u, α_v_g, α_n_g,
+    netRad_o, netRad_u, netRad_g, Ref(Rn_Leaf), Ref(Rns_Leaf))
+
+  netRad_o[], netRad_u[], netRad_g[]
+end
+
 
 function readparam(lc::Int=1)
   parameter1 = zeros(Cdouble, 48)
