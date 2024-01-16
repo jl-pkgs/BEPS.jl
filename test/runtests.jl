@@ -4,7 +4,7 @@ using BEPS: path_proj
 
 
 
-include("test-readparam.jl")
+include("test-clang.jl")
 include("test-soil.jl")
 
 

@@ -24,32 +24,38 @@ sum(df_c)
 
 df_diff = abs.(df_jl .- df_c)
 df_diff_perc = abs.(df_jl .- df_c) ./ df_c .* 100
-
+# df_diff = abs.(df_ET_jl .- df_ET_c)
+# fwrite(df_diff, "a-3.csv")
 max(df_diff)
 max(df_diff_perc) # SH, 1.48%的误差
 ```
 
 # 绘图展示结果
-
 ```{julia}
 using Plots
 using Ipaper
-gr(framestyle=:box)
 
 function plot_var(var=:SH)
   n = size(df_jl, 1)
-  n = 24*7
   inds = 1:n
 
   y_jl = df_jl[inds, var]
-  # y_c = df_c[inds, var]
-  # diff_perc = (y_jl .- y_c) ./ y_c .* 100
-  plot(y_jl; title="$var", label=nothing) # 
+  y_c = df_c[inds, var]
+  diff_perc = (y_jl .- y_c) ./ y_c .* 100
+
+  plot(diff_perc; title="$var", label="bias (%)") # 
 end
 
 vars = names(df_jl)[[1:4; 8; 12:16]]
 ps = map(plot_var, vars)
-
 plot(ps..., layout=(3, 4), size=(1400, 800))
 # write_fig("images/Figure1_bias_of_julia-version.png", 15, 8; show=false)
+```
+
+```{julia}
+# using ProfileView
+# @time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+# @profview df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+@profview_allocs df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+@profview df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 ```

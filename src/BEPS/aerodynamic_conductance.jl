@@ -5,8 +5,20 @@
 
 # Examples
 ```julia
-ra_o, G_o_a, G_o_b, G_u_a, G_u_b, ra_g = aerodynamic_conductance_jl(
-    canopy_height_o, canopy_height_u, z_wind, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u)
+canopyh_o = 2.0
+canopyh_u = 0.2
+height_wind_sp = 2.0
+clumping = 0.8
+Ta = 20.0
+wind_sp = 2.
+GH_o = 100.0
+lai_o = 4.0
+lai_u = 2.0
+
+ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
+  aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
+    lai_o, lai_u)
+r1 = (; ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u)
 ```
 """
 function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
@@ -91,7 +103,7 @@ end
 
 
 function windProfile_factor(canopy_height_u, canopy_height_o, gamma, k=1.0)
-  exp(-gamma * (1 - canopy_height_u * k / canopy_height_o))
+  exp(gamma * (1 - canopy_height_u * k / canopy_height_o))
 end
 
 function cal_Nu(u::FT, nu_lower::FT)::FT

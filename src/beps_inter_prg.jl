@@ -36,10 +36,12 @@ function inter_prg_jl(
   Tc_old = Leaf()
   Tc_new = Leaf()
   Gs_old = Leaf()
-  Gc = Leaf() # total conductance for CO2 from the intercellular space of the leaves to the reference height above the canopy
-  Gh = Leaf() # total conductance for heat transfer from the leaf surface to the reference height above the canopy
-  Gw = Leaf() # total conductance for water from the intercellular space of the leaves to the reference height above the canopy
-  Gww = Leaf() # total conductance for water from the surface of the leaves to the reference height above the canopy
+
+  # to the reference height above the canopy
+  Gc = Leaf()  # total conductance for CO2 from the intercellular space of the leaves
+  Gh = Leaf()  # total conductance for heat transfer from the leaf surface 
+  Gw = Leaf()  # total conductance for water from the intercellular space of the leaves
+  Gww = Leaf() # total conductance for water from the surface of the leaves
 
   Gs_new = Leaf()
   Ac = Leaf()
@@ -71,7 +73,6 @@ function inter_prg_jl(
   Kn = 0.3  #0.713/2.4
   G_theta = 0.5
   gamma = 0.066
-
   # double K,Vcmax0,Vcmax_sunlit,Vcmax_shaded,expr1,expr2,expr3;
   # double slope_Vcmax_N, leaf_N,Jmax_sunlit,Jmax_shaded;
 
@@ -435,6 +436,5 @@ function inter_prg_jl(
 
   # total GPP . gC/m2/step
   mid_res.GPP = (GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded) * 12 * step * 0.000001
-  # return
   nothing
 end 
