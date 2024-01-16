@@ -159,3 +159,6 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   # 参考Chen 2012年的聚集指数论文
   Rn_o, Rn_u, Rn_g
 end
+
+
+# TODO: 切分成两个函数，长波与短波

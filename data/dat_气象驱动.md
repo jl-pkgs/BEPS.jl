@@ -12,7 +12,7 @@
 
 - `tem`: Tair, degC
 
-- `hum`: q (specific humidity), kg/kg
+- `hum`: q (specific humidity), g/kg
 
 - `pre`: prcp (precipitation), mm
 

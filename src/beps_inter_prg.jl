@@ -135,7 +135,7 @@ function inter_prg_jl(
   Ks = meteo.Srad
   rh_air = meteo.rh
   wind_sp = meteo.wind
-  precip = meteo.rain / step  # precipitation in meters
+  prcp = meteo.rain / step  # precipitation in meters
   Ta = meteo.temp
 
   VPS_air = cal_es(Ta)  # to estimate saturated water vapor pressure in kpa
@@ -194,7 +194,7 @@ function inter_prg_jl(
   # for(kkk = 1;kkk <= kloop;kkk++)
   @inbounds for kkk = 2:kloop+1
     # /*****  Snow pack stage 1 by X. Luo  *****/
-    var.Xcs_o[kkk], var.Xcs_u[kkk], var.Xg_snow[kkk] = snowpack_stage1_jl(Ta, precip,
+    var.Xcs_o[kkk], var.Xcs_u[kkk], var.Xg_snow[kkk] = snowpack_stage1_jl(Ta, prcp,
       # var.Wcs_o[kkk-1], var.Wcs_u[kkk-1], var.Wg_snow[kkk-1],
       Ref(var.Wcs_o, kkk), Ref(var.Wcs_u, kkk), Ref(var.Wg_snow, kkk),
       lai_o, lai_u, clumping,
@@ -204,7 +204,7 @@ function inter_prg_jl(
 
     # /*****  Rain fall stage 1 by X. Luo  *****/
     var.Wcl_o[kkk], var.Wcl_u[kkk], var.Xcl_o[kkk], var.Xcl_u[kkk], var.r_rain_g[kkk] = 
-      rainfall_stage1_jl(Ta, precip, var.Wcl_o[kkk-1], var.Wcl_u[kkk-1], lai_o, lai_u, clumping)
+      rainfall_stage1_jl(Ta, prcp, var.Wcl_o[kkk-1], var.Wcl_u[kkk-1], lai_o, lai_u, clumping)
 
     # Old version
     # if(thetam[0][kkk-1]<soilp.theta_vwp[1]*0.5) var.alpha_g = alpha_dry;
@@ -220,12 +220,8 @@ function inter_prg_jl(
 
     # /*****  Soil water factor module by L. He  *****/
     soil_water_factor_v2(soilp)
-    f_soilwater = soilp.f_soilwater
-
-    if (f_soilwater > 1.0)
-      f_soilwater = 1.0
-    end  # to be used for module photosynthesis
-
+    f_soilwater = min(soilp.f_soilwater, 1.0) # used in `photosynthesis`
+    
     GH_o = var.Qhc_o[kkk-1]# to be used as the init. for module aerodynamic_conductance
 
     init_leaf_dbl(Ci_old, 0.7 * CO2_air)

@@ -1,7 +1,7 @@
 function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
-  percent_snow_g::Ref{FT}, depth_water::Ref{FT}, depth_snow::Ref{FT}, mass_water_g::Ref{FT}, mass_snow_g::Ref{FT}, # Ref{FT}
+  percent_snow_g::Ref{FT}, depth_water::Ref{FT}, depth_snow::Ref{FT}, mass_water_g::Ref{FT}, mass_snow_g::Ref{FT},
   density_snow::FT, swc_g::FT, porosity_g::FT) where {FT<:Real}
-  # evapo_soil::Ref{FT}, evapo_water_g::Ref{FT}, evapo_snow_g::Ref{FT}
+  
   met = meteo_pack_jl(Tg, RH)
   ρ_a = met.rho_a
   cp = met.cp

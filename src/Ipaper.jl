@@ -1,62 +1,4 @@
-# using BEPS
-## MutableNamedTuples
-# using MutableNamedTuples
-# using Ipaper
-import MutableNamedTuples: MutableNamedTuple
-
-const MNT = MutableNamedTuple
-
-# mnt(keys::Vector{Symbol}, values) = (; zip(keys, values)...)
-"""
-    mnt(keys::Vector{Symbol}, values)
-    mnt(keys::Vector{<:AbstractString}, values)
-    
-# Examples
-```julia
-mnt([:dw, :betaw, :swmax, :a, :c, :kh, :uh]
-```
-"""
-mnt(; kw...) = MNT(; kw...)
-
-
-mnt(keys::Vector{Symbol}, values) = MNT(; zip(keys, values)...)
-
-mnt(keys::Vector{<:AbstractString}, values) = mnt(Symbol.(keys), values)
-
-mnt(keys::Vector{Symbol}) = mnt(Symbol.(keys), zeros(length(keys)))
-
-mnt(keys::Tuple, values) = MNT(; zip(keys, values)...)
-mnt(keys::Tuple) = mnt(keys, zeros(length(keys)))
-
-mnt(keys::Vector{<:AbstractString}) = mnt(Symbol.(keys))
-
-to_list = mnt;
-
-Base.names(x::MNT) = keys(x) |> collect
-
-# function Base.values(x::MNT)
-#   @show "hello"
-#   getindex.(values(getfield(x, :nt))) |> collect
-#   # values(x) |> collect
-# end
-
-
-function add(x::MutableNamedTuple, y::MutableNamedTuple)
-  mnt([keys(x)..., keys(y)...],
-    [values(x)..., values(y)...],)
-end
-
-function Base.:(==)(x::MNT, y::MNT)
-  if length(x) != length(y)
-    return false
-  end
-  keys(x) == keys(y) && values(x) == values(y)
-end
-
-export mnt, add, MNT
-
-# a = MNT{(:o_sunlit, :o_shaded, :u_sunlit, :u_shaded), NTuple{4, Base.RefValue{Int64}}}
-
+export LVector, list
 
 ## second version
 import LabelledArrays
@@ -99,6 +41,3 @@ Base.:+(x::T1, y::AbstractVector{T2}) where {T1<:Real,T2<:Real} = x .+ y
 Base.:-(x::T1, y::AbstractVector{T2}) where {T1<:Real,T2<:Real} = x .- y
 Base.:*(x::T1, y::AbstractVector{T2}) where {T1<:Real,T2<:Real} = x .* y
 Base.:/(x::T1, y::AbstractVector{T2}) where {T1<:Real,T2<:Real} = x ./ y
-
-
-export LVector, list

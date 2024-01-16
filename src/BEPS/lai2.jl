@@ -15,3 +15,14 @@ function lai2(clumping::Float64, CosZs::Float64,
   LAI.u_sunlit = CosZs > 0 ? 2 * CosZs * (1 - exp(-0.5 * clumping * (lai_o + lai_u) / CosZs)) - LAI.o_sunlit : 0
   LAI.u_shaded = max(0, lai_u - LAI.u_sunlit)  # edited by J. Leng
 end
+
+function lai2(clumping::Float64, CosZs::Float64,
+  stem_o::Float64, stem_u::Float64,
+  lai_o::Float64, lai_u::Float64)
+
+  LAI = Leaf()
+  PAI = Leaf()
+  
+  lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
+  LAI, PAI
+end
