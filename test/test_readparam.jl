@@ -1,5 +1,6 @@
 using Test
-
+using BEPS
+# import BEPS: readparam, readcoef
 
 @testset "readparam" begin
   lcs = [1, 2, 6, 9, 13, 40, -1]
@@ -22,7 +23,3 @@ end
     @test maximum(abs.(coef1 .- coef2)) == 0
   end
 end
-
-
-
-# Test init soil
