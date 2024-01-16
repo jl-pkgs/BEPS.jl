@@ -1,3 +1,69 @@
+export InterTempLeafs
+
+@with_kw mutable struct InterTempLeafs
+  x0::Float64 = 0.0
+  Cc_new::Leaf = Leaf(x0)
+  Cs_old::Leaf = Leaf(x0)
+  Cs_new::Leaf = Leaf(x0)
+  Ci_old::Leaf = Leaf(x0)
+  Tc_old::Leaf = Leaf(x0)
+  Tc_new::Leaf = Leaf(x0)
+  Gs_old::Leaf = Leaf(x0)
+
+  # to the reference height above the canopy
+  Gc::Leaf = Leaf(x0)  # total conductance for CO2 from the intercellular space of the leaves
+  Gh::Leaf = Leaf(x0)  # total conductance for heat transfer from the leaf surface 
+  Gw::Leaf = Leaf(x0)  # total conductance for water from the intercellular space of the leaves
+  Gww::Leaf = Leaf(x0) # total conductance for water from the surface of the leaves
+
+  Gs_new::Leaf = Leaf(x0)
+  Ac::Leaf = Leaf(x0)
+  Ci_new::Leaf = Leaf(x0)
+
+  Rn::Leaf = Leaf(x0)
+  Rns::Leaf = Leaf(x0)
+  Rnl::Leaf = Leaf(x0)
+
+  leleaf::Leaf = Leaf(x0)
+  GPP::Leaf = Leaf(x0)
+  LAI::Leaf = Leaf(x0)
+  PAI::Leaf = Leaf(x0)
+end
+
+InterTempLeafs(x0) = InterTempLeafs(; x0)
+
+function reset!(l::InterTempLeafs)
+  # reset!(l.Cc_new)
+  # reset!(l.Cs_old)
+  # reset!(l.Cs_new)
+  # reset!(l.Ci_old)
+  # reset!(l.Tc_old)
+  # reset!(l.Tc_new)
+  # reset!(l.Gs_old)
+  # reset!(l.Gc)
+  # reset!(l.Gh)
+  # reset!(l.Gw)
+  # reset!(l.Gww)
+  # reset!(l.Gs_new)
+  # reset!(l.Ac)
+  # reset!(l.Ci_new)
+  # reset!(l.Rn)
+  # reset!(l.Rns)
+  # reset!(l.Rnl)
+  # reset!(l.leleaf)
+  # reset!(l.GPP)
+  # reset!(l.LAI)
+  # reset!(l.PAI)
+
+  # names = fieldnames(InterTempLeafs)[2:end]
+  # for name in names
+  #   x = getfield(l, name)
+  #   reset(x)
+  # end
+end
+
+
+
 @with_kw mutable struct InterTempVars
   Tc_u::Vector{FT} = zeros(MAX_Loop)
   Ts0::Vector{FT} = zeros(MAX_Loop)
@@ -36,10 +102,12 @@
   lambda_snow::Vector{FT} = zeros(MAX_Loop)
 
   # 记录土壤温度
-  
   Cs::Matrix{FT} = zeros(layer + 2, MAX_Loop)
   Tm::Matrix{FT} = zeros(layer + 2, MAX_Loop)
   G::Matrix{FT} = zeros(layer + 2, MAX_Loop)
+
+  # Leafs
+  TempLeafs::InterTempLeafs = InterTempLeafs(0.0)
 end
 
 function init_vars!(x::InterTempVars)
@@ -66,7 +134,6 @@ function init_vars!(x::InterTempVars)
 
   # x.Ac_snow_o .= 0.
   # x.Ac_snow_u .= 0.  
-  
   # x.alpha_v_sw .= 0.
   # x.alpha_n_sw .= 0.
   # x.r_rain_g .= 0.

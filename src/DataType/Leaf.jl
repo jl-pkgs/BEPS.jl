@@ -1,3 +1,10 @@
+export @reset, reset!
+macro reset(x)
+  quote
+    reset!($(esc(x)))
+  end
+end
+
 @with_kw mutable struct Leaf
   o_sunlit::Cdouble = 0.0
   o_shaded::Cdouble = 0.0
@@ -26,6 +33,8 @@ for (m, f) in Base_ops
 end
 
 
+reset!(x::Leaf) = init_leaf_dbl(x, 0.0)
+
 function init_leaf_struct(x::Leaf, replacement::Leaf)
   x.o_sunlit = replacement.o_sunlit
   x.o_shaded = replacement.o_shaded
@@ -39,6 +48,7 @@ function init_leaf_dbl(x::Leaf, replacement::Float64)
   x.o_shaded = replacement
   x.u_sunlit = replacement
   x.u_shaded = replacement
+  nothing
   # ccall((:init_leaf_dbl, libbeps), Cvoid, (Ptr{Leaf}, Cdouble), Ref(x), replacement)
 end
 

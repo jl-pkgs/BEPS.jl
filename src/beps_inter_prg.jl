@@ -25,34 +25,39 @@ function inter_prg_jl(
   # var = var2
   # var = InterTempVars()
   init_vars!(var)
+  reset!(var.TempLeafs)
+  @unpack Cc_new, Cs_old, Cs_new, Ci_old, 
+    Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww, 
+    Gs_new, Ac, Ci_new, Rn, Rns, Rnl, 
+    leleaf, GPP, LAI, PAI = var.TempLeafs
+
+  # Cc_new = Leaf()
+  # Cs_old = Leaf()
+  # Cs_new = Leaf()
+  # Ci_old = Leaf()
+  # Tc_old = Leaf()
+  # Tc_new = Leaf()
+  # Gs_old = Leaf()
+  # # to the reference height above the canopy
+  # Gc = Leaf()  # total conductance for CO2 from the intercellular space of the leaves
+  # Gh = Leaf()  # total conductance for heat transfer from the leaf surface 
+  # Gw = Leaf()  # total conductance for water from the intercellular space of the leaves
+  # Gww = Leaf() # total conductance for water from the surface of the leaves
+
+  # Gs_new = Leaf()
+  # Ac = Leaf()
+  # Ci_new = Leaf()
+
+  # Rn = Leaf()
+  # Rns = Leaf()
+  # Rnl = Leaf()
+  # leleaf = Leaf()
+  # GPP = Leaf()
+  # LAI = Leaf()
+  # PAI = Leaf()
 
   d_soil = zeros(layer + 1)
   lambda = zeros(layer + 2)
-
-  Cc_new = Leaf()
-  Cs_old = Leaf()
-  Cs_new = Leaf()
-  Ci_old = Leaf()
-  Tc_old = Leaf()
-  Tc_new = Leaf()
-  Gs_old = Leaf()
-
-  # to the reference height above the canopy
-  Gc = Leaf()  # total conductance for CO2 from the intercellular space of the leaves
-  Gh = Leaf()  # total conductance for heat transfer from the leaf surface 
-  Gw = Leaf()  # total conductance for water from the intercellular space of the leaves
-  Gww = Leaf() # total conductance for water from the surface of the leaves
-
-  Gs_new = Leaf()
-  Ac = Leaf()
-  Ci_new = Leaf()
-
-  Rn = Leaf()
-  Rns = Leaf()
-  Rnl = Leaf()
-
-  leleaf = Leaf()
-  GPP = Leaf()
 
   ra_o = 0.0
   ra_u = 0.0
@@ -69,11 +74,6 @@ function inter_prg_jl(
   Tco = 0.0
   Tcu = 0.0
 
-  # # parameters for Vcmax-Nitrogen calculations
-  Kn = 0.3  #0.713/2.4
-  G_theta = 0.5
-  gamma = 0.066
-
   alpha_sat = param[24+1]       # albedo of saturated/dry soil for module rainfall 1
   alpha_dry = param[25+1]       # the albedo of dry soil
   canopyh_o = param[29+1]       # to be used for module aerodynamic_conductance
@@ -84,8 +84,12 @@ function inter_prg_jl(
 
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
   if (CosZs > 0) # day time
-    K = G_theta * clumping / CosZs  # G_theta = 0.5 assuming a spherical leaf angle distribution
+    # parameters for Vcmax-Nitrogen calculations
+    G_theta = 0.5 # assuming a spherical leaf angle distribution
+    Kn = 0.3      # 0.713/2.4
+    K = G_theta * clumping / CosZs
     Vcmax0 = param[36+1]
+    
     expr1 = 1 - exp(-K * lai)
     expr2 = 1 - exp(-lai * (Kn + K))
     expr3 = 1 - exp(-Kn * lai)
@@ -113,19 +117,16 @@ function inter_prg_jl(
   else
     lai_u = 1.18 * exp(-0.99 * lai_o)
   end
-
   (lai_u > lai_o) && (lai_u = 0.01)
   
   stem_o = param[8+1] * 0.2    # parameter[8].LAI max overstory
   stem_u = param[9+1] * 0.2    # parameter[9].LAI max understory
 
   # lai2: separate lai into sunlit and shaded portions
-  LAI = Leaf()
-  PAI = Leaf()
   lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
 
   # /*****  Initialization of this time step  *****/
-  Ks = meteo.Srad
+  Rs = meteo.Srad
   rh_air = meteo.rh
   wind_sp = meteo.wind
   prcp = meteo.rain / step  # precipitation in meters
@@ -136,10 +137,11 @@ function inter_prg_jl(
   VPD_air = es - ea                        # water vapor deficit at the reference height
 
   q_ca = 0.622 * ea / (101.35 - 0.378 * ea)  # in g/g, unitless
-  Cp_ca = Cpd * (1 + 0.84 * q_ca)
+  cp = Cpd * (1 + 0.84 * q_ca)
   slope = cal_slope(Ta)
+  gamma = 0.066
 
-  if (Ks <= 0)
+  if (Rs <= 0)
     alpha_v_o = 0.0
     alpha_n_o = 0.0
     alpha_v_u = 0.0
@@ -210,8 +212,8 @@ function inter_prg_jl(
     init_leaf_dbl(Ci_old, 0.7 * CO2_air)
     init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
 
-    percentArea_snow_o = var.Ac_snow_o[kkk] / lai_o / 2
-    percentArea_snow_u = var.Ac_snow_u[kkk] / lai_u / 2
+    percArea_snow_o = var.Ac_snow_o[kkk] / lai_o / 2
+    percArea_snow_u = var.Ac_snow_u[kkk] / lai_u / 2
 
     temp_grd = Ta   # ground temperature substituted by air temperature
 
@@ -236,18 +238,17 @@ function inter_prg_jl(
       Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) / (PAI.u_sunlit + PAI.u_shaded)
 
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
-      radiation_o, radiation_u, radiation_g = netRadiation_jl(Ks, CosZs, Tco, Tcu, temp_grd,
+      radiation_o, radiation_u, radiation_g = netRadiation_jl(Rs, CosZs, Tco, Tcu, temp_grd,
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
         clumping, Ta, rh_air, var.alpha_v_sw[kkk], var.alpha_n_sw[kkk],
-        percentArea_snow_o, percentArea_snow_u,
+        percArea_snow_o, percArea_snow_u,
         var.Xg_snow[kkk],
         alpha_v_o, alpha_n_o, alpha_v_u, alpha_n_u,
         alpha_v_g, alpha_n_g, Rn, Rns, Rnl, Ra)
 
       # /*****  Photosynthesis module by B. Chen  *****/
-      # conductance for water
-      update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u)
-      latent_heat!(leleaf, Gw, VPD_air, slope, Tc_old, Ta, rho_a, Cp_ca, gamma)
+      update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u) # conductance for water
+      latent_heat!(leleaf, Gw, VPD_air, slope, Tc_old, Ta, rho_a, cp, gamma)
 
       if (CosZs > 0)
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
@@ -271,13 +272,13 @@ function inter_prg_jl(
       update_Gc!(Gc, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
 
       # /***** Leaf temperatures module by L. He  *****/
-      Leaf_Temperatures_jl(Ta, slope, gamma, VPD_air, Cp_ca,
+      Leaf_Temperatures_jl(Ta, slope, gamma, VPD_air, cp,
         Gw, Gww, Gh,
         var.Xcs_o[kkk], var.Xcl_o[kkk], var.Xcs_u[kkk], var.Xcl_u[kkk],
         Rn, Tc_new)
 
-      H_o_sunlit = (Tc_new.o_sunlit - Ta) * rho_a * Cp_ca * Gh.o_sunlit
-      H_o_shaded = (Tc_new.o_shaded - Ta) * rho_a * Cp_ca * Gh.o_shaded
+      H_o_sunlit = (Tc_new.o_sunlit - Ta) * rho_a * cp * Gh.o_sunlit
+      H_o_shaded = (Tc_new.o_shaded - Ta) * rho_a * cp * Gh.o_shaded
       GH_o = H_o_sunlit * PAI.o_sunlit + H_o_shaded * PAI.o_shaded  # for next num aerodynamic conductance calculation
 
       if (abs(Tc_new.o_sunlit - Tc_old.o_sunlit) < 0.02 &&

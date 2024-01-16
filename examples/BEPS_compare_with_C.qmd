@@ -7,12 +7,18 @@
 
 ```{julia}
 using BEPS
+using BenchmarkTools
+
 d = deserialize("data/p1_meteo")
 lai = readdlm("examples/input/p1_lai.txt")[:]
 
 par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
   soil_type=8, Tsoil=2.2,
   soilwater=0.4115, snowdepth=0.0)
+
+@time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+@btime df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+
 ```
 
 ```{julia}

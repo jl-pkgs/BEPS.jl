@@ -50,11 +50,10 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
       end
 
       CosZs = s_coszs(jday, rstep - 1, par.lat, par.lon) # cos_solar zenith angle
+      
       # /***** start simulation modules *****/
-
       fun(jday, rstep - 1, _lai, par.clumping, param, meteo, CosZs, var_o, var_n, p_soil,
         Ra, mid_res, mid_ET, var; debug)
-      # inter_prg_jl(jday, rstep - 1, _lai, par.clumping, parameter, meteo, CosZs, var_o, var_n, p_soil, mid_res)
       # Store updated variables array in temp array
       v2last .= var_n
 
