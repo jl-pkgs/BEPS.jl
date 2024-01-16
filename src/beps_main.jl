@@ -17,6 +17,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
 
   df_out = DataFrame(zeros(n, length(vars)), vars)
   df_ET = DataFrame(zeros(n, length(vars_ET)), vars_ET)
+  Tg = zeros(n, layer)
 
   var_o = zeros(41)
   var_n = zeros(41)
@@ -50,10 +51,12 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
       end
 
       CosZs = s_coszs(jday, rstep - 1, par.lat, par.lon) # cos_solar zenith angle
-      
+
       # /***** start simulation modules *****/
       fun(jday, rstep - 1, _lai, par.clumping, param, meteo, CosZs, var_o, var_n, p_soil,
         Ra, mid_res, mid_ET, var; debug)
+      
+      Tg[k, :] .= p_soil.temp_soil_c[1:layer]
       # Store updated variables array in temp array
       v2last .= var_n
 
@@ -61,5 +64,5 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
       fill_res!(df_ET, mid_ET, k)
     end # End of hourly loop
   end # End of daily loop
-  df_out, df_ET
+  df_out, df_ET, Tg
 end

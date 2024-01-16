@@ -21,6 +21,7 @@ ClimateData(Srad, LR, temp, rh, rain, wind) =
   gpp_u_sunlit::Cdouble = 0.0
   gpp_o_shaded::Cdouble = 0.0
   gpp_u_shaded::Cdouble = 0.0
+  
   plant_resp::Cdouble = 0.0
   npp_o::Cdouble = 0.0
   npp_u::Cdouble = 0.0

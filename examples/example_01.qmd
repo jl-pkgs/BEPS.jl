@@ -16,8 +16,8 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
 ```
 
 ```{julia}
-@time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
-@time df_c, df_ET_c = besp_main(d, lai, par; version="c");
+@time df_jl, df_ET_jl, Tg = besp_main(d, lai, par; version="julia");
+@time df_c, df_ET_c, Tg = besp_main(d, lai, par; version="c");
 
 sum(df_jl)
 sum(df_c)
@@ -52,4 +52,25 @@ ps = map(plot_var, vars)
 
 plot(ps..., layout=(3, 4), size=(1400, 800))
 # write_fig("images/Figure1_bias_of_julia-version.png", 15, 8; show=false)
+```
+
+
+```{julia}
+## 土壤温度的变化
+begin
+  using Plots
+  gr(framestyle=:box)
+
+  depths = [0.05, 0.10, 0.20, 0.40, 1.25] |> cumsum |> x -> round.(x, digits=4)
+
+  p = plot(; size=(1400, 700), title="Soil temperature")
+  plot!(d[:, :tem]; label="Tair")
+  for i = 1:5
+    label = "depth: $(depths[i])"
+    plot!(Tg[:, i]; label)
+  end
+  p
+end
+
+# write_fig("images/Figure2_variation_of_Tg.png", 15, 8; show=false)
 ```

@@ -32,35 +32,13 @@ end
 
 InterTempLeafs(x0) = InterTempLeafs(; x0)
 
-function reset!(l::InterTempLeafs)
-  # reset!(l.Cc_new)
-  # reset!(l.Cs_old)
-  # reset!(l.Cs_new)
-  # reset!(l.Ci_old)
-  # reset!(l.Tc_old)
-  # reset!(l.Tc_new)
-  # reset!(l.Gs_old)
-  # reset!(l.Gc)
-  # reset!(l.Gh)
-  # reset!(l.Gw)
-  # reset!(l.Gww)
-  # reset!(l.Gs_new)
-  # reset!(l.Ac)
-  # reset!(l.Ci_new)
-  # reset!(l.Rn)
-  # reset!(l.Rns)
-  # reset!(l.Rnl)
-  # reset!(l.leleaf)
-  # reset!(l.GPP)
-  # reset!(l.LAI)
-  # reset!(l.PAI)
-
-  # names = fieldnames(InterTempLeafs)[2:end]
-  # for name in names
-  #   x = getfield(l, name)
-  #   reset(x)
-  # end
-end
+# function reset!(l::InterTempLeafs)
+#   names = fieldnames(InterTempLeafs)[2:end]
+#   for name in names
+#     x = getfield(l, name)
+#     reset!(x)
+#   end
+# end
 
 
 

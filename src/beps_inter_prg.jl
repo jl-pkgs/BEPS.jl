@@ -25,7 +25,7 @@ function inter_prg_jl(
   # var = var2
   # var = InterTempVars()
   init_vars!(var)
-  reset!(var.TempLeafs)
+  # reset!(var.TempLeafs)
   @unpack Cc_new, Cs_old, Cs_new, Ci_old, 
     Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww, 
     Gs_new, Ac, Ci_new, Rn, Rns, Rnl, 
@@ -89,7 +89,7 @@ function inter_prg_jl(
     Kn = 0.3      # 0.713/2.4
     K = G_theta * clumping / CosZs
     Vcmax0 = param[36+1]
-    
+
     expr1 = 1 - exp(-K * lai)
     expr2 = 1 - exp(-lai * (Kn + K))
     expr3 = 1 - exp(-Kn * lai)
@@ -126,15 +126,15 @@ function inter_prg_jl(
   lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
 
   # /*****  Initialization of this time step  *****/
-  Rs = meteo.Srad
-  rh_air = meteo.rh
+  Rs      = meteo.Srad
+  rh_air  = meteo.rh
   wind_sp = meteo.wind
-  prcp = meteo.rain / step  # precipitation in meters
-  Ta = meteo.temp
+  prcp    = meteo.rain / step  # precipitation in meters
+  Ta      = meteo.temp
 
   es = cal_es(Ta)  # to estimate saturated water vapor pressure in kpa
-  ea = es * rh_air / 100                   # to be used for module photosynthesis
-  VPD_air = es - ea                        # water vapor deficit at the reference height
+  ea = es * rh_air / 100                   # used in `photosynthesis`
+  VPD = es - ea                            # water vapor deficit at the reference height
 
   q_ca = 0.622 * ea / (101.35 - 0.378 * ea)  # in g/g, unitless
   cp = Cpd * (1 + 0.84 * q_ca)
@@ -154,8 +154,8 @@ function inter_prg_jl(
   end
 
   # Ground surface temperature
-  var.Ts0[1] = clamp(var_o[3+1], Ta - 2.0, Ta + 2.0)
-  var.Tsm0[1] = clamp(var_o[5+1], Ta - 2.0, Ta + 2.0)
+  var.Ts0[1] = clamp(var_o[3+1], Ta - 2.0, Ta + 2.0)  # ground0
+  var.Tsm0[1] = clamp(var_o[5+1], Ta - 2.0, Ta + 2.0) # 
   var.Tsn0[1] = clamp(var_o[4+1], Ta - 2.0, Ta + 2.0) # snow0
   var.Tsn1[1] = clamp(var_o[6+1], Ta - 2.0, Ta + 2.0) # snow1
   var.Tsn2[1] = clamp(var_o[7+1], Ta - 2.0, Ta + 2.0) # snow2
@@ -248,7 +248,7 @@ function inter_prg_jl(
 
       # /*****  Photosynthesis module by B. Chen  *****/
       update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u) # conductance for water
-      latent_heat!(leleaf, Gw, VPD_air, slope, Tc_old, Ta, rho_a, cp, gamma)
+      latent_heat!(leleaf, Gw, VPD, slope, Tc_old, Ta, rho_a, cp, gamma)
 
       if (CosZs > 0)
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
@@ -272,7 +272,7 @@ function inter_prg_jl(
       update_Gc!(Gc, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
 
       # /***** Leaf temperatures module by L. He  *****/
-      Leaf_Temperatures_jl(Ta, slope, gamma, VPD_air, cp,
+      Leaf_Temperatures_jl(Ta, slope, gamma, VPD, cp,
         Gw, Gww, Gh,
         var.Xcs_o[kkk], var.Xcl_o[kkk], var.Xcs_u[kkk], var.Xcl_u[kkk],
         Rn, Tc_new)
@@ -343,9 +343,11 @@ function inter_prg_jl(
       surface_temperature_jl(Ta, rh_air, Zsp[], Zp[],
         var.Cs[2, kkk], var.Cs[1, kkk], Gheat_g, d_soil[2], var.rho_snow[kkk], var.Tc_u[kkk],
         radiation_g, var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk],
-        lambda[2], var.Xg_snow[kkk],
-
-        var.G[2, kkk], var.Ts0[kkk-1], var.Tm[2, kkk-1], var.Tm[1, kkk-1], var.Tsm0[kkk-1], 
+        lambda[2], 
+        var.Xg_snow[kkk], var.G[2, kkk], 
+        var.Ts0[kkk-1], 
+        # T_soil1_last::FT, T_any0_last::FT, T_soil0_last::FT,
+        var.Tm[2, kkk-1], var.Tm[1, kkk-1], var.Tsm0[kkk-1], 
         var.Tsn0[kkk-1], var.Tsn1[kkk-1], var.Tsn2[kkk-1])
 
     Update_temp_soil_c(soilp, var.Tm[1, kkk])
