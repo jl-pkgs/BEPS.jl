@@ -260,7 +260,7 @@ function inter_prg_jl(
       Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) / (PAI.u_sunlit + PAI.u_shaded)
 
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
-      radiation_o, radiation_u, radiation_g = netRadiation(Ks, CosZs, Tco, Tcu, temp_grd,
+      radiation_o, radiation_u, radiation_g = netRadiation_jl(Ks, CosZs, Tco, Tcu, temp_grd,
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
         clumping, Ta, rh_air, var.alpha_v_sw[kkk], var.alpha_n_sw[kkk],
         percentArea_snow_o, percentArea_snow_u,
@@ -277,7 +277,7 @@ function inter_prg_jl(
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
           Ta, e_a10, f_soilwater, b_h2o, m_h2o,
           Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
-          Gs_new, Ac, Ci_new; version="c")
+          Gs_new, Ac, Ci_new; version="julia")
       else
         init_leaf_dbl(Gs_new, 0.0001)
         init_leaf_dbl(Ac, 0.0)

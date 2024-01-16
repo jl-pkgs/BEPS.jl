@@ -78,15 +78,6 @@ function Leaf_Temperature(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh
   Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
 end
 
-
-function latent_heat!(leleaf::Leaf, Gw::Leaf, VPD_air, slope, Tc_old::Leaf, temp_air, rho_a, Cp_ca, psychrometer)
-  leleaf.o_sunlit = Gw.o_sunlit * (VPD_air + slope * (Tc_old.o_sunlit - temp_air)) * rho_a * Cp_ca / psychrometer
-  leleaf.o_shaded = Gw.o_shaded * (VPD_air + slope * (Tc_old.o_shaded - temp_air)) * rho_a * Cp_ca / psychrometer
-  leleaf.u_sunlit = Gw.u_sunlit * (VPD_air + slope * (Tc_old.u_sunlit - temp_air)) * rho_a * Cp_ca / psychrometer
-  leleaf.u_shaded = Gw.u_shaded * (VPD_air + slope * (Tc_old.u_shaded - temp_air)) * rho_a * Cp_ca / psychrometer
-end
-
-
 function evaporation_canopy(tempL, temp_air, rh_air, Gwater, lai, percent_water_o, percent_water_u, percent_snow_o, percent_snow_u, evapo_water_o, evapo_water_u, evapo_snow_o, evapo_snow_u)
   ccall((:evaporation_canopy, libbeps), Cvoid, (Leaf, Cdouble, Cdouble, Leaf, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), tempL, temp_air, rh_air, Gwater, lai, percent_water_o, percent_water_u, percent_snow_o, percent_snow_u, evapo_water_o, evapo_water_u, evapo_snow_o, evapo_snow_u)
 end
@@ -153,10 +144,11 @@ export inter_prg_c,
   # readparam, 
   # readcoef, 
   # lai2, s_coszs,
-  Leaf_Temperatures, 
-  latent_heat!, 
+  # latent_heat!, 
+  
+  Leaf_Temperatures,
   evaporation_canopy, 
-  rainfall_stage1, rainfall_stage2, rainfall_stage3, meteo_pack, snowpack_stage1, snowpack_stage2, snowpack_stage3
+  rainfall_stage1, rainfall_stage2, rainfall_stage3, snowpack_stage1, snowpack_stage2, snowpack_stage3
 
 
 

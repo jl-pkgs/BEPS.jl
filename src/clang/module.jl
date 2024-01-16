@@ -1,7 +1,7 @@
-export photosynthesis,
-  netRadiation,
-  netRadiation_jl,
+export 
   evaporation_soil,
+  netRadiation_c,
+  photosynthesis_c,
   aerodynamic_conductance_c,
   surface_temperature_c,
   aerodynamic_conductance_c,
@@ -10,13 +10,29 @@ export photosynthesis,
 
 # include("s_coszs.jl")
 include("evaporation_soil.jl")
-include("photosynthesis.jl")
 # include("surface_temperature.jl")
 # include("netRadiation.jl")
 # include("sensible_heat.jl")
 # include("transpiration.jl")
+function photosynthesis_c(temp_leaf_p::Cdouble, rad_leaf::Cdouble, e_air::Cdouble,
+  g_lb_w::Cdouble, vc_opt::Cdouble,
+  f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble,
+  cii::Cdouble, temp_leaf_c::Cdouble, LH_leaf::Cdouble)
 
-function netRadiation(shortRad_global, CosZs,
+  Gs_w = init_dbl()
+  aphoto = init_dbl()
+  ci = init_dbl()
+
+  ccall((:photosynthesis, libbeps), Cvoid,
+    (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
+      Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
+    temp_leaf_p, rad_leaf, e_air, g_lb_w, vc_opt, f_soilwater, b_h2o, m_h2o, cii, temp_leaf_c, LH_leaf,
+    Gs_w, aphoto, ci)
+
+  Gs_w[], aphoto[], ci[]
+end
+
+function netRadiation_c(shortRad_global, CosZs,
   temp_o, temp_u, temp_g,
   lai_o, lai_u, lai_os, lai_us, lai::Leaf, Ω, temp_air, rh,
   α_snow_v, α_snow_n,

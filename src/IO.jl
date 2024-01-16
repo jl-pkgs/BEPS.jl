@@ -9,11 +9,13 @@ function Base.sum(df::DataFrame)
   list(keys, vals)
 end
 
-
-# import NaNStatistics: nanmaximum
+function nanmaximum(x::AbstractVector) 
+  inds = .!isnan.(x) |> findall
+  !isempty(inds) ? maximum(x[inds]) : NaN
+end
 
 function Base.max(df::DataFrame)
-  vals = [maximum(df[!, c]) for c in names(df)]
+  vals = [nanmaximum(df[!, c]) for c in names(df)]
   keys = names(df)
   list(keys, vals)
 end

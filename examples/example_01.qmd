@@ -1,18 +1,12 @@
-# 需要确定的参数
+# BEPS
 
-- `landcover` : 
-- `soil_type` : 
-- `clumping`  : 
-
-> 这两个是初始变量
-
-- `soilwater` : 
-- `snowdepth` : 
+```{julia}
+# import RTableTools: fread
+# d = fread("examples/input/p1_meteo")
+```
 
 ```{julia}
 using BEPS
-# import RTableTools: fread
-# d = fread("examples/input/p1_meteo")
 d = deserialize("data/p1_meteo")
 lai = readdlm("examples/input/p1_lai.txt")[:]
 
@@ -33,21 +27,31 @@ df_diff_perc = abs.(df_jl .- df_c) ./ df_c .* 100
 # df_diff = abs.(df_ET_jl .- df_ET_c)
 # fwrite(df_diff, "a-3.csv")
 max(df_diff)
-max(df_diff_perc) # SH, 1.5%的误差, 误差达到了3%
+max(df_diff_perc) # SH, 1.48%的误差
 ```
 
 # 绘图展示结果
 ```{julia}
 using Plots
 
-n = size(df_jl, 1)
-inds = 1:n
-p1 = plot(df_jl.SH[inds], label="julia")
-plot!(df_c.SH[inds] + 0, label="c")
+function plot_var(var=:SH)
+  n = size(df_jl, 1)
+  inds = 1:n
 
-p2 = plot(df_diff_perc.SH[inds], label="Julia error (%)")
+  y_jl = df_jl[inds, var]
+  y_c = df_c[inds, var]
+  diff_perc = (y_jl .- y_c) ./ y_c .* 100
 
-plot(p1, p2, layout=(2, 1), size=(1400, 800))
+  plot(diff_perc; title="$var", label="bias (%)") # 
+end
+
+vars = names(df_jl)[[1:4; 8; 12:16]]
+ps = map(plot_var, vars)
+# p1 = plot(df_jl.SH[inds], label="julia", title="SH")
+# plot!(df_c.SH[inds] + 0, label="c")
+# p2 = plot(df_diff_perc.SH[inds], label="Julia error (%)")
+
+plot(ps..., layout=(3, 4), size=(1400, 800))
 ```
 
 ```{julia}

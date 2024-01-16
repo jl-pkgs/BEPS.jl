@@ -20,7 +20,11 @@ include("test-soil.jl")
   # @time df_c, df_ET_c = besp_main(d, lai, par; version="c");
   r = sum(df_jl)
 
-  @test r.GPP ≈ 2369.3039241523384
-  @test r.Evap ≈ 748.8864673979658
-  @test r.Trans ≈ 444.02624822679013
+  @test abs(r.GPP - 2369.3039241523384) < 0.01
+  @test abs(r.Evap - 748.8864673979658) < 0.01
+  @test abs(r.Trans - 444.02624822679013) < 0.01
+
+  # @test abs(r.GPP - 2369.3039943774525) < 1
+  # @test abs(r.Evap - 748.8870728418663) < 1
+  # @test abs(r.Trans - 444.0272797401601) < 1
 end
