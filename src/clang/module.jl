@@ -1,8 +1,10 @@
 export 
   evaporation_soil_c,
+  evaporation_canopy_c,
   netRadiation_c,
   photosynthesis_c,
   aerodynamic_conductance_c,
+  Leaf_Temperature_c,
   surface_temperature_c,
   aerodynamic_conductance_c,
   transpiration_c,
@@ -72,6 +74,19 @@ function evaporation_soil_c(temp_air, temp_g, rh_air, netRad_g, Gheat_g,
   evapo_soil[], evapo_water_g[], evapo_snow_g[]
 end
 
+function evaporation_canopy_c(tempL::Leaf, Ta::Float64, rh_air::Float64,
+  Gwater::Leaf, lai::Leaf,
+  perc_water_o::Float64, perc_water_u::Float64, perc_snow_o::Float64, perc_snow_u::Float64)
+
+  evapo_water_o = init_dbl()
+  evapo_water_u = init_dbl()
+  evapo_snow_o = init_dbl()
+  evapo_snow_u = init_dbl()
+
+  ccall((:evaporation_canopy, libbeps), Cvoid, (Leaf, Cdouble, Cdouble, Leaf, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), tempL, Ta, rh_air, Gwater, lai, perc_water_o, perc_water_u, perc_snow_o, perc_snow_u, evapo_water_o, evapo_water_u, evapo_snow_o, evapo_snow_u)
+
+  evapo_water_o[], evapo_water_u[], evapo_snow_o[], evapo_snow_u[]
+end
 
 function Leaf_Temperatures_c(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs_o, Xcl_o, Xcs_u, Xcl_u, radiation::Leaf, Tc::Leaf)
   ccall((:Leaf_Temperatures, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Leaf, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Ptr{Leaf}),
@@ -103,6 +118,8 @@ function aerodynamic_conductance_c(canopy_height_o::T, canopy_height_u::T,
     ra_o, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b)
   ra_o[], ra_u[], ra_g[], G_o_a[], G_o_b[], G_u_a[], G_u_b[]
 end
+
+
 
 
 function transpiration_c(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, lai::Leaf)

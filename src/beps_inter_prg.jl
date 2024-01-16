@@ -324,11 +324,10 @@ function inter_prg_jl(
     var.Trans_o[kkk], var.Trans_u[kkk] = transpiration_jl(Tc_new, Ta, rh_air, Gw, LAI)
 
     # /*****  Evaporation and sublimation from canopy by X. Luo  *****/
-    evaporation_canopy(
+    var.Eil_o[kkk], var.Eil_u[kkk], var.EiS_o[kkk], var.EiS_u[kkk] = evaporation_canopy_jl(
       Tc_new, Ta, rh_air,
       Gww, PAI,
-      var.Xcl_o[kkk], var.Xcl_u[kkk], var.Xcs_o[kkk], var.Xcs_u[kkk],
-      Ref(var.Eil_o, kkk), Ref(var.Eil_u, kkk), Ref(var.EiS_o, kkk), Ref(var.EiS_u, kkk))
+      var.Xcl_o[kkk], var.Xcl_u[kkk], var.Xcs_o[kkk], var.Xcs_u[kkk])
 
     # /*****  Rainfall stage 2 by X. Luo  *****/
     rainfall_stage2(var.Eil_o[kkk], var.Eil_u[kkk], Ref(var.Wcl_o, kkk), Ref(var.Wcl_u, kkk))

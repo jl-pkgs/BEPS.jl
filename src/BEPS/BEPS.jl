@@ -12,6 +12,7 @@ include("Leaf_Temperature.jl")
 include("surface_temperature.jl")
 include("transpiration.jl")
 include("evaporation_soil.jl")
+include("evaporation_canopy.jl")
 
 include("netRadiation.jl")
 include("photosynthesis.jl")
@@ -23,6 +24,7 @@ export aerodynamic_conductance_jl,
   Leaf_Temperatures_jl, 
   surface_temperature_jl,
   transpiration_jl, 
+  evaporation_canopy_jl,
   evaporation_soil_jl, 
   netRadiation_jl, 
   photosynthesis_jl
