@@ -2,8 +2,6 @@ module clang
 # using BEPS.beps_c
 # using BEPS_jll
 # export BEPS_jll
-
-# using CEnum
 import Base: RefValue, RefArray
 TypeRef{T} = Union{Ref{T},RefArray{T,Vector{T},Nothing}}
 
@@ -11,8 +9,6 @@ using BEPS
 import BEPS: libbeps
 # const libbeps = "deps/libbeps.dll"
 
-# include("../DataType/DataType.jl")
-# include("helpers.jl")
 include("../DataType/Constant.jl")
 include("SOIL_c.jl")
 include("module.jl")
@@ -50,6 +46,24 @@ end
 # function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
 #     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil_c}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
 # end
+
+"""
+s_coszs(jday::Int, j::Int, lat::T, lon::T) where {T<:Real}
+
+# Example
+```jldoc
+x = zeros(4)
+s_coszs(Ref(x, 1), 10, 1, 30, 120)
+x
+```
+"""
+function s_coszs(jday::Int, j::Int, lat::T, lon::T) where {T<:Real}
+  CosZs = init_dbl()
+  ccall((:s_coszs, libbeps), Cvoid, (Cshort, Cshort, Cfloat, Cfloat, Ptr{Cdouble}),
+    jday, j, lat, lon, CosZs)
+  # return Value(CosZs)
+  CosZs[]
+end
 
 # passed test
 # lai2(0.8, 0.6, 0.2, 0.4, 0.2, 0.4)
@@ -145,12 +159,9 @@ export inter_prg_c,
   # readcoef, 
   # lai2, s_coszs,
   # latent_heat!, 
-  
   Leaf_Temperatures,
   evaporation_canopy, 
   rainfall_stage1, rainfall_stage2, rainfall_stage3, snowpack_stage1, snowpack_stage2, snowpack_stage3
-
-
 
 
 end # module
