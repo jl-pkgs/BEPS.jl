@@ -10,6 +10,9 @@ export besp_main
 export clang
 
 
+path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))
+libbeps = path_proj("deps/libbeps.dll")
+
 # import Statistics: mean, std
 include("IO.jl")
 include("Ipaper.jl")

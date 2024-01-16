@@ -4,7 +4,6 @@ authors = ["Dongdong Kong <kongdd@users.noreply.github.com>"]
 version = "0.1.1"
 
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 LabelledArrays = "2ee39098-c373-598a-b85f-a56591580800"
@@ -17,7 +16,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
-CSV = "0.10"
 DataFrames = "1.5, 1.6"
 DelimitedFiles = "1.9"
 LabelledArrays = "1.14"

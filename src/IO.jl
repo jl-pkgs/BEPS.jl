@@ -1,6 +1,5 @@
 
 import DataFrames: DataFrame
-import CSV
 using DelimitedFiles: readdlm
 
 
@@ -19,11 +18,11 @@ function Base.max(df::DataFrame)
   list(keys, vals)
 end
 
-fread(f) = DataFrame(CSV.File(f))
-fwrite(df, file) = begin
-  # dirname(file) |> check_dir
-  CSV.write(file, df)
-end
-
-
-export fread, fwrite, readdlm
+# import CSV
+# fread(f) = DataFrame(CSV.File(f))
+# fwrite(df, file) = begin
+#   # dirname(file) |> check_dir
+#   CSV.write(file, df)
+# end
+# export fread, fwrite, 
+readdlm

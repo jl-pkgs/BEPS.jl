@@ -4,13 +4,12 @@ module clang
 # export BEPS_jll
 
 # using CEnum
-const libbeps = "deps/libbeps.dll"
-
-
 import Base: RefValue, RefArray
 TypeRef{T} = Union{Ref{T},RefArray{T,Vector{T},Nothing}}
 
 using BEPS
+import BEPS: libbeps
+# const libbeps = "deps/libbeps.dll"
 
 # include("../DataType/DataType.jl")
 # include("helpers.jl")
