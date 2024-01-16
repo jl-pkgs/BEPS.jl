@@ -1,6 +1,5 @@
 # BEPS.jl
 
-<!-- [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://CUG-hydro.github.io/BEPS.jl/stable) -->
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://CUG-hydro.github.io/BEPS.jl/dev)
 [![CI](https://github.com/CUG-hydro/BEPS.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/CUG-hydro/BEPS.jl/actions/workflows/CI.yml)
 [![Codecov](https://codecov.io/gh/CUG-hydro/BEPS.jl/branch/master/graph/badge.svg)](https://app.codecov.io/gh/CUG-hydro/BEPS.jl/tree/master)
@@ -8,10 +7,10 @@
 Boreal Ecosystem Productivity Simulator in Julia
 
 > Dongdong Kong
-
-BEPS.jl is alive in Julia now. All functions have been ported to Julia, and the
-performance is about 2.5 times faster than C version.
-
+>
+> BEPS.jl is alive in Julia now. All functions have been ported to Julia, and the
+> performance is about 2.5 times faster than C version.
+>
 > - Julia: 0.286327 seconds (822.38 k allocations: 22.998 MiB, 0.85% gc time)
 > - C    : 0.787059 seconds (629.95 k allocations: 13.915 MiB)
 
@@ -20,18 +19,20 @@ performance is about 2.5 times faster than C version.
 
 ## Install
 
-* For developers
-```bash
-git clone https://github.com/CUG-hydro/BEPS.jl
-cd BEPS.jl/deps
-git clone https://github.com/CUG-hydro/BEPS.c
-```
+- For developers
 
-* For users
-```bash
-# In Julia
-] add https://github.com/CUG-hydro/BEPS.jl
-```
+  ```bash
+  git clone https://github.com/CUG-hydro/BEPS.jl
+  cd BEPS.jl/deps
+  git clone https://github.com/CUG-hydro/BEPS.c
+  ```
+
+- For users
+
+  ```bash
+  # In Julia
+  ] add https://github.com/CUG-hydro/BEPS.jl
+  ```
 
 ## Usage
 
