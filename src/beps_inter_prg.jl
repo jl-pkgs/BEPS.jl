@@ -184,7 +184,6 @@ function inter_prg_jl(
   end
 
   init_leaf_dbl(Tc_old, Ta - 0.5)
-
   # Cs = zeros(layer + 2, MAX_Loop)
   # Tm = zeros(layer + 2, MAX_Loop)
   # G = zeros(layer + 2, MAX_Loop)
@@ -204,10 +203,8 @@ function inter_prg_jl(
       Ref(var.alpha_v_sw, kkk), Ref(var.alpha_n_sw, kkk))
 
     # /*****  Rain fall stage 1 by X. Luo  *****/
-    rainfall_stage1(Ta, precip, var.Wcl_o[kkk-1], var.Wcl_u[kkk-1],
-      lai_o, lai_u, clumping,
-      Ref(var.Wcl_o, kkk), Ref(var.Wcl_u, kkk), Ref(var.Xcl_o, kkk),
-      Ref(var.Xcl_u, kkk), Ref(var.r_rain_g, kkk))
+    var.Wcl_o[kkk], var.Wcl_u[kkk], var.Xcl_o[kkk], var.Xcl_u[kkk], var.r_rain_g[kkk] = 
+      rainfall_stage1_jl(Ta, precip, var.Wcl_o[kkk-1], var.Wcl_u[kkk-1], lai_o, lai_u, clumping)
 
     # Old version
     # if(thetam[0][kkk-1]<soilp.theta_vwp[1]*0.5) var.alpha_g = alpha_dry;
@@ -330,7 +327,7 @@ function inter_prg_jl(
       var.Xcl_o[kkk], var.Xcl_u[kkk], var.Xcs_o[kkk], var.Xcs_u[kkk])
 
     # /*****  Rainfall stage 2 by X. Luo  *****/
-    rainfall_stage2(var.Eil_o[kkk], var.Eil_u[kkk], Ref(var.Wcl_o, kkk), Ref(var.Wcl_u, kkk))
+    rainfall_stage2_jl(var.Eil_o[kkk], var.Eil_u[kkk], Ref(var.Wcl_o, kkk), Ref(var.Wcl_u, kkk))
 
     # /*****  Snow pack stage 2 by X. Luo  *****/
     snowpack_stage2(var.EiS_o[kkk], var.EiS_u[kkk], Ref(var.Wcs_o, kkk), Ref(var.Wcs_u, kkk))

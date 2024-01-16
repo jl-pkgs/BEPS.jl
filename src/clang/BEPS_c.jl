@@ -92,25 +92,32 @@ function lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI::Leaf, PAI::Lea
     clumping, CosZs, stem_o, stem_u, lai_o, lai_u, Ref(LAI), Ref(PAI))
 end
 
-function rainfall_stage1(temp_air, precipitation, mass_water_o_last, mass_water_u_last, lai_o, lai_u, clumping, mass_water_o, mass_water_u, percent_water_o, percent_water_u, precipitation_g)
-  ccall((:rainfall_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), temp_air, precipitation, mass_water_o_last, mass_water_u_last, lai_o, lai_u, clumping, mass_water_o, mass_water_u, percent_water_o, percent_water_u, precipitation_g)
-end
-
-function rainfall_stage2(evapo_water_o, evapo_water_u, mass_water_o, mass_water_u)
-  ccall((:rainfall_stage2, libbeps), Cvoid, (Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}), evapo_water_o, evapo_water_u, mass_water_o, mass_water_u)
-end
-
-# no prototype is found for this function at beps.h:181:6, please use with caution
-function rainfall_stage3()
-  ccall((:rainfall_stage3, libbeps), Cvoid, ())
-end
-
 function meteo_pack(temp, rh, meteo_pack_output)
   ccall((:meteo_pack, libbeps), Cvoid, (Cdouble, Cdouble, Ptr{Cdouble}), temp, rh, meteo_pack_output)
 end
 
+function rainfall_stage1(temp_air, prcp, mass_water_o_last, mass_water_u_last, lai_o, lai_u, clumping)
+  mass_water_o = init_dbl()
+  mass_water_u = init_dbl()
+  percent_water_o = init_dbl()
+  percent_water_u = init_dbl()
+  prcp_g = init_dbl()
 
-function snowpack_stage1(temp_air, precipitation,
+  ccall((:rainfall_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), temp_air, prcp, mass_water_o_last, mass_water_u_last, lai_o, lai_u, clumping, mass_water_o, mass_water_u, percent_water_o, percent_water_u, prcp_g)
+
+  mass_water_o[], mass_water_u[], percent_water_o[], percent_water_u[], prcp_g[]
+end
+
+function rainfall_stage2(evapo_water_o, evapo_water_u, mass_water_o::Ref, mass_water_u::Ref)
+  ccall((:rainfall_stage2, libbeps), Cvoid, (Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}), evapo_water_o, evapo_water_u, mass_water_o, mass_water_u)
+end
+
+# # no prototype is found for this function at beps.h:181:6, please use with caution
+# function rainfall_stage3()
+#   ccall((:rainfall_stage3, libbeps), Cvoid, ())
+# end
+
+function snowpack_stage1(temp_air, prcp,
   mass_snow_o_last, mass_snow_u_last, mass_snow_g_last,
   mass_snow_o::TypeRef, mass_snow_u::TypeRef, mass_snow_g::TypeRef,
   lai_o::T, lai_u::T, clumping::T,
@@ -118,7 +125,7 @@ function snowpack_stage1(temp_air, precipitation,
   density_snow::TypeRef, depth_snow::TypeRef, albedo_v_snow::TypeRef, albedo_n_snow::TypeRef) where {T<:Real}
 
   ccall((:snowpack_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    temp_air, precipitation,
+    temp_air, prcp,
     mass_snow_o_last, mass_snow_u_last, mass_snow_g_last,
     mass_snow_o, mass_snow_u, mass_snow_g, # by reference
     lai_o, lai_u, clumping,
@@ -154,7 +161,7 @@ export inter_prg_c,
   # latent_heat!, 
   # Leaf_Temperatures,
   # evaporation_canopy, 
-  rainfall_stage1, rainfall_stage2, rainfall_stage3, snowpack_stage1, snowpack_stage2, snowpack_stage3
+  rainfall_stage1, rainfall_stage2, snowpack_stage1, snowpack_stage2, snowpack_stage3
 
 
 end # module

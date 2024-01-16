@@ -14,10 +14,14 @@ include("transpiration.jl")
 include("evaporation_soil.jl")
 include("evaporation_canopy.jl")
 
+include("rainfall_stage.jl")
+
 include("netRadiation.jl")
 include("photosynthesis.jl")
 
-export s_coszs, lai2, readparam, readcoef
+export s_coszs, lai2, readparam, readcoef, 
+  rainfall_stage1_jl, rainfall_stage2_jl
+
 export aerodynamic_conductance_jl, 
   sensible_heat_jl,
   latent_heat!,
