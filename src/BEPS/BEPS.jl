@@ -15,12 +15,14 @@ include("evaporation_soil.jl")
 include("evaporation_canopy.jl")
 
 include("rainfall_stage.jl")
+include("snowpack.jl")
 
 include("netRadiation.jl")
 include("photosynthesis.jl")
 
 export s_coszs, lai2, readparam, readcoef, 
-  rainfall_stage1_jl, rainfall_stage2_jl
+  rainfall_stage1_jl, rainfall_stage2_jl, 
+  snowpack_stage1_jl, snowpack_stage2_jl, snowpack_stage3_jl
 
 export aerodynamic_conductance_jl, 
   sensible_heat_jl,

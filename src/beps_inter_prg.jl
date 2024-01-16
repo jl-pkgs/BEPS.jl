@@ -193,12 +193,11 @@ function inter_prg_jl(
   # for(kkk = 1;kkk <= kloop;kkk++)
   @inbounds for kkk = 2:kloop+1
     # /*****  Snow pack stage 1 by X. Luo  *****/
-    snowpack_stage1(Ta, precip,
-      var.Wcs_o[kkk-1], var.Wcs_u[kkk-1], var.Wg_snow[kkk-1],
+    var.Xcs_o[kkk], var.Xcs_u[kkk], var.Xg_snow[kkk] = snowpack_stage1_jl(Ta, precip,
+      # var.Wcs_o[kkk-1], var.Wcs_u[kkk-1], var.Wg_snow[kkk-1],
       Ref(var.Wcs_o, kkk), Ref(var.Wcs_u, kkk), Ref(var.Wg_snow, kkk),
       lai_o, lai_u, clumping,
       Ref(var.Ac_snow_o, kkk), Ref(var.Ac_snow_u, kkk),
-      Ref(var.Xcs_o, kkk), Ref(var.Xcs_u, kkk), Ref(var.Xg_snow, kkk),
       Ref(var.rho_snow, kkk), Zsp,
       Ref(var.alpha_v_sw, kkk), Ref(var.alpha_n_sw, kkk))
 
@@ -330,7 +329,7 @@ function inter_prg_jl(
     rainfall_stage2_jl(var.Eil_o[kkk], var.Eil_u[kkk], Ref(var.Wcl_o, kkk), Ref(var.Wcl_u, kkk))
 
     # /*****  Snow pack stage 2 by X. Luo  *****/
-    snowpack_stage2(var.EiS_o[kkk], var.EiS_u[kkk], Ref(var.Wcs_o, kkk), Ref(var.Wcs_u, kkk))
+    snowpack_stage2_jl(var.EiS_o[kkk], var.EiS_u[kkk], Ref(var.Wcs_o, kkk), Ref(var.Wcs_u, kkk))
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g
@@ -376,7 +375,7 @@ function inter_prg_jl(
     # soilp.temp_soil_c[1] = var.Tm[1, kkk]
 
     # /*****  Snow Pack Stage 3 module by X. Luo  *****/
-    snowpack_stage3(Ta, var.Tsn0[kkk], var.Tsn0[kkk-1], var.rho_snow[kkk], Zsp, Zp, Ref(var.Wg_snow, kkk))
+    snowpack_stage3_jl(Ta, var.Tsn0[kkk], var.Tsn0[kkk-1], var.rho_snow[kkk], Zsp, Zp, Ref(var.Wg_snow, kkk))
 
     # /*****  Sensible heat flux module by X. Luo  *****/    
     var.Qhc_o[kkk], var.Qhc_u[kkk], var.Qhg[kkk] =

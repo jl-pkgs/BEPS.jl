@@ -118,11 +118,19 @@ end
 # end
 
 function snowpack_stage1(temp_air, prcp,
-  mass_snow_o_last, mass_snow_u_last, mass_snow_g_last,
+  # mass_snow_o_last, mass_snow_u_last, mass_snow_g_last,
   mass_snow_o::TypeRef, mass_snow_u::TypeRef, mass_snow_g::TypeRef,
   lai_o::T, lai_u::T, clumping::T,
-  area_snow_o::TypeRef, area_snow_u::TypeRef, percent_snow_o::TypeRef, percent_snow_u::TypeRef, percent_snow_g::TypeRef,
+  area_snow_o::TypeRef, area_snow_u::TypeRef, 
+  # percent_snow_o::TypeRef, percent_snow_u::TypeRef, percent_snow_g::TypeRef,
   density_snow::TypeRef, depth_snow::TypeRef, albedo_v_snow::TypeRef, albedo_n_snow::TypeRef) where {T<:Real}
+
+  mass_snow_o_last = mass_snow_o[]
+  mass_snow_u_last = mass_snow_u[]
+  mass_snow_g_last = mass_snow_g[]
+  percent_snow_o = init_dbl()
+  percent_snow_u = init_dbl()
+  percent_snow_g = init_dbl()
 
   ccall((:snowpack_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
     temp_air, prcp,
@@ -130,6 +138,8 @@ function snowpack_stage1(temp_air, prcp,
     mass_snow_o, mass_snow_u, mass_snow_g, # by reference
     lai_o, lai_u, clumping,
     area_snow_o, area_snow_u, percent_snow_o, percent_snow_u, percent_snow_g, density_snow, depth_snow, albedo_v_snow, albedo_n_snow)
+
+  percent_snow_o[], percent_snow_u[], percent_snow_g[]
 end
 
 function snowpack_stage2(evapo_snow_o, evapo_snow_u, mass_snow_o, mass_snow_u)
