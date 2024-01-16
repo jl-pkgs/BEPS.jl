@@ -1,7 +1,7 @@
 using DataFrames: DataFrame
 
 
-function hum2RH(hum::FT, tem::FT)::FT
+function q2RH(hum::FT, tem::FT)::FT
   # Vapour pressure in mbar
   ea = 0.46 * hum * (tem + 273.16) / 100
   es = 6.1078 * exp((17.269 * tem) / (237.3 + tem))
@@ -23,7 +23,7 @@ function fill_meteo!(meteo::ClimateData,
   meteo.rain = pre / 1000 # m to mm
   meteo.wind = wind
   meteo.LR = -200.0 #  -200.0 means no measured long-wave radiation, the value will be 
-  meteo.rh = hum2RH(hum, tem)
+  meteo.rh = q2RH(hum, tem)
 end
 
 function fill_meteo!(meteo::ClimateData, d::DataFrame, k::Int=1)

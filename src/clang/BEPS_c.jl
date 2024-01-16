@@ -10,7 +10,7 @@ const libbeps = "deps/libbeps.dll"
 import Base: RefValue, RefArray
 TypeRef{T} = Union{Ref{T},RefArray{T,Vector{T},Nothing}}
 
-include("DataType/DataType.jl")
+include("../DataType/DataType.jl")
 include("helpers.jl")
 include("SOIL_c.jl")
 include("module/module.jl")
