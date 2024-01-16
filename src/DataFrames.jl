@@ -1,7 +1,4 @@
-
 import DataFrames: DataFrame
-using DelimitedFiles: readdlm
-
 
 function Base.sum(df::DataFrame)
   vals = [sum(df[!, c]) for c in names(df)]

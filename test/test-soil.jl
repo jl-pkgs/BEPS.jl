@@ -2,7 +2,7 @@ using Test
 import BEPS: kstep
 
 function is_soil_equal(p_jl, p_c; tol=1e-7, verbose=false)
-  names = fieldnames(typeof(p_jl))
+  names = fieldnames(typeof(p_c))
   for name in names
     x_jl = getfield(p_jl, name)
     x_c = getfield(p_c, name)

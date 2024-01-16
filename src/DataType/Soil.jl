@@ -44,4 +44,13 @@ T = Vector{Float64}
   lambda::T = zeros(10)
   Ett::T = zeros(10)
   G::T = zeros(10)
+
+  # temporary variables in soil_water_factor_v2
+  ft::T = zeros(10)
+  dtt::T = zeros(10)
+  fpsisr::T = zeros(10)
 end
+
+# ft = zeros(Float64, p.n_layer)
+# fpsisr = zeros(Float64, p.n_layer)
+# dtt = zeros(Float64, p.n_layer)

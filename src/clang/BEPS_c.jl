@@ -9,7 +9,7 @@ using BEPS
 import BEPS: libbeps
 # const libbeps = "deps/libbeps.dll"
 
-include("../DataType/Constant.jl")
+# include("../DataType/Constant.jl")
 include("SOIL_c.jl")
 include("module.jl")
 # include("beps_inter_prg.jl")
@@ -164,7 +164,7 @@ end
 # end
 
 export inter_prg_c,
-  Vcmax_Jmax, 
+  # Vcmax_Jmax, 
   # readparam, 
   # readcoef, 
   # lai2, s_coszs,

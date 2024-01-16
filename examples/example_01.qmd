@@ -61,6 +61,7 @@ write_fig("images/Figure1_bias_of_julia-version.png", 15, 8; show=false)
 # @time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 # @profview df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 @profview_allocs df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
+@profview df_jl, df_ET_jl = besp_main(d, lai, par; version="julia");
 ```
 
 

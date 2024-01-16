@@ -83,9 +83,9 @@ end
 
 # Function to compute soil water stress factor
 function soil_water_factor_v2(p::Soil)
-  ft = zeros(Float64, p.n_layer)
-  fpsisr = zeros(Float64, p.n_layer)
-  dtt = zeros(Float64, p.n_layer)
+  # ft = zeros(Float64, p.n_layer)
+  # fpsisr = zeros(Float64, p.n_layer)
+  # dtt = zeros(Float64, p.n_layer)
 
   t1 = -0.02
   t2 = 2.0
@@ -99,29 +99,29 @@ function soil_water_factor_v2(p::Soil)
 
   for i in 1:p.n_layer
     # psi_sr in m H2O! This is the old version. LHE.
-    fpsisr[i] = p.psim[i] > p.psi_min ? 1.0 / (1 + ((p.psim[i] - p.psi_min) / p.psi_min)^p.alpha) : 1.0
+    p.fpsisr[i] = p.psim[i] > p.psi_min ? 1.0 / (1 + ((p.psim[i] - p.psi_min) / p.psi_min)^p.alpha) : 1.0
 
-    ft[i] = p.temp_soil_p[i] > 0.0 ? 1.0 - exp(t1 * p.temp_soil_p[i]^t2) : 0
+    p.ft[i] = p.temp_soil_p[i] > 0.0 ? 1.0 - exp(t1 * p.temp_soil_p[i]^t2) : 0
 
-    fpsisr[i] *= ft[i]
+    p.fpsisr[i] *= p.ft[i]
   end
 
   for i in 1:p.n_layer
-    dtt[i] = FW_VERSION == 1 ? p.f_root[i] * fpsisr[i] : p.f_root[i]
+    p.dtt[i] = FW_VERSION == 1 ? p.f_root[i] * p.fpsisr[i] : p.f_root[i]
   end
-  dtt_sum = sum(dtt)
+  dtt_sum = sum(p.dtt)
 
   if dtt_sum < 0.000001
     p.f_soilwater = 0.1
   else
     fpsisr_sum = 0
     for i in 1:p.n_layer
-      p.dt[i] = dtt[i] / dtt_sum
+      p.dt[i] = p.dtt[i] / dtt_sum
 
       if isnan(p.dt[i])
         println(p.dt[1])
       end
-      fpsisr_sum += fpsisr[i] * p.dt[i]
+      fpsisr_sum += p.fpsisr[i] * p.dt[i]
     end
     p.f_soilwater = max(0.1, fpsisr_sum)
   end
