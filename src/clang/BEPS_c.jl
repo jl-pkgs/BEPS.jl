@@ -46,6 +46,18 @@ end
 # function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
 #     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil_c}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
 # end
+function readparam(lc::Int=1)
+  parameter1 = zeros(Cdouble, 48)
+  # readparam(short lc, double* parameter1)
+  ccall((:readparam, libbeps), Cvoid, (Cshort, Ptr{Cdouble}), lc, parameter1)
+  parameter1
+end
+
+function readcoef(lc::Int=1, stxt::Int=1)
+  coef = zeros(Cdouble, 48)
+  ccall((:readcoef, libbeps), Cvoid, (Cshort, Cint, Ptr{Cdouble}), lc, stxt, coef)
+  coef
+end
 
 """
 s_coszs(jday::Int, j::Int, lat::T, lon::T) where {T<:Real}
@@ -78,18 +90,6 @@ end
 function lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI::Leaf, PAI::Leaf)
   ccall((:lai2, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Leaf}, Ptr{Leaf}),
     clumping, CosZs, stem_o, stem_u, lai_o, lai_u, Ref(LAI), Ref(PAI))
-end
-
-function Leaf_Temperatures(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs_o, Xcl_o, Xcs_u, Xcl_u, radiation::Leaf, Tc::Leaf)
-  ccall((:Leaf_Temperatures, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Leaf, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Ptr{Leaf}),
-    Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, 
-    Xcs_o, Xcl_o, Xcs_u, Xcl_u, 
-    radiation, Ref(Tc))
-end
-
-function Leaf_Temperature(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
-  ccall((:Leaf_Temperature, libbeps), Cdouble, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble), 
-  Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
 end
 
 function evaporation_canopy(tempL, temp_air, rh_air, Gwater, lai, percent_water_o, percent_water_u, percent_snow_o, percent_snow_u, evapo_water_o, evapo_water_u, evapo_snow_o, evapo_snow_u)
@@ -159,7 +159,7 @@ export inter_prg_c,
   # readcoef, 
   # lai2, s_coszs,
   # latent_heat!, 
-  Leaf_Temperatures,
+  # Leaf_Temperatures,
   evaporation_canopy, 
   rainfall_stage1, rainfall_stage2, rainfall_stage3, snowpack_stage1, snowpack_stage2, snowpack_stage3
 

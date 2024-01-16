@@ -295,7 +295,7 @@ function inter_prg_jl(
       update_Gc!(Gc, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
 
       # /***** Leaf temperatures module by L. He  *****/
-      Leaf_Temperatures(Ta, slope, gamma, VPD_air, Cp_ca,
+      Leaf_Temperatures_jl(Ta, slope, gamma, VPD_air, Cp_ca,
         Gw, Gww, Gh,
         var.Xcs_o[kkk], var.Xcl_o[kkk], var.Xcs_u[kkk], var.Xcl_u[kkk],
         Rn, Tc_new)

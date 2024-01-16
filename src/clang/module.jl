@@ -73,17 +73,16 @@ function evaporation_soil_c(temp_air, temp_g, rh_air, netRad_g, Gheat_g,
 end
 
 
-function readparam(lc::Int=1)
-  parameter1 = zeros(Cdouble, 48)
-  # readparam(short lc, double* parameter1)
-  ccall((:readparam, libbeps), Cvoid, (Cshort, Ptr{Cdouble}), lc, parameter1)
-  parameter1
+function Leaf_Temperatures_c(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs_o, Xcl_o, Xcs_u, Xcl_u, radiation::Leaf, Tc::Leaf)
+  ccall((:Leaf_Temperatures, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Leaf, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Ptr{Leaf}),
+    Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh,
+    Xcs_o, Xcl_o, Xcs_u, Xcl_u,
+    radiation, Ref(Tc))
 end
 
-function readcoef(lc::Int=1, stxt::Int=1)
-  coef = zeros(Cdouble, 48)
-  ccall((:readcoef, libbeps), Cvoid, (Cshort, Cint, Ptr{Cdouble}), lc, stxt, coef)
-  coef
+function Leaf_Temperature_c(Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
+  ccall((:Leaf_Temperature, libbeps), Cdouble, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
+    Tair, slope, psychrometer, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
 end
 
 function aerodynamic_conductance_c(canopy_height_o::T, canopy_height_u::T,
