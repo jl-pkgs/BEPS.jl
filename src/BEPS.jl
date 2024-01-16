@@ -5,11 +5,11 @@ using UnPack
 import Parameters: @with_kw, @with_kw_noshow
 using Printf
 using Reexport
+@reexport using Serialization: deserialize, serialize
 
 export clang
 export besp_main
 export init_soil!
-
 
 path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))
 libbeps = path_proj("deps/libbeps.dll")

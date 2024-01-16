@@ -3,7 +3,7 @@
 <!-- [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://CUG-hydro.github.io/BEPS.jl/stable) -->
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://CUG-hydro.github.io/BEPS.jl/dev)
 [![CI](https://github.com/CUG-hydro/BEPS.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/CUG-hydro/BEPS.jl/actions/workflows/CI.yml)
-[![Codecov](https://codecov.io/gh/CUG-hydro/BEPS.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/CUG-hydro/BEPS.jl)
+[![Codecov](https://codecov.io/gh/CUG-hydro/BEPS.jl/branch/master/graph/badge.svg)](https://app.codecov.io/gh/CUG-hydro/BEPS.jl/tree/master)
 
 Boreal Ecosystem Productivity Simulator in Julia
 

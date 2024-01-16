@@ -11,10 +11,10 @@
 
 ```{julia}
 using BEPS
-import RTableTools: fread
+# import RTableTools: fread
 # using BEPS.clang
-f = "examples/input/p1_meteo.txt"
-d = fread(f)
+# d = fread("examples/input/p1_meteo")
+d = deserialize("data/p1_meteo")
 lai = readdlm("examples/input/p1_lai.txt")[:]
 
 par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
