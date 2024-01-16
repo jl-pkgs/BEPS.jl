@@ -33,6 +33,7 @@ max(df_diff_perc) # SH, 1.48%的误差
 # 绘图展示结果
 ```{julia}
 using Plots
+using Ipaper
 
 function plot_var(var=:SH)
   n = size(df_jl, 1)
@@ -50,8 +51,9 @@ ps = map(plot_var, vars)
 # p1 = plot(df_jl.SH[inds], label="julia", title="SH")
 # plot!(df_c.SH[inds] + 0, label="c")
 # p2 = plot(df_diff_perc.SH[inds], label="Julia error (%)")
-
+# title = "bias (%): (julia - c)/c"
 plot(ps..., layout=(3, 4), size=(1400, 800))
+write_fig("images/Figure1_bias_of_julia-version.png", 15, 8; show=false)
 ```
 
 ```{julia}
