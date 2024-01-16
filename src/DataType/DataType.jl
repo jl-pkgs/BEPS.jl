@@ -18,6 +18,11 @@ include("Other_structs.jl")
 include("InterTempVars.jl")
 include("OutputET.jl")
 
-export Soil, Leaf, LeafRef,
+export 
+  Leaf, LeafRef,
+  Soil, TSoil,
   ClimateData, Results, Cpools,
-  OutputET
+  InterTempVars,
+  OutputET, Radiation
+
+export FT, init_dbl, dbl

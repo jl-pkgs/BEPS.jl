@@ -1,19 +1,3 @@
-using Printf
-
-function inter_prg_c(jday, rstep,
-  lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
-  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil,
-  Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET, var::InterTempVars; debug=false, kw...) where {T<:Real}
-
-  ccall((:inter_prg_c, libbeps), Cvoid,
-    (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
-      Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil}, Ptr{Results}, Ptr{OutputET}),
-    jday, rstep, lai, clumping, parameter,
-    Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res), Ref(mid_ET))
-end
-
-
 """
 The inter-module function between main program and modules
 
@@ -276,7 +260,7 @@ function inter_prg_jl(
       Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) / (PAI.u_sunlit + PAI.u_shaded)
 
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
-      radiation_o, radiation_u, radiation_g = netRadiation_jl(Ks, CosZs, Tco, Tcu, temp_grd,
+      radiation_o, radiation_u, radiation_g = netRadiation(Ks, CosZs, Tco, Tcu, temp_grd,
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
         clumping, Ta, rh_air, var.alpha_v_sw[kkk], var.alpha_n_sw[kkk],
         percentArea_snow_o, percentArea_snow_u,
@@ -293,7 +277,7 @@ function inter_prg_jl(
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
           Ta, e_a10, f_soilwater, b_h2o, m_h2o,
           Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
-          Gs_new, Ac, Ci_new; version="julia")
+          Gs_new, Ac, Ci_new; version="c")
       else
         init_leaf_dbl(Gs_new, 0.0001)
         init_leaf_dbl(Ac, 0.0)
@@ -356,6 +340,8 @@ function inter_prg_jl(
     Gheat_g = 1 / ra_g
     mass_water_g[] = rho_w * Zp[]
 
+    # passed: aerodynamic_conductance_jl, transpiration_jl, sensible_heat_jl
+    
     evaporation_soil(temp_grd, var.Ts0[kkk-1], rh_air, radiation_g, Gheat_g,
       Ref(var.Xg_snow, kkk), Zp, Zsp, mass_water_g, Ref(var.Wg_snow, kkk), # Ref
       var.rho_snow[kkk], soilp.thetam_prev[1], soilp.fei[1],

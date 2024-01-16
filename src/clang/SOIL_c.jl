@@ -66,3 +66,18 @@ function UpdateSoilMoisture(p::Soil, peroid_in_seconds::Cdouble)
     ccall((:UpdateSoilMoisture, libbeps), Cvoid, (Ptr{Soil}, Cdouble), 
       Ref(p), peroid_in_seconds)
 end
+
+export SoilRootFraction, 
+  Init_Soil_Parameters, 
+  Init_Soil_Status, 
+  soil_water_factor_v2, 
+  Soil_Water_Uptake, 
+  UpdateSoilLambda, 
+  init_soil_parameter, 
+  Update_Cs, 
+  Update_ice_ratio, 
+  UpdateSoilThermalConductivity, 
+  UpdateHeatFlux, 
+  Update_temp_soil_c, 
+  Update_G, 
+  UpdateSoilMoisture

@@ -1,8 +1,5 @@
-include("BEPS_helper.jl")
-
-
 function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
-  version="julia", kw...)
+  version="julia", debug=false, kw...)
 
   p_soil = Soil()
   meteo = ClimateData()
@@ -30,7 +27,6 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
   elseif version == "c"
     fun = inter_prg_c
   end
-  debug = false
 
   for jday = 1:365
     if mod(jday, 50) == 0

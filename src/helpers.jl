@@ -56,4 +56,7 @@ end
 
 
 
-export meteo_pack_jl, cal_slope, cal_es, blackbody
+export pow, cal_ea, cal_es, 
+  cal_slope, cal_lambda, cal_cp, ea2q, RH2q,
+  cal_Rln, 
+  meteo_pack_jl, blackbody

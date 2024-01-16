@@ -1,15 +1,3 @@
-function transpiration_c(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, lai::Leaf)
-
-  trans_o = init_dbl()
-  trans_u = init_dbl()
-
-  ccall((:transpiration, libbeps), Cvoid,
-    (Leaf, Cdouble, Cdouble, Leaf, Leaf, Ptr{Cdouble}, Ptr{Cdouble}),
-    T_leaf, Ta, RH, Gtrans, lai, trans_o, trans_u)
-  trans_o[], trans_u[]
-end
-
-
 function transpiration_jl(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, lai::Leaf)
   T = Leaf() # transpiration
 
@@ -20,7 +8,7 @@ function transpiration_jl(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, 
   Δ = met.slope
   γ = met.gamma  # psychrometer constant
   λ = cal_lambda(Ta)
-  
+
   # Luo, 2018, JGR-Biogeosciences
   T.o_sunlit = (VPD + Δ * (T_leaf.o_sunlit - Ta)) * ρₐ * cp * Gtrans.o_sunlit / γ
   T.o_shaded = (VPD + Δ * (T_leaf.o_shaded - Ta)) * ρₐ * cp * Gtrans.o_shaded / γ

@@ -1,40 +1,17 @@
-# function aerodynamic_conductance(canopy_height_o, canopy_height_u, z_wind, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u,
-#   ra_o::TypeRef, ra_u::TypeRef, ra_g::TypeRef,
-#   G_o_a::TypeRef, G_o_b::TypeRef, G_u_a::TypeRef, G_u_b::TypeRef)
+"""
+    aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
+        z_wind::FT, clumping::FT,
+        temp_air::FT, wind_sp::FT, SH_o_p::FT, lai_o::FT, lai_u::FT=0.0)
 
-#   ccall((:aerodynamic_conductance, libbeps), Cvoid,
-#     (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-#     canopy_height_o, canopy_height_u, z_wind, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u,
-#     ra_o, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b)
-# end
-export aerodynamic_conductance_c, aerodynamic_conductance_jl
-
-function aerodynamic_conductance_c(canopy_height_o::T, canopy_height_u::T,
-  z_wind::T, clumping::T,
-  temp_air::T, wind_sp::T, SH_o_p::T, lai_o::T, lai_u::T=0.0) where {T<:Real}
-  
-  ra_o = Ref(0.0)
-  ra_u = Ref(0.0)
-  ra_g = Ref(0.0)
-  G_o_a = Ref(0.0)
-  G_o_b = Ref(0.0)
-  G_u_a = Ref(0.0)
-  G_u_b = Ref(0.0)
-
-  ccall((:aerodynamic_conductance, libbeps), Cvoid,
-    (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    canopy_height_o, canopy_height_u, z_wind, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u,
-    ra_o, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b)
-  ra_o[], ra_u[], ra_g[], G_o_a[], G_o_b[], G_u_a[], G_u_b[]
-end
-
-# ra_o, G_o_a, G_o_b, G_u_a, G_u_b, ra_g = aerodynamic_conductance_jl(canopy_height_o::T, canopy_height_u::T, 
-# z_wind::T, clumping::T,
-# temp_air::T, wind_sp::T, SH_o_p::T, lai_o::T)
-# // ra_o, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b
-function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT, 
-  z_wind::FT, clumping::FT, 
-  temp_air::FT, wind_sp::FT, SH_o_p::FT, lai_o::FT, lai_u::FT = 0.0)
+# Examples
+```julia
+ra_o, G_o_a, G_o_b, G_u_a, G_u_b, ra_g = aerodynamic_conductance_jl(
+    canopy_height_o, canopy_height_u, z_wind, clumping, temp_air, wind_sp, SH_o_p, lai_o, lai_u)
+```
+"""
+function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
+  z_wind::FT, clumping::FT,
+  temp_air::FT, wind_sp::FT, SH_o_p::FT, lai_o::FT, lai_u::FT=0.0)
 
   # beta::FT = 0.5 # Bowen's ratio
   k::FT = 0.4   # von Karman's constant
@@ -44,17 +21,17 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
   n::FT = 5.0
   nu_lower::FT = (13.3 + temp_air * 0.07) / 1000000  # viscosity (cm2/s)
   alfaw::FT = (18.9 + temp_air * 0.07) / 1000000
-  
+
   if wind_sp == 0
     G_o_a = 1 / 200.0
     G_o_b = 1 / 200.0
     G_u_a = 1 / 200.0
     G_u_b = 1 / 200.0
-    ra_g = 300.
-    ra_u = 0.
-    ra_o = 0.
+    ra_g = 300.0
+    ra_u = 0.0
+    ra_o = 0.0
   else
-    d::FT  = 0.8 * canopy_height_o  # displacement height (m)
+    d::FT = 0.8 * canopy_height_o  # displacement height (m)
     z0::FT = 0.08 * canopy_height_o # roughness length (m)
 
     ustar::FT = wind_sp * k / log((z_wind - d) / z0) # friction velocity (m/s)
@@ -94,7 +71,7 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
     un_d = uh * exp(-gamma * (1 - canopy_height_u * 0.8 / canopy_height_o))
     # # wind speed at the zero displacement of canopy
     # un_t = uh * exp(-gamma * (1 - canopy_height_u / canopy_height_o))
-    Nu = cal_Nu(un_d, nu_lower)    
+    Nu = cal_Nu(un_d, nu_lower)
     rb_u = min(40, 0.5 * 0.1 / (alfaw * Nu)) # leaf boundary resistance
     G_u_b = 1.0 / rb_u
 

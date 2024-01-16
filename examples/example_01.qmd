@@ -11,9 +11,8 @@
 
 ```{julia}
 using BEPS
-using BEPS.beps_c
+# using BEPS.clang
 # using Ipaper
-
 f = "examples/input/p1_meteo.txt"
 d = fread(f)
 lai = readdlm("examples/input/p1_lai.txt")[:]
@@ -32,12 +31,26 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
 sum(df_jl)
 sum(df_c)
 
-df_diff = abs.(df_jl .- df_c) 
+df_diff = abs.(df_jl .- df_c)
 df_diff_perc = abs.(df_jl .- df_c) ./ df_c .* 100
 # df_diff = abs.(df_ET_jl .- df_ET_c)
 # fwrite(df_diff, "a-3.csv")
-max(df_diff_perc) # SH, 1.5%的误差
 max(df_diff)
+max(df_diff_perc) # SH, 1.5%的误差, 误差达到了3%
+```
+
+# 绘图展示结果
+```{julia}
+using Plots
+
+n = size(df_jl, 1)
+inds = 1:n
+p1 = plot(df_jl.SH[inds], label="julia")
+plot!(df_c.SH[inds] + 0, label="c")
+
+p2 = plot(df_diff_perc.SH[inds], label="Julia error (%)")
+
+plot(p1, p2, layout=(2, 1), size=(1400, 800))
 ```
 
 ```{julia}

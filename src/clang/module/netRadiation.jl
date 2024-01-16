@@ -1,11 +1,11 @@
-function netRadiation_c(shortRad_global, CosZs,
+function netRadiation(shortRad_global, CosZs,
   temp_o, temp_u, temp_g,
   lai_o, lai_u, lai_os, lai_us, lai::Leaf, Ω, temp_air, rh,
   α_snow_v, α_snow_n,
   percentArea_snow_o, percentArea_snow_u, percent_snow_g,
   α_v_o, α_n_o, α_v_u, α_n_u, α_v_g, α_n_g,
   # netRad_o::TypeRef, netRad_u::TypeRef, netRad_g::TypeRef,
-  netRadLeaf::Leaf, netShortRadLeaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
+  Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
 
   netRad_o = init_dbl()
   netRad_u = init_dbl()
@@ -16,7 +16,7 @@ function netRadiation_c(shortRad_global, CosZs,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Leaf}, Ptr{Leaf}),
     shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai, Ω, temp_air, rh, α_snow_v, α_snow_n, percentArea_snow_o, percentArea_snow_u, percent_snow_g,
     α_v_o, α_n_o, α_v_u, α_n_u, α_v_g, α_n_g,
-    netRad_o, netRad_u, netRad_g, Ref(netRadLeaf), Ref(netShortRadLeaf))
+    netRad_o, netRad_u, netRad_g, Ref(Rn_Leaf), Ref(Rns_Leaf))
 
   netRad_o[], netRad_u[], netRad_g[]
 end

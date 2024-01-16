@@ -1,4 +1,4 @@
-module beps_c
+module clang
 # using BEPS.beps_c
 # using BEPS_jll
 # export BEPS_jll
@@ -10,18 +10,35 @@ const libbeps = "deps/libbeps.dll"
 import Base: RefValue, RefArray
 TypeRef{T} = Union{Ref{T},RefArray{T,Vector{T},Nothing}}
 
-include("../DataType/DataType.jl")
-include("helpers.jl")
+using BEPS
+
+# include("../DataType/DataType.jl")
+# include("helpers.jl")
+include("../DataType/Constant.jl")
 include("SOIL_c.jl")
 include("module/module.jl")
-include("beps_inter_prg.jl")
-include("beps_main.jl")
-include("debug_Rln.jl")
+# include("beps_inter_prg.jl")
+# include("beps_main.jl")
+# include("debug_Rln.jl")
 
 # function plantresp(LC, mid_res::Results, lai_yr, lai, temp_air, temp_soil, CosZs)
 #     ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Results}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
 #         LC, Ref(mid_res), lai_yr, lai, temp_air, temp_soil, CosZs)
 # end
+
+function inter_prg_c(jday, rstep,
+  lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
+  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil,
+  Ra::Radiation,
+  mid_res::Results, mid_ET::OutputET, var::InterTempVars; debug=false, kw...) where {T<:Real}
+
+  ccall((:inter_prg_c, libbeps), Cvoid,
+    (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
+      Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil}, Ptr{Results}, Ptr{OutputET}),
+    jday, rstep, lai, clumping, parameter,
+    Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res), Ref(mid_ET))
+end
+
 
 function Vcmax_Jmax(lai_o, clumping, Vcmax0, slope_Vcmax_N, leaf_N, CosZs, Vcmax_sunlit, Vcmax_shaded, Jmax_sunlit, Jmax_shaded)
   ccall((:Vcmax_Jmax, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
@@ -47,19 +64,6 @@ function readcoef(lc::Int=1, stxt::Int=1)
   coef = zeros(Cdouble, 48)
   ccall((:readcoef, libbeps), Cvoid, (Cshort, Cint, Ptr{Cdouble}), lc, stxt, coef)
   coef
-end
-
-
-# no prototype is found for this function at beps.h:133:6, please use with caution
-function readhydr_param()
-  ccall((:readhydr_param, libbeps), Cvoid, ())
-end
-
-
-
-# no prototype is found for this function at beps.h:138:6, please use with caution
-function soil_water_factor()
-  ccall((:soil_water_factor, libbeps), Cvoid, ())
 end
 
 # passed test
@@ -151,12 +155,25 @@ end
 # exports
 # const PREFIXES = ["CX", "clang_"]
 # , prefix in PREFIXES
-for name in names(@__MODULE__; all=true)
-  # if startswith(string(name), prefix)
-  if !(string(name) in ["eval", "include"])
-    @eval export $name
-  end
-  # end
-end
+# for name in names(@__MODULE__; all=true)
+#   # if startswith(string(name), prefix)
+#   if !(string(name) in ["#eval", "#include"])
+#     @eval export $name
+#   end
+#   # end
+# end
+
+export inter_prg_c,
+  Vcmax_Jmax, 
+  # readparam, 
+  readcoef, 
+  # lai2, s_coszs,
+  Leaf_Temperatures, 
+  latent_heat!, 
+  evaporation_canopy, 
+  rainfall_stage1, rainfall_stage2, rainfall_stage3, meteo_pack, snowpack_stage1, snowpack_stage2, snowpack_stage3
+
+
+
 
 end # module

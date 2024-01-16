@@ -1,25 +1,7 @@
-function sensible_heat_c(tempL::Leaf, 
-  temp_g::Cdouble, temp_air::Cdouble, RH::Cdouble,
-  Gheat::Leaf, Gheat_g::Cdouble, LAI::Leaf)
-
-  SH_o = init_dbl()
-  SH_u = init_dbl()
-  SH_g = init_dbl()
-
-  ccall((:sensible_heat, libbeps), Cvoid,
-    (Leaf, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Leaf,
-      Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    tempL, temp_g, temp_air, RH, Gheat, Gheat_g, LAI,
-    SH_o, SH_u, SH_g)
-  
-  SH_o[], SH_u[], SH_g[]
-end
-
-
 function sensible_heat_jl(T_leaf::Leaf, T_ground::FT, Ta::FT, RH::FT,
   Gheat::Leaf, Gheat_g::FT, lai::Leaf)
 
-  SH = Leaf()  
+  SH = Leaf()
   met = meteo_pack_jl(Ta, RH)
   ρₐ = met.rho_a
   cp = met.cp     # specific heat of moist air above canopy
