@@ -1,3 +1,16 @@
+import BEPS: SoilRootFraction,
+  Init_Soil_Parameters,
+  Init_Soil_Status,
+  soil_water_factor_v2,
+  Soil_Water_Uptake,
+  Update_Cs,
+  Update_ice_ratio,
+  UpdateSoilThermalConductivity,
+  UpdateHeatFlux,
+  Update_temp_soil_c,
+  Update_G,
+  UpdateSoilMoisture
+
 function SoilRootFraction(p::Soil_c)
   ccall((:SoilRootFraction, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
 end
@@ -24,15 +37,15 @@ function Soil_Water_Uptake(p::Soil_c, Trans_o, Trans_u, Evap_soil)
     Ref(p), Trans_o, Trans_u, Evap_soil)
 end
 
-function UpdateSoilLambda(p::Soil_c)
-  ccall((:UpdateSoilLambda, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
-end
+# function UpdateSoilLambda(p::Soil_c)
+#   ccall((:UpdateSoilLambda, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
+# end
 
-function init_soil_parameter(T_USDA, S_USDA, Ref_Depth, T_Density, S_Density, T_OC, S_OC, p::Soil_c)
-  ccall((:init_soil_parameter, libbeps), Cvoid,
-    (Cuchar, Cuchar, Cuchar, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Soil_c}),
-    T_USDA, S_USDA, Ref_Depth, T_Density, S_Density, T_OC, S_OC, Ref(p))
-end
+# function init_soil_parameter(T_USDA, S_USDA, Ref_Depth, T_Density, S_Density, T_OC, S_OC, p::Soil_c)
+#   ccall((:init_soil_parameter, libbeps), Cvoid,
+#     (Cuchar, Cuchar, Cuchar, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Soil_c}),
+#     T_USDA, S_USDA, Ref_Depth, T_Density, S_Density, T_OC, S_OC, Ref(p))
+# end
 
 function Update_Cs(p::Soil_c)
   ccall((:Update_Cs, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
@@ -66,18 +79,3 @@ function UpdateSoilMoisture(p::Soil_c, peroid_in_seconds::Cdouble)
     ccall((:UpdateSoilMoisture, libbeps), Cvoid, (Ptr{Soil_c}, Cdouble), 
       Ref(p), peroid_in_seconds)
 end
-
-export SoilRootFraction, 
-  Init_Soil_Parameters, 
-  Init_Soil_Status, 
-  soil_water_factor_v2, 
-  Soil_Water_Uptake, 
-  UpdateSoilLambda, 
-  init_soil_parameter, 
-  Update_Cs, 
-  Update_ice_ratio, 
-  UpdateSoilThermalConductivity, 
-  UpdateHeatFlux, 
-  Update_temp_soil_c, 
-  Update_G, 
-  UpdateSoilMoisture

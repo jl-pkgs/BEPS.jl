@@ -15,7 +15,7 @@ using BEPS
 # include("../DataType/DataType.jl")
 # include("helpers.jl")
 include("../DataType/Constant.jl")
-# include("SOIL_c.jl")
+include("SOIL_c.jl")
 include("module/module.jl")
 # include("beps_inter_prg.jl")
 # include("beps_main.jl")

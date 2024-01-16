@@ -19,10 +19,10 @@ include("DataType/DataType.jl")
 include("helpers.jl")
 include("BEPS_helper.jl")
 
+include("BEPS/BEPS.jl")
+
 include("clang/BEPS_c.jl")
 @reexport using BEPS.clang;
-
-include("BEPS/BEPS.jl")
 
 include("beps_inter_prg.jl")
 include("beps_main.jl")

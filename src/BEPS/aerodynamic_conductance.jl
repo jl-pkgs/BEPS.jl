@@ -22,7 +22,7 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
   nu_lower::FT = (13.3 + temp_air * 0.07) / 1000000  # viscosity (cm2/s)
   alfaw::FT = (18.9 + temp_air * 0.07) / 1000000
 
-  if wind_sp == 0
+  @fastmath if wind_sp == 0
     G_o_a = 1 / 200.0
     G_o_b = 1 / 200.0
     G_u_a = 1 / 200.0

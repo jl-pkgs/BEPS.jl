@@ -20,7 +20,7 @@ function UpdateHeatFlux(p::Soil,
     p.temp_soil_c[i] = clamp(p.temp_soil_c[i], -50.0, 50.0)
   end
 
-  update_ice_ratio!(p)
+  Update_ice_ratio(p)
   p.temp_soil_p .= p.temp_soil_c
 end
 
@@ -39,7 +39,7 @@ end
 
 
 # Function to update the frozen status of each soil
-function update_ice_ratio!(p::Soil)
+function Update_ice_ratio(p::Soil)
   Lf0 = 3.34 * 100000  # latent heat of fusion (liquid: solid) at 0C
 
   @inbounds for i in 1:p.n_layer
@@ -258,3 +258,5 @@ function Soil_Water_Uptake(p::Soil, Trans_o::Float64, Trans_u::Float64, Evap_soi
     p.Ett[i] = Trans / rho_w * p.dt[i]
   end
 end
+
+export UpdateHeatFlux, Update_Cs, UpdateSoilThermalConductivity, soil_water_factor_v2, UpdateSoilMoisture, Soil_Water_Uptake
