@@ -12,18 +12,20 @@ end
 
 function Leaf_Temperatures_jl(Tair::Float64, slope::Float64, psychrometer::Float64, VPD_air::Float64, Cp_ca::Float64,
   Gw::Leaf, Gww::Leaf, Gh::Leaf,
-  Xcs_o::Float64, Xcl_o::Float64, Xcs_u::Float64, Xcl_u::Float64,
+  Xcs_o::Float64, Xcl_o::Float64, 
+  Xcs_u::Float64, Xcl_u::Float64,
   radiation::Leaf, Tc::Leaf)
 
-  Tc.o_sunlit = Leaf_Temperature_jl(Tair, slope, psychrometer, VPD_air, Cp_ca,
-    Gw.o_sunlit, Gww.o_sunlit, Gh.o_sunlit, Xcs_o + Xcl_o, radiation.o_sunlit, true)
+  args = (Tair, slope, psychrometer, VPD_air, Cp_ca)
+  Tc.o_sunlit = Leaf_Temperature_jl(args...,
+    Gw.o_sunlit, Gww.o_sunlit, Gh.o_sunlit, Xcs_o + Xcl_o, radiation.o_sunlit)
 
-  Tc.o_shaded = Leaf_Temperature_jl(Tair, slope, psychrometer, VPD_air, Cp_ca,
-    Gw.o_shaded, Gww.o_shaded, Gh.o_shaded, Xcs_o + Xcl_o, radiation.o_shaded, true)
+  Tc.o_shaded = Leaf_Temperature_jl(args...,
+    Gw.o_shaded, Gww.o_shaded, Gh.o_shaded, Xcs_o + Xcl_o, radiation.o_shaded)
 
-  Tc.u_sunlit = Leaf_Temperature_jl(Tair, slope, psychrometer, VPD_air, Cp_ca,
-    Gw.u_sunlit, Gww.u_sunlit, Gh.u_sunlit, Xcs_u + Xcl_u, radiation.u_sunlit, true)
+  Tc.u_sunlit = Leaf_Temperature_jl(args...,
+    Gw.u_sunlit, Gww.u_sunlit, Gh.u_sunlit, Xcs_u + Xcl_u, radiation.u_sunlit)
 
-  Tc.u_shaded = Leaf_Temperature_jl(Tair, slope, psychrometer, VPD_air, Cp_ca,
-    Gw.u_shaded, Gww.u_shaded, Gh.u_shaded, Xcs_u + Xcl_u, radiation.u_shaded, true)
+  Tc.u_shaded = Leaf_Temperature_jl(args...,
+    Gw.u_shaded, Gww.u_shaded, Gh.u_shaded, Xcs_u + Xcl_u, radiation.u_shaded)
 end

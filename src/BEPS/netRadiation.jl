@@ -1,4 +1,3 @@
-# @timeit_all 
 function netRadiation_jl(Rs_global::FT, CosZs::FT,
   temp_o::FT, temp_u::FT, temp_g::FT,
   lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
@@ -29,12 +28,9 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   α_g::FT = 0.5 * (α_v_gs + α_n_gs)
 
   # separate global solar radiation into direct and diffuse one
-  if (CosZs < 0.001)  # solar zenith angle small, all diffuse radiation
-    ratio_cloud = 0.0
-  else
-    ratio_cloud = Rs_global / (1367 * CosZs)  # Luo2018, A4
-  end
-
+  # solar zenith angle small, all diffuse radiation
+  ratio_cloud = (CosZs < 0.001) ? 0.0 : Rs_global / (1367 * CosZs)  # Luo2018, A4
+  
   if (ratio_cloud > 0.8)
     Ra.Rs_df = 0.13 * Rs_global  # Luo2018, A2
   else
@@ -46,7 +42,6 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Ra.Rs_dir = Rs_global - Ra.Rs_df  # Luo2018, A3
 
   # fraction at each layer of canopy, direct and diffuse. use Leaf only lai here
-  
   τ_o_dir::FT = exp(-0.5 * Ω * lai_o / CosZs)
   τ_u_dir::FT = exp(-0.5 * Ω * lai_u / CosZs)
 
@@ -60,17 +55,8 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   τ_u_df::FT = exp(-0.5 * Ω * lai_u / cosQ_u)
   τ_us_df::FT = exp(-0.5 * Ω * lai_us / cosQ_u)
 
-  # ϵivity of each part
-  ea = cal_ea(temp_air, rh)
-  ϵ_air = 1.0 - exp(-(pow(ea * 10.0, (temp_air + 273.15) / 1200.0)))
-  ϵ_air = clamp(ϵ_air, 0.7, 1.0)
-
-  ϵ_o = 0.98
-  ϵ_u = 0.98
-  ϵ_g = 0.96
-
+  # net short direct radiation on canopy and ground
   if Rs_global > zero && CosZs > zero
-    # net short direct radiation on canopy and ground
     Ra.Rns_o_dir = Ra.Rs_dir * ((1.0 - α_o) - (1.0 - α_u) * τ_o_dir)  # dir into dif_under
     Ra.Rns_u_dir = Ra.Rs_dir * τ_o_dir * ((1.0 - α_u) - (1.0 - α_g) * τ_u_dir)
     Ra.Rns_g_dir = Ra.Rs_dir * τ_o_dir * τ_u_dir * (1.0 - α_g)
@@ -80,8 +66,8 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
     Ra.Rns_g_dir = 0.0
   end
 
+  # net short diffuse radiation on canopy and ground
   if Rs_global > zero && CosZs > zero
-    # net short diffuse radiation on canopy and ground
     Ra.Rns_o_df = Ra.Rs_df * ((1.0 - α_o) - (1.0 - α_u) * τ_o_df) +
                0.21 * Ω * Ra.Rs_dir * (1.1 - 0.1 * lai_o) * exp(-CosZs)  # A8
     Ra.Rns_u_df = Ra.Rs_df * τ_o_df * ((1.0 - α_u) - (1.0 - α_g) * τ_u_df) +
@@ -98,22 +84,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Rns_u = Ra.Rns_u_dir + Ra.Rns_u_df
   Rns_g = Ra.Rns_g_dir + Ra.Rns_g_df
 
-  # 计算植被和地面的净长波辐射
-  Rl_air = cal_Rln(ϵ_air, temp_air)
-  Rl_o = cal_Rln(ϵ_o, temp_o)
-  Rl_u = cal_Rln(ϵ_u, temp_u)
-  Rl_g = cal_Rln(ϵ_g, temp_g)
-
-  Rnl_o = (ϵ_o * (Rl_air + Rl_u * (1.0 - τ_u_df) + Rl_g * τ_u_df) - 2 * Rl_o) *
-          (1.0 - τ_o_df) +
-          ϵ_o * (1.0 - ϵ_u) * (1.0 - τ_u_df) * (Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df))
-
-  Rnl_u = (ϵ_u * (Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df) + Rl_g) - 2 * Rl_u) * (1.0 - τ_u_df) +
-          (1.0 - ϵ_g) * ((Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df)) * τ_u_df + Rl_u * (1.0 - τ_u_df)) +
-          ϵ_u * (1.0 - ϵ_o) * (Rl_u * (1.0 - τ_u_df) + Rl_g * τ_u_df) * (1.0 - τ_o_df)
-
-  Rnl_g = ϵ_g * ((Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df)) * τ_u_df + Rl_u * (1.0 - τ_u_df)) -
-          Rl_g + (1.0 - ϵ_u) * Rl_g * (1.0 - τ_u_df)
+  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(temp_air, rh, temp_o, temp_u, temp_g, lai_o, lai_u, Ω)
 
   # 计算植被和地面的总净辐射
   Rn_o = Rns_o + Rnl_o
@@ -161,4 +132,41 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
 end
 
 
-# TODO: 切分成两个函数，长波与短波
+function cal_Rln_Longwave(temp_air::FT, rh::FT, temp_o::FT, 
+  temp_u::FT, temp_g::FT, lai_o::FT, lai_u::FT, Ω::FT) where {FT<:Real}
+
+  # indicators to describe leaf distribution angles in canopy. slightly related with LAI
+  cosQ_o::FT = 0.537 + 0.025 * lai_o  # Luo2018, A10, a representative zenith angle for diffuse radiation transmission
+  cosQ_u::FT = 0.537 + 0.025 * lai_u
+
+  τ_o_df::FT = exp(-0.5 * Ω * lai_o / cosQ_o)
+  τ_u_df::FT = exp(-0.5 * Ω * lai_u / cosQ_u)
+
+  # ϵ of each part
+  ea = cal_ea(temp_air, rh)
+  ϵ_air = 1.0 - exp(-(pow(ea * 10.0, (temp_air + 273.15) / 1200.0)))
+  ϵ_air = clamp(ϵ_air, 0.7, 1.0)
+
+  ϵ_o = 0.98
+  ϵ_u = 0.98
+  ϵ_g = 0.96
+
+  # 计算植被和地面的净长波辐射
+  Rl_air = cal_Rln(ϵ_air, temp_air)
+  Rl_o = cal_Rln(ϵ_o, temp_o)
+  Rl_u = cal_Rln(ϵ_u, temp_u)
+  Rl_g = cal_Rln(ϵ_g, temp_g)
+
+  Rnl_o = (ϵ_o * (Rl_air + Rl_u * (1.0 - τ_u_df) + Rl_g * τ_u_df) - 2 * Rl_o) *
+          (1.0 - τ_o_df) +
+          ϵ_o * (1.0 - ϵ_u) * (1.0 - τ_u_df) * (Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df))
+
+  Rnl_u = (ϵ_u * (Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df) + Rl_g) - 2 * Rl_u) * (1.0 - τ_u_df) +
+          (1.0 - ϵ_g) * ((Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df)) * τ_u_df + Rl_u * (1.0 - τ_u_df)) +
+          ϵ_u * (1.0 - ϵ_o) * (Rl_u * (1.0 - τ_u_df) + Rl_g * τ_u_df) * (1.0 - τ_o_df)
+
+  Rnl_g = ϵ_g * ((Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df)) * τ_u_df + Rl_u * (1.0 - τ_u_df)) -
+          Rl_g + (1.0 - ϵ_u) * Rl_g * (1.0 - τ_u_df)
+  
+  Rnl_o, Rnl_u, Rnl_g
+end

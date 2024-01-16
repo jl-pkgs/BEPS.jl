@@ -1,8 +1,8 @@
 @with_kw mutable struct InterTempVars
   Tc_u::Vector{FT} = zeros(MAX_Loop)
   Ts0::Vector{FT} = zeros(MAX_Loop)
-  Tsn0::Vector{FT} = zeros(MAX_Loop)
   Tsm0::Vector{FT} = zeros(MAX_Loop)
+  Tsn0::Vector{FT} = zeros(MAX_Loop)
   Tsn1::Vector{FT} = zeros(MAX_Loop)
   Tsn2::Vector{FT} = zeros(MAX_Loop)
   Qhc_o::Vector{FT} = zeros(MAX_Loop)
@@ -34,6 +34,9 @@
   Evap_SW::Vector{FT} = zeros(MAX_Loop)
   Evap_SS::Vector{FT} = zeros(MAX_Loop)
   lambda_snow::Vector{FT} = zeros(MAX_Loop)
+
+  # 记录土壤温度
+  
   Cs::Matrix{FT} = zeros(layer + 2, MAX_Loop)
   Tm::Matrix{FT} = zeros(layer + 2, MAX_Loop)
   G::Matrix{FT} = zeros(layer + 2, MAX_Loop)

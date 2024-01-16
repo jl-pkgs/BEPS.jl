@@ -307,7 +307,7 @@ end
   rate * exp(tprime * eact / (tref * rugc * t_lk))
 end
 
-# 
+
 function LAMBDA(tak::Float64)::Float64
   y = 3149000.0 - 2370.0 * tak
   # add heat of fusion for melting ice
