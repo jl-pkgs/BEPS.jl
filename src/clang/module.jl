@@ -1,5 +1,5 @@
 export 
-  evaporation_soil,
+  evaporation_soil_c,
   netRadiation_c,
   photosynthesis_c,
   aerodynamic_conductance_c,
@@ -9,7 +9,7 @@ export
   sensible_heat_c
 
 # include("s_coszs.jl")
-include("evaporation_soil.jl")
+# include("evaporation_soil.jl")
 # include("surface_temperature.jl")
 # include("netRadiation.jl")
 # include("sensible_heat.jl")
@@ -53,6 +53,23 @@ function netRadiation_c(shortRad_global, CosZs,
     netRad_o, netRad_u, netRad_g, Ref(Rn_Leaf), Ref(Rns_Leaf))
 
   netRad_o[], netRad_u[], netRad_g[]
+end
+
+
+function evaporation_soil_c(temp_air, temp_g, rh_air, netRad_g, Gheat_g,
+  percent_snow_g::TypeRef, depth_water::TypeRef, depth_snow::TypeRef, mass_water_g::TypeRef, mass_snow_g::TypeRef,
+  density_snow, swc_g, porosity_g)
+  # evapo_soil::TypeRef, evapo_water_g::TypeRef, evapo_snow_g::TypeRef
+
+  evapo_soil = init_dbl()
+  evapo_water_g = init_dbl()
+  evapo_snow_g = init_dbl()
+
+  ccall((:evaporation_soil, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cdouble, Cdouble, Cdouble,
+      Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
+    temp_air, temp_g, rh_air, netRad_g, Gheat_g, percent_snow_g, depth_water, depth_snow, mass_water_g, mass_snow_g, density_snow, swc_g, porosity_g, evapo_soil, evapo_water_g, evapo_snow_g)
+
+  evapo_soil[], evapo_water_g[], evapo_snow_g[]
 end
 
 

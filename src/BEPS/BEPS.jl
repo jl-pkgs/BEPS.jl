@@ -10,6 +10,7 @@ include("aerodynamic_conductance.jl")
 include("sensible_heat.jl")
 include("surface_temperature.jl")
 include("transpiration.jl")
+include("evaporation_soil.jl")
 
 include("netRadiation.jl")
 include("photosynthesis.jl")
@@ -20,5 +21,6 @@ export aerodynamic_conductance_jl,
   latent_heat!,
   surface_temperature_jl,
   transpiration_jl, 
+  evaporation_soil_jl, 
   netRadiation_jl, 
   photosynthesis_jl

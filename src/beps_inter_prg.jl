@@ -340,12 +340,11 @@ function inter_prg_jl(
     Gheat_g = 1 / ra_g
     mass_water_g[] = rho_w * Zp[]
 
-    # passed: aerodynamic_conductance_jl, transpiration_jl, sensible_heat_jl
-    
-    evaporation_soil(temp_grd, var.Ts0[kkk-1], rh_air, radiation_g, Gheat_g,
-      Ref(var.Xg_snow, kkk), Zp, Zsp, mass_water_g, Ref(var.Wg_snow, kkk), # Ref
-      var.rho_snow[kkk], soilp.thetam_prev[1], soilp.fei[1],
-      Ref(var.Evap_soil, kkk), Ref(var.Evap_SW, kkk), Ref(var.Evap_SS, kkk))
+    var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk] = 
+      evaporation_soil_jl(temp_grd, var.Ts0[kkk-1], rh_air, radiation_g, Gheat_g,
+        Ref(var.Xg_snow, kkk), Zp, Zsp, mass_water_g, Ref(var.Wg_snow, kkk), # Ref
+        var.rho_snow[kkk], soilp.thetam_prev[1], soilp.fei[1])
+        # Ref(var.Evap_soil, kkk), Ref(var.Evap_SW, kkk), Ref(var.Evap_SS, kkk)
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
     UpdateSoilThermalConductivity(soilp)
