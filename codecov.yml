@@ -1,0 +1,6 @@
+ignore:
+  - "src/debug/*"
+  - "*/debug/*"
+  - "src/*/deprecated"
+  - "src/*/temp"
+  

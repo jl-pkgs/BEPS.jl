@@ -22,7 +22,7 @@ include("InterTempVars.jl")
 include("OutputET.jl")
 
 export 
-  Leaf, LeafRef,
+  Leaf, 
   Soil, 
   Soil_c, TSoil,
   ClimateData, Results, Cpools,

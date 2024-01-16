@@ -59,38 +59,6 @@ function multiply!(Z::Leaf, X::Leaf, Y::Leaf)
 end
 
 
-## LeafRef
-@with_kw mutable struct LeafRef{T}
-  o_sunlit::T = Ref(0.0)
-  o_shaded::T = Ref(0.0)
-  u_sunlit::T = Ref(0.0)
-  u_shaded::T = Ref(0.0)
-end
-
-
-function init_leaf_struct(x::Leaf, replacement::LeafRef)
-  x.o_sunlit = replacement.o_sunlit[]
-  x.o_shaded = replacement.o_shaded[]
-  x.u_sunlit = replacement.u_sunlit[]
-  x.u_shaded = replacement.u_shaded[]
-end
-
-function init_leaf_dbl(x::LeafRef, replacement::Float64)
-  x.o_sunlit[] = replacement
-  x.o_shaded[] = replacement
-  x.u_sunlit[] = replacement
-  x.u_shaded[] = replacement
-end
-
-function multiply!(Z::Leaf, X::LeafRef, Y::Leaf)
-  Z.o_sunlit = X.o_sunlit[] * Y.o_sunlit
-  Z.o_shaded = X.o_shaded[] * Y.o_shaded
-  Z.u_sunlit = X.u_sunlit[] * Y.u_sunlit
-  Z.u_shaded = X.u_shaded[] * Y.u_shaded
-end
-
-
-
 function update_Gw!(Gw::Leaf, Gs_new::Leaf, Ga_o, Ga_u, Gb_o, Gb_u)
   Gw.o_sunlit = 1.0 / (1.0 / Ga_o + 1.0 / Gb_o + 1.0 / Gs_new.o_sunlit)  #conductance for water
   Gw.o_shaded = 1.0 / (1.0 / Ga_o + 1.0 / Gb_o + 1.0 / Gs_new.o_shaded)
@@ -103,19 +71,4 @@ function update_Gc!(Gc::Leaf, Gs_new::Leaf, Ga_o, Ga_u, Gb_o, Gb_u)
   Gc.o_shaded = 1.0 / (1.0 / Ga_o + 1.4 / Gb_o + 1.6 / Gs_new.o_shaded)
   Gc.u_sunlit = 1.0 / (1.0 / Ga_u + 1.4 / Gb_u + 1.6 / Gs_new.u_sunlit)
   Gc.u_shaded = 1.0 / (1.0 / Ga_u + 1.4 / Gb_u + 1.6 / Gs_new.u_shaded)
-end
-
-
-function update_Gw!(Gw::Leaf, Gs_new::LeafRef, Ga_o, Ga_u, Gb_o, Gb_u)
-  Gw.o_sunlit = 1.0 / (1.0 / Ga_o + 1.0 / Gb_o + 1.0 / Gs_new.o_sunlit[])  #conductance for water
-  Gw.o_shaded = 1.0 / (1.0 / Ga_o + 1.0 / Gb_o + 1.0 / Gs_new.o_shaded[])
-  Gw.u_sunlit = 1.0 / (1.0 / Ga_u + 1.0 / Gb_u + 1.0 / Gs_new.u_sunlit[])
-  Gw.u_shaded = 1.0 / (1.0 / Ga_u + 1.0 / Gb_u + 1.0 / Gs_new.u_shaded[])
-end
-
-function update_Gc!(Gc::Leaf, Gs_new::LeafRef, Ga_o, Ga_u, Gb_o, Gb_u)
-  Gc.o_sunlit = 1.0 / (1.0 / Ga_o + 1.4 / Gb_o + 1.6 / Gs_new.o_sunlit[]) # conductance for CO2
-  Gc.o_shaded = 1.0 / (1.0 / Ga_o + 1.4 / Gb_o + 1.6 / Gs_new.o_shaded[])
-  Gc.u_sunlit = 1.0 / (1.0 / Ga_u + 1.4 / Gb_u + 1.6 / Gs_new.u_sunlit[])
-  Gc.u_shaded = 1.0 / (1.0 / Ga_u + 1.4 / Gb_u + 1.6 / Gs_new.u_shaded[])
 end
