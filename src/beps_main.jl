@@ -24,7 +24,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
 
   if version == "julia"
     fun = inter_prg_jl
-    p_soil = Soil_c()
+    p_soil = Soil()
   elseif version == "c"
     fun = inter_prg_c
     p_soil = Soil_c()

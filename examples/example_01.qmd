@@ -11,7 +11,7 @@
 
 ```{julia}
 using BEPS
-using RTableTools
+import RTableTools: fread
 # using BEPS.clang
 f = "examples/input/p1_meteo.txt"
 d = fread(f)

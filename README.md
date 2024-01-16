@@ -9,6 +9,8 @@ Boreal Ecosystem Productivity Simulator in Julia
 
 > Dongdong Kong
 
+> [!CAUTION]
+> BEPS.clang only works under Windows.
 
 ## Usage
 ```bash

@@ -59,7 +59,9 @@ function UpdateSoilThermalConductivity(p::Soil_c)
   ccall((:UpdateSoilThermalConductivity, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
 end
 
-function UpdateHeatFlux(p::Soil_c, Xg_snow, lambda_snow, Tsn0, Tair_annual_mean, peroid_in_seconds)
+function UpdateHeatFlux(p::Soil_c, Xg_snow, lambda_snow, Tsn0, 
+    Tair_annual_mean, peroid_in_seconds)
+  
   ccall((:UpdateHeatFlux, libbeps), Cvoid,
     (Ptr{Soil_c}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
     Ref(p), Xg_snow, lambda_snow, Tsn0, Tair_annual_mean, peroid_in_seconds)

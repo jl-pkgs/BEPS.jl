@@ -4,7 +4,7 @@ function UpdateHeatFlux(p::Soil,
   Tair_annual_mean::Float64, period_in_seconds::Float64)
 
   # TODO: i may have bug
-  @inbounds for i in 2:p.n_layer
+  @inbounds for i in 2:p.n_layer+1
     if i <= p.n_layer
       p.G[i] = (p.temp_soil_p[i-1] - p.temp_soil_p[i]) / (0.5 * p.d_soil[i-1] / p.lambda[i-1] + 0.5 * p.d_soil[i] / p.lambda[i])
     else
@@ -76,7 +76,6 @@ function UpdateSoilThermalConductivity(p::Soil)
     tmp4 = p.thetam[i] / p.fei[i]  # Sr
 
     p.lambda[i] = (tmp1 * tmp2 * tmp3 - 0.15) * tmp4 + 0.15  # Note: eq. 8. LHE
-
     p.lambda[i] = max(p.lambda[i], 0.15)  # juweimin05
   end
 end
@@ -100,7 +99,7 @@ function soil_water_factor_v2(p::Soil)
 
   for i in 1:p.n_layer
     # psi_sr in m H2O! This is the old version. LHE.
-    fpsisr[i] = p.psim[i] > p.psi_min ? 1.0 / (1 + ((p.psim[i] - p.psi_min) / p.psi_min)^p.alpha) : 0
+    fpsisr[i] = p.psim[i] > p.psi_min ? 1.0 / (1 + ((p.psim[i] - p.psi_min) / p.psi_min)^p.alpha) : 1.0
 
     ft[i] = p.temp_soil_p[i] > 0.0 ? 1.0 - exp(t1 * p.temp_soil_p[i]^t2) : 0
 
@@ -115,15 +114,15 @@ function soil_water_factor_v2(p::Soil)
   if dtt_sum < 0.000001
     p.f_soilwater = 0.1
   else
+    fpsisr_sum = 0
     for i in 1:p.n_layer
       p.dt[i] = dtt[i] / dtt_sum
 
       if isnan(p.dt[i])
         println(p.dt[1])
       end
+      fpsisr_sum += fpsisr[i] * p.dt[i]
     end
-
-    fpsisr_sum = sum(fpsisr .* p.dt)
     p.f_soilwater = max(0.1, fpsisr_sum)
   end
 end
@@ -136,8 +135,8 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
   # assign the current soil temperature to prev variables.
   p.thetam_prev .= p.thetam
 
-  # Compute f_ice
-  @inbounds for i in 1:p.n_layer
+  # TODO: check this
+  @inbounds for i in 1:p.n_layer+1
     if p.temp_soil_c[i] > 0.0
       p.f_ice[i] = 1.0
     elseif p.temp_soil_c[i] < -1.0
@@ -259,4 +258,9 @@ function Soil_Water_Uptake(p::Soil, Trans_o::Float64, Trans_u::Float64, Evap_soi
   end
 end
 
-export UpdateHeatFlux, Update_Cs, UpdateSoilThermalConductivity, soil_water_factor_v2, UpdateSoilMoisture, Soil_Water_Uptake
+export UpdateHeatFlux, Update_Cs, 
+  Update_ice_ratio,
+  UpdateSoilThermalConductivity, 
+  soil_water_factor_v2, 
+  UpdateSoilMoisture, 
+  Soil_Water_Uptake

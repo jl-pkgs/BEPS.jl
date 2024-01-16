@@ -25,4 +25,4 @@ end
 #   CSV.write(file, df)
 # end
 # export fread, fwrite, 
-readdlm
+export readdlm

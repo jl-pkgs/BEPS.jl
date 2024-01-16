@@ -6,8 +6,9 @@ import Parameters: @with_kw, @with_kw_noshow
 using Printf
 using Reexport
 
-export besp_main
 export clang
+export besp_main
+export init_soil!
 
 
 path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))

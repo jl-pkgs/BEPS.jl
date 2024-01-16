@@ -1,4 +1,5 @@
 using Test
 using BEPS
 
-include("test_readparam.jl")
+include("test-readparam.jl")
+include("test-soil.jl")

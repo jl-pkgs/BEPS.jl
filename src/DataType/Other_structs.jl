@@ -11,6 +11,10 @@
   df_u::Cdouble = 0.0
 end
 
+ClimateData(Srad, LR, temp, rh, rain, wind) = 
+  ClimateData(; Srad, LR, temp, rh, rain, wind)
+
+
 
 @with_kw mutable struct Results
   gpp_o_sunlit::Cdouble = 0.0
