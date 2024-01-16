@@ -16,6 +16,18 @@ include("evaporation_soil.jl")
 # include("sensible_heat.jl")
 # include("transpiration.jl")
 
+function readparam(lc::Int=1)
+  parameter1 = zeros(Cdouble, 48)
+  # readparam(short lc, double* parameter1)
+  ccall((:readparam, libbeps), Cvoid, (Cshort, Ptr{Cdouble}), lc, parameter1)
+  parameter1
+end
+
+function readcoef(lc::Int=1, stxt::Int=1)
+  coef = zeros(Cdouble, 48)
+  ccall((:readcoef, libbeps), Cvoid, (Cshort, Cint, Ptr{Cdouble}), lc, stxt, coef)
+  coef
+end
 
 function aerodynamic_conductance_c(canopy_height_o::T, canopy_height_u::T,
   z_wind::T, clumping::T,

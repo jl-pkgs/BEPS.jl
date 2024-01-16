@@ -15,7 +15,7 @@ using BEPS
 # include("../DataType/DataType.jl")
 # include("helpers.jl")
 include("../DataType/Constant.jl")
-include("SOIL_c.jl")
+# include("SOIL_c.jl")
 include("module/module.jl")
 # include("beps_inter_prg.jl")
 # include("beps_main.jl")
@@ -28,13 +28,13 @@ include("module/module.jl")
 
 function inter_prg_c(jday, rstep,
   lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
-  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil,
+  var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; debug=false, kw...) where {T<:Real}
 
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
-      Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil}, Ptr{Results}, Ptr{OutputET}),
+      Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil_c}, Ptr{Results}, Ptr{OutputET}),
     jday, rstep, lai, clumping, parameter,
     Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res), Ref(mid_ET))
 end
@@ -49,22 +49,8 @@ end
 
 
 # function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
-#     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
+#     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil_c}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, soiltype, soilp, mid_res)
 # end
-
-# √, passed test
-function readparam(lc::Int=1)
-  parameter1 = zeros(Cdouble, 48)
-  # readparam(short lc, double* parameter1)
-  ccall((:readparam, libbeps), Cvoid, (Cshort, Ptr{Cdouble}), lc, parameter1)
-  parameter1
-end
-
-function readcoef(lc::Int=1, stxt::Int=1)
-  coef = zeros(Cdouble, 48)
-  ccall((:readcoef, libbeps), Cvoid, (Cshort, Cint, Ptr{Cdouble}), lc, stxt, coef)
-  coef
-end
 
 # passed test
 # lai2(0.8, 0.6, 0.2, 0.4, 0.2, 0.4)

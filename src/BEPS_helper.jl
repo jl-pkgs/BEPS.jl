@@ -31,13 +31,14 @@ function fill_meteo!(meteo::ClimateData, d::DataFrame, k::Int=1)
 end
 
 
-function init_soil!(p_soil::Soil, var_o::Vector,
+function init_soil!(p_soil::Union{Soil_c,Soil}, var_o::Vector,
   meteo::ClimateData, parameter::Vector, par::NamedTuple)
   # landcover::Int, soil_type::Int, Tsoil, soilwater, snowdepth
   # /***** initialize soil conditions, read soil parameters and set depth *****/
   Init_Soil_Parameters(par.landcover, par.soil_type, parameter[28], p_soil)
   p_soil.r_drainage = parameter[27]
   Init_Soil_Status(p_soil, par.Tsoil, meteo.temp, par.soilwater, par.snowdepth) # LHE
+  
   # Initialize intermediate variables array
   var_o .= 0
   for i = 4:9

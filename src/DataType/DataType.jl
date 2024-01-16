@@ -12,7 +12,10 @@ dbl() = Cdouble(0)
 
 include("Constant.jl")
 include("Leaf.jl")
+
 include("Soil.jl")
+include("Soil_c.jl")
+
 include("Other_structs.jl")
 
 include("InterTempVars.jl")
@@ -20,7 +23,8 @@ include("OutputET.jl")
 
 export 
   Leaf, LeafRef,
-  Soil, TSoil,
+  Soil, 
+  Soil_c, TSoil,
   ClimateData, Results, Cpools,
   InterTempVars,
   OutputET, Radiation
