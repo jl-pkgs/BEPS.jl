@@ -16,10 +16,10 @@ include("Leaf.jl")
 include("Soil.jl")
 include("Soil_c.jl")
 
-include("Other_structs.jl")
-
 include("InterTempVars.jl")
-include("OutputET.jl")
+include("Radiation.jl")
+include("INPUT.jl")
+include("OUTPUT.jl")
 
 export 
   Leaf, 

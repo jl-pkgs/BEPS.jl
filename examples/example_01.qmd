@@ -38,13 +38,13 @@ gr(framestyle=:box)
 
 function plot_var(var=:SH)
   n = size(df_jl, 1)
-  n = 24*7
+  # n = 24 * 7
   inds = 1:n
 
   y_jl = df_jl[inds, var]
-  # y_c = df_c[inds, var]
-  # diff_perc = (y_jl .- y_c) ./ y_c .* 100
-  plot(y_jl; title="$var", label=nothing) # 
+  y_c = df_c[inds, var]
+  diff_perc = (y_jl .- y_c) ./ y_c .* 100
+  plot(diff_perc; title="$var", label=nothing) # 
 end
 
 vars = names(df_jl)[[1:4; 8; 12:16]]

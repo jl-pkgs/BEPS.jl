@@ -15,29 +15,6 @@ ClimateData(Srad, LR, temp, rh, rain, wind) =
   ClimateData(; Srad, LR, temp, rh, rain, wind)
 
 
-
-@with_kw mutable struct Results
-  gpp_o_sunlit::Cdouble = 0.0
-  gpp_u_sunlit::Cdouble = 0.0
-  gpp_o_shaded::Cdouble = 0.0
-  gpp_u_shaded::Cdouble = 0.0
-  
-  plant_resp::Cdouble = 0.0
-  npp_o::Cdouble = 0.0
-  npp_u::Cdouble = 0.0
-  GPP::Cdouble = 0.0
-  NPP::Cdouble = 0.0
-  NEP::Cdouble = 0.0
-  soil_resp::Cdouble = 0.0
-  Net_Rad::Cdouble = 0.0
-
-  SH::Cdouble = 0.0
-  LH::Cdouble = 0.0
-  Trans::Cdouble = 0.0
-  Evap::Cdouble = 0.0
-end
-
-
 @with_kw mutable struct Cpools
   Ccd::NTuple{3,Cdouble} = nzero(3)
   Cssd::NTuple{3,Cdouble} = nzero(3)

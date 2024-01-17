@@ -94,9 +94,7 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, depth_snow::FT, depth_wat
     T_snow = clamp(T_snow, T_air - 25.0, T_air + 25.0)
 
     G_snow = λ_snow * (T_snow - T_snow1_last) / 0.04
-
-    G = G_snow
-    G = clamp(G, -100.0, 100.0)
+    G = clamp(G_snow, -100.0, 100.0)
 
     G_snow1 = λ_snow * (T_snow1_last - T_snow2_last) / (depth_snow - 0.02)
     T_snow1 = T_snow1_last + ((G - G_snow1) / (cp_ice * ρ_snow * 0.02)) * length_step

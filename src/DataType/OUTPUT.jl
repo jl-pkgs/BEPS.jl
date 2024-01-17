@@ -1,3 +1,25 @@
+@with_kw mutable struct Results
+  gpp_o_sunlit::Cdouble = 0.0
+  gpp_u_sunlit::Cdouble = 0.0
+  gpp_o_shaded::Cdouble = 0.0
+  gpp_u_shaded::Cdouble = 0.0
+
+  plant_resp::Cdouble = 0.0
+  npp_o::Cdouble = 0.0
+  npp_u::Cdouble = 0.0
+  GPP::Cdouble = 0.0
+  NPP::Cdouble = 0.0
+  NEP::Cdouble = 0.0
+  soil_resp::Cdouble = 0.0
+  Net_Rad::Cdouble = 0.0
+
+  SH::Cdouble = 0.0
+  LH::Cdouble = 0.0
+  Trans::Cdouble = 0.0
+  Evap::Cdouble = 0.0
+end
+
+
 @with_kw mutable struct OutputET
   Trans_o::Cdouble = 0.0
   Trans_u::Cdouble = 0.0
@@ -18,26 +40,6 @@
   SH::Cdouble = 0.0
   LH::Cdouble = 0.0
 end
-
-@with_kw mutable struct Radiation
-  Rs_o_df::FT = 0.0
-  Rs_u_df::FT = 0.0
-
-  Rs_o_dir::FT = 0.0
-  Rs_u_dir::FT = 0.0
-
-  Rns_o_df::FT = 0.0
-  Rns_u_df::FT = 0.0
-  Rns_g_df::FT = 0.0
-
-  Rns_o_dir::FT = 0.0
-  Rns_u_dir::FT = 0.0
-  Rns_g_dir::FT = 0.0
-
-  Rs_df::FT = 0.0
-  Rs_dir::FT = 0.0
-end
-
 
 function OutputET!(x::OutputET, 
   Trans_o::AbstractVector{T}, Trans_u::AbstractVector{T},
