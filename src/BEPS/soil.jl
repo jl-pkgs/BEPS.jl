@@ -20,119 +20,119 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
   if stxt == 1  # sand
     b = [1.7, 1.9, 2.1, 2.3, 2.5]
     Ksat = [0.000058, 0.000052, 0.000046, 0.000035, 0.000010]  # saturated hydraulic conductivity
-    fei = [0.437, 0.437, 0.437, 0.437, 0.437]  # porosity
-    theta_vfc = [0.09, 0.09, 0.09, 0.09, 0.09]  # field capacity
-    theta_vwp = [0.03, 0.03, 0.03, 0.03, 0.03]  # wilt point
-    thermal_cond = [8.6, 8.6, 8.6, 8.6, 8.6]  # thermal conductivity
-    psi_sat = [0.07, 0.08, 0.09, 0.10, 0.12]  # water potential at sat
+    porosity = [0.437, 0.437, 0.437, 0.437, 0.437]# porosity
+    θ_vfc = [0.09, 0.09, 0.09, 0.09, 0.09]   # field capacity
+    θ_vwp = [0.03, 0.03, 0.03, 0.03, 0.03]   # wilt point
+    thermal_cond = [8.6, 8.6, 8.6, 8.6, 8.6] # thermal conductivity
+    ψ_sat = [0.07, 0.08, 0.09, 0.10, 0.12]   # water potential at sat
 
   elseif stxt == 2  # loamy sand
     b = [2.1, 2.3, 2.5, 2.7, 2.9]
     Ksat = [0.000017, 0.000015, 0.000014, 0.000010, 0.000003]  # saturated hydraulic conductivity
-    fei = [0.437, 0.437, 0.437, 0.437, 0.437]  # porosity
-    theta_vfc = [0.21, 0.21, 0.21, 0.21, 0.21]  # field capacity
-    theta_vwp = [0.06, 0.06, 0.06, 0.06, 0.06]  # wilt point
+    porosity = [0.437, 0.437, 0.437, 0.437, 0.437]  # porosity
+    θ_vfc = [0.21, 0.21, 0.21, 0.21, 0.21]  # field capacity
+    θ_vwp = [0.06, 0.06, 0.06, 0.06, 0.06]  # wilt point
     thermal_cond = [8.3, 8.3, 8.3, 8.3, 8.3]  # thermal conductivity
-    psi_sat = [0.09, 0.10, 0.11, 0.12, 0.14]  # water potential at sat
+    ψ_sat = [0.09, 0.10, 0.11, 0.12, 0.14]  # water potential at sat
 
   elseif stxt == 3  # sandy loam
     b = [3.1, 3.3, 3.5, 3.7, 3.9]
     Ksat = [0.0000072, 0.00000648, 0.00000576, 0.00000432, 0.00000144]  # saturated hydraulic conductivity
-    fei = [0.453, 0.453, 0.453, 0.453, 0.453]  # porosity
-    theta_vfc = [0.21, 0.21, 0.21, 0.21, 0.21]  # field capacity
-    theta_vwp = [0.10, 0.10, 0.10, 0.10, 0.10]  # wilt point
+    porosity = [0.453, 0.453, 0.453, 0.453, 0.453]  # porosity
+    θ_vfc = [0.21, 0.21, 0.21, 0.21, 0.21]  # field capacity
+    θ_vwp = [0.10, 0.10, 0.10, 0.10, 0.10]  # wilt point
     thermal_cond = [8.0, 8.0, 8.0, 8.0, 8.0]  # thermal conductivity
-    psi_sat = [0.15, 0.16, 0.17, 0.18, 0.20]  # water potential at sat
+    ψ_sat = [0.15, 0.16, 0.17, 0.18, 0.20]  # water potential at sat
 
   elseif stxt == 4  # loam
     b = [4.5, 4.7, 4.9, 5.1, 5.3]
     Ksat = [0.0000037, 0.0000033, 0.00000296, 0.00000222, 0.00000074]  # saturated hydraulic conductivity
-    fei = [0.463, 0.463, 0.463, 0.463, 0.463]  # porosity
-    theta_vfc = [0.27, 0.27, 0.27, 0.27, 0.27]  # field capacity
-    theta_vwp = [0.12, 0.12, 0.12, 0.12, 0.12]  # wilt point
+    porosity = [0.463, 0.463, 0.463, 0.463, 0.463]  # porosity
+    θ_vfc = [0.27, 0.27, 0.27, 0.27, 0.27]  # field capacity
+    θ_vwp = [0.12, 0.12, 0.12, 0.12, 0.12]  # wilt point
     thermal_cond = [7.0, 7.0, 7.0, 7.0, 7.0]  # thermal conductivity
-    psi_sat = [0.11, 0.12, 0.13, 0.14, 0.16]  # water potential at sat
+    ψ_sat = [0.11, 0.12, 0.13, 0.14, 0.16]  # water potential at sat
 
   elseif stxt == 5  # silty loam
     b = [4.7, 4.9, 5.1, 5.3, 5.5]
     Ksat = [0.0000019, 0.0000017, 0.00000152, 0.00000114, 0.00000038]  # saturated hydraulic conductivity
-    fei = [0.501, 0.501, 0.501, 0.501, 0.501]  # porosity
-    theta_vfc = [0.33, 0.33, 0.33, 0.33, 0.33]  # field capacity
-    theta_vwp = [0.13, 0.13, 0.13, 0.13, 0.13]  # wilt point
+    porosity = [0.501, 0.501, 0.501, 0.501, 0.501]  # porosity
+    θ_vfc = [0.33, 0.33, 0.33, 0.33, 0.33]  # field capacity
+    θ_vwp = [0.13, 0.13, 0.13, 0.13, 0.13]  # wilt point
     thermal_cond = [6.3, 6.3, 6.3, 6.3, 6.3]  # thermal conductivity
-    psi_sat = [0.21, 0.22, 0.23, 0.24, 0.26]  # water potential at sat
+    ψ_sat = [0.21, 0.22, 0.23, 0.24, 0.26]  # water potential at sat
 
   elseif stxt == 6 # sandy clay loam
     b = [4.0, 4.2, 4.4, 4.6, 4.8]
     Ksat = [0.0000012, 0.00000108, 0.0000096, 0.0000072, 0.0000024]
-    fei = fill(0.398, 5)
-    theta_vfc = fill(0.26, 5)
-    theta_vwp = fill(0.15, 5)
+    porosity = fill(0.398, 5)
+    θ_vfc = fill(0.26, 5)
+    θ_vwp = fill(0.15, 5)
     thermal_cond = fill(7.0, 5)
-    psi_sat = [0.28, 0.29, 0.30, 0.31, 0.33]
+    ψ_sat = [0.28, 0.29, 0.30, 0.31, 0.33]
 
   elseif stxt == 7 # clay loam
     b = [5.2, 5.4, 5.6, 5.8, 6.0]
     Ksat = [0.00000064, 0.00000058, 0.00000051, 0.00000038, 0.00000013]
-    fei = fill(0.464, 5)
-    theta_vfc = fill(0.32, 5)
-    theta_vwp = fill(0.20, 5)
+    porosity = fill(0.464, 5)
+    θ_vfc = fill(0.32, 5)
+    θ_vwp = fill(0.20, 5)
     thermal_cond = [5.8, 5.8, 5.7, 5.8, 5.8]
-    psi_sat = [0.26, 0.27, 0.28, 0.29, 0.31]
+    ψ_sat = [0.26, 0.27, 0.28, 0.29, 0.31]
 
   elseif stxt == 8 # silty clay loam
     b = [6.6, 6.8, 7.0, 7.2, 7.4]
     Ksat = [0.00000042, 0.00000038, 0.00000034, 0.000000252, 0.000000084]
-    fei = fill(0.471, 5)
-    theta_vfc = fill(0.37, 5)
-    theta_vwp = fill(0.32, 5)
+    porosity = fill(0.471, 5)
+    θ_vfc = fill(0.37, 5)
+    θ_vwp = fill(0.32, 5)
     thermal_cond = fill(4.2, 5)
-    psi_sat = [0.33, 0.34, 0.35, 0.36, 0.38]
+    ψ_sat = [0.33, 0.34, 0.35, 0.36, 0.38]
 
   elseif stxt == 9 # sandy clay
     b = [6.0, 6.2, 6.4, 6.6, 6.8]
     Ksat = [0.00000033, 0.0000003, 0.000000264, 0.000000198, 0.000000066]
-    fei = fill(0.430, 5)
-    theta_vfc = fill(0.34, 5)
-    theta_vwp = fill(0.24, 5)
+    porosity = fill(0.430, 5)
+    θ_vfc = fill(0.34, 5)
+    θ_vwp = fill(0.24, 5)
     thermal_cond = fill(6.3, 5)
-    psi_sat = [0.29, 0.30, 0.31, 0.32, 0.34]
+    ψ_sat = [0.29, 0.30, 0.31, 0.32, 0.34]
 
   elseif stxt == 10 # silty clay
     b = [7.9, 8.1, 8.3, 8.5, 8.7]
     Ksat = [0.00000025, 0.000000225, 0.0000002, 0.00000015, 0.00000005]
-    fei = fill(0.479, 5)
-    theta_vfc = fill(0.39, 5)
-    theta_vwp = fill(0.25, 5)
+    porosity = fill(0.479, 5)
+    θ_vfc = fill(0.39, 5)
+    θ_vwp = fill(0.25, 5)
     thermal_cond = fill(4.0, 5)
-    psi_sat = [0.34, 0.35, 0.36, 0.37, 0.39]
+    ψ_sat = [0.34, 0.35, 0.36, 0.37, 0.39]
 
   elseif stxt == 11 # clay
     b = [7.6, 7.8, 8.0, 8.2, 8.4]
     Ksat = [0.00000017, 0.000000153, 0.000000136, 0.000000102, 0.000000034]
-    fei = fill(0.475, 5)
-    theta_vfc = fill(0.40, 5)
-    theta_vwp = fill(0.27, 5)
+    porosity = fill(0.475, 5)
+    θ_vfc = fill(0.40, 5)
+    θ_vwp = fill(0.27, 5)
     thermal_cond = fill(4.4, 5)
-    psi_sat = [0.37, 0.38, 0.39, 0.40, 0.42]
+    ψ_sat = [0.37, 0.38, 0.39, 0.40, 0.42]
 
   else # default
     b = [7.6, 7.8, 8.0, 8.2, 8.4]
     Ksat = [0.00000017, 0.000000153, 0.000000136, 0.000000102, 0.000000034]
-    fei = fill(0.475, 5)
-    theta_vfc = fill(0.40, 5)
-    theta_vwp = fill(0.27, 5)
+    porosity = fill(0.475, 5)
+    θ_vfc = fill(0.40, 5)
+    θ_vwp = fill(0.27, 5)
     thermal_cond = fill(4.4, 5)
-    psi_sat = [0.37, 0.38, 0.39, 0.40, 0.42]
+    ψ_sat = [0.37, 0.38, 0.39, 0.40, 0.42]
   end
 
   p.b[1:5] .= b
   p.Ksat[1:5] .= Ksat
-  p.fei[1:5] .= fei
-  p.theta_vfc[1:5] .= theta_vfc
-  p.theta_vwp[1:5] .= theta_vwp
+  p.fei[1:5] .= porosity
+  p.theta_vfc[1:5] .= θ_vfc
+  p.theta_vwp[1:5] .= θ_vwp
   p.thermal_cond[1:5] .= thermal_cond
-  p.psi_sat[1:5] .= psi_sat
+  p.psi_sat[1:5] .= ψ_sat
   
   p
 end

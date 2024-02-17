@@ -7,9 +7,12 @@ TypeRef{T} = Union{Ref{T},RefArray{T,Vector{T},Nothing}}
 
 using BEPS
 import BEPS: libbeps
+
+using Parameters
 # const libbeps = "deps/libbeps.dll"
 
 # include("../DataType/Constant.jl")
+include("struct_SOIL.jl")
 include("SOIL_c.jl")
 include("module.jl")
 # include("beps_inter_prg.jl")
@@ -172,6 +175,6 @@ export inter_prg_c,
   # Leaf_Temperatures,
   # evaporation_canopy, 
   rainfall_stage1, rainfall_stage2, snowpack_stage1, snowpack_stage2, snowpack_stage3
-
+export Soil_c
 
 end # module

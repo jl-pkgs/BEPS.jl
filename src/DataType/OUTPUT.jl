@@ -81,6 +81,7 @@ function update_ET!(x::OutputET, mid_res::Results, Ta)
 
   x.SH = (x.Qhc_o + x.Qhc_u + x.Qhg)
 
+  # fill values to res
   mid_res.Trans = x.Trans
   mid_res.Evap  = x.Evap
   mid_res.LH    = x.LH

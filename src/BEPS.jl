@@ -7,9 +7,9 @@ using Printf
 using Reexport
 @reexport using Serialization: deserialize, serialize
 @reexport using DelimitedFiles: readdlm
-
 export besp_main
 export init_soil!
+export Soil_c
 
 path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))
 libbeps = path_proj("deps/libbeps.dll")
@@ -21,13 +21,14 @@ include("Ipaper.jl")
 
 include("DataType/DataType.jl")
 include("helpers.jl")
-include("BEPS_helper.jl")
 
 include("BEPS/BEPS.jl")
 
 include("clang/BEPS_c.jl")
 @reexport import BEPS.clang;
-import BEPS.clang: inter_prg_c, photosynthesis_c
+import BEPS.clang: inter_prg_c, photosynthesis_c, Soil_c
+
+include("BEPS_helper.jl")
 
 include("beps_inter_prg.jl")
 include("beps_main.jl")

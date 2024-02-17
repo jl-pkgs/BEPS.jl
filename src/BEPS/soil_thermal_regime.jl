@@ -132,11 +132,13 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
   inf, inf_max = 0.0, 0.0
   this_step, total_t, max_Fb = 0.0, 0.0, 0.0
 
+  @unpack fei, b = p
+  dz = p.d_soil
   # assign the current soil temperature to prev variables.
   p.thetam_prev .= p.thetam
 
   # TODO: check this
-  @inbounds for i in 1:p.n_layer+1
+  @inbounds for i in 1:p.n_layer
     if p.temp_soil_c[i] > 0.0
       p.f_ice[i] = 1.0
     elseif p.temp_soil_c[i] < -1.0
@@ -147,7 +149,7 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
   end
 
   # Max infiltration calculation
-  inf_max = p.f_ice[1] * p.Ksat[1] * (1 + (p.fei[1] - p.thetam_prev[1]) / p.d_soil[1] * p.psi_sat[1] * p.b[1] / p.fei[1])
+  inf_max = p.f_ice[1] * p.Ksat[1] * (1 + (fei[1] - p.thetam_prev[1]) / dz[1] * p.psi_sat[1] * b[1] / fei[1])
   inf = max(p.f_ice[1] * (p.Zp / kstep + p.r_rain_g), 0)
   inf = clamp(inf, 0, inf_max)
 
@@ -156,53 +158,53 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
 
   @inbounds while total_t < kstep
     for i in 1:p.n_layer
-      p.km[i] = p.f_ice[i] * p.Ksat[i] * ((p.thetam[i] / p.fei[i])^(2 * p.b[i] + 3))
+      p.km[i] = p.f_ice[i] * p.Ksat[i] * ((p.thetam[i] / fei[i])^(2 * b[i] + 3))
     end
 
     # soil moisture in the boundaries
     for i in 1:p.n_layer
       if i < p.n_layer
-        p.thetab[i] = (p.thetam[i+1] / p.d_soil[i+1] + p.thetam[i] / p.d_soil[i]) / (1 / p.d_soil[i] + 1 / p.d_soil[i+1])
+        p.thetab[i] = (p.thetam[i+1] / dz[i+1] + p.thetam[i] / dz[i]) / (1 / dz[i] + 1 / dz[i+1])
       else
-        d1 = max((p.thetam[i] - p.thetab[i-1]) * 2.0 / p.d_soil[i], 0)
-        p.thetab[i] = p.thetam[i] + d1 * p.d_soil[i] / 2.0
-        p.thetab[i] = min(p.thetab[i], p.fei[i])
+        d1 = max((p.thetam[i] - p.thetab[i-1]) * 2.0 / dz[i], 0)
+        p.thetab[i] = p.thetam[i] + d1 * dz[i] / 2.0
+        p.thetab[i] = min(p.thetab[i], fei[i])
       end
     end
 
     for i in 1:p.n_layer
       if i < p.n_layer
-        p.Kb[i] = p.f_ice[i] * (p.Ksat[i] * p.d_soil[i] + p.Ksat[i+1] * p.d_soil[i+1]) / (p.d_soil[i] + p.d_soil[i+1]) * (p.thetab[i] / p.fei[i])^(2 * p.b[i] + 3)
+        p.Kb[i] = p.f_ice[i] * (p.Ksat[i] * dz[i] + p.Ksat[i+1] * dz[i+1]) / (dz[i] + dz[i+1]) * (p.thetab[i] / fei[i])^(2 * b[i] + 3)
       else
-        p.Kb[i] = 0.5 * p.f_ice[i] * p.Ksat[i] * (p.thetab[i] / p.fei[i])^(2 * p.b[i] + 3)
+        p.Kb[i] = 0.5 * p.f_ice[i] * p.Ksat[i] * (p.thetab[i] / fei[i])^(2 * b[i] + 3)
       end
     end
 
     # the unsaturated soil water retention. LHe
     for i in 1:p.n_layer
-      p.psim[i] = p.psi_sat[i] * (p.thetam[i] / p.fei[i])^(-p.b[i])
+      p.psim[i] = p.psi_sat[i] * (p.thetam[i] / fei[i])^(-b[i])
       p.psim[i] = max(p.psi_sat[i], p.psim[i])
     end
 
     # the unsaturated soil water retention @ boundaries. LHe
     for i in 1:p.n_layer
-      p.psib[i] = p.psi_sat[i] * (p.thetab[i] / p.fei[i])^(-p.b[i])
+      p.psib[i] = p.psi_sat[i] * (p.thetab[i] / fei[i])^(-b[i])
       p.psib[i] = max(p.psi_sat[i], p.psib[i])
     end
 
     # the unsaturated hydraulic conductivity of soil layer @ boundaries
     for i in 1:p.n_layer
       if i < p.n_layer
-        p.KK[i] = (p.km[i] * p.psim[i] + p.km[i+1] * p.psim[i+1]) / (p.psim[i] + p.psim[i+1]) * (p.b[i] + p.b[i+1]) / (p.b[i] + p.b[i+1] + 6)
+        p.KK[i] = (p.km[i] * p.psim[i] + p.km[i+1] * p.psim[i+1]) / (p.psim[i] + p.psim[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6)
       else
-        p.KK[i] = (p.km[i] * p.psim[i] + p.Kb[i] * p.psib[i]) / (p.psim[i] + p.psib[i]) * p.b[i] / (p.b[i] + 3)
+        p.KK[i] = (p.km[i] * p.psim[i] + p.Kb[i] * p.psib[i]) / (p.psim[i] + p.psib[i]) * b[i] / (b[i] + 3)
       end
     end
 
     # Fb, flow speed. Dancy's law. LHE.
     for i in 1:p.n_layer
       if i < p.n_layer
-        p.r_waterflow[i] = p.KK[i] * (2 * (p.psim[i+1] - p.psim[i]) / (p.d_soil[i] + p.d_soil[i+1]) + 1)
+        p.r_waterflow[i] = p.KK[i] * (2 * (p.psim[i+1] - p.psim[i]) / (dz[i] + dz[i+1]) + 1)
       else
         p.r_waterflow[i] = 0
       end
@@ -210,7 +212,7 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
 
     # check the r_waterflow further. LHE
     for i in 1:p.n_layer-1
-      p.r_waterflow[i] = min((p.fei[i+1] - p.thetam[i+1]) * p.d_soil[i+1] / kstep + p.Ett[i+1], p.r_waterflow[i])
+      p.r_waterflow[i] = min((fei[i+1] - p.thetam[i+1]) * dz[i+1] / kstep + p.Ett[i+1], p.r_waterflow[i])
       max_Fb = max(max_Fb, abs(p.r_waterflow[i]))
     end
 
@@ -228,12 +230,12 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
     # from there: kstep is replaced by this_step. LHE
     for i in 1:p.n_layer
       if i == 1
-        p.thetam[i] += (inf * this_step - p.r_waterflow[i] * this_step - p.Ett[i] * this_step) / p.d_soil[i]
+        p.thetam[i] += (inf * this_step - p.r_waterflow[i] * this_step - p.Ett[i] * this_step) / dz[i]
       else
-        p.thetam[i] += (p.r_waterflow[i-1] * this_step - p.r_waterflow[i] * this_step - p.Ett[i] * this_step) / p.d_soil[i]
+        p.thetam[i] += (p.r_waterflow[i-1] * this_step - p.r_waterflow[i] * this_step - p.Ett[i] * this_step) / dz[i]
       end
 
-      p.thetam[i] = clamp(p.thetam[i], p.theta_vwp[i], p.fei[i])
+      p.thetam[i] = clamp(p.thetam[i], p.theta_vwp[i], fei[i])
     end
   end
 
