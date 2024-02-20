@@ -1,13 +1,24 @@
 using Test
+using BEPS
 import BEPS: kstep
 
+
+function Base.getindex(x::Union{Soil, Soil_c}, i::Integer)
+  names = fieldnames(typeof(x))
+  getfield(x, names[i])
+end
+
 function is_soil_equal(p_jl, p_c; tol=1e-7, verbose=false)
-  names = fieldnames(typeof(p_c))
-  for name in names
-    x_jl = getfield(p_jl, name)
-    x_c = getfield(p_c, name)
+  names_c = fieldnames(typeof(p_c))
+  names_jl = fieldnames(typeof(p_jl))
+  ## 变量名可能不同
+  
+  for i in eachindex(names_c)
+    x_jl = getfield(p_jl, i)
+    x_c = getfield(p_c, i)
     # verbose && println("[$name], c=$x_c, jl=$x_jl")
-    verbose && println(name)
+    # name_c = 
+    verbose && println("C and Julia: $(names_c[i]), $(names_jl[i])")
     @test maximum(abs.(x_c .- x_jl)) <= tol
   end
 end

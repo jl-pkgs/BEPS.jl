@@ -60,9 +60,10 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 
 ## TODO
 
+- [ ] 通量站上测试模型表现 (top1 task)
+- [ ] 热浪期间，土壤温度的表现
 - [ ] 土壤类型参数
 - [ ] clumping index数据处理
-- [ ] 通量站上测试模型表现
 
 ## Researches
 

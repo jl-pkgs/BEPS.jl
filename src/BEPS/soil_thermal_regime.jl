@@ -3,9 +3,10 @@ function UpdateHeatFlux(p::Soil,
   Xg_snow::Float64, lambda_snow::Float64, Tsn0::Float64,
   Tair_annual_mean::Float64, period_in_seconds::Float64)
 
+  n = p.n_layer
   # TODO: i may have bug
-  @inbounds for i in 2:p.n_layer+1
-    if i <= p.n_layer
+  @inbounds for i in 2:n+1
+    if i <= n
       p.G[i] = (p.temp_soil_p[i-1] - p.temp_soil_p[i]) / (0.5 * p.d_soil[i-1] / p.lambda[i-1] + 0.5 * p.d_soil[i] / p.lambda[i])
     else
       p.G[i] = p.lambda[i-1] * (p.temp_soil_p[i-1] - Tair_annual_mean) / (DEPTH_F + p.d_soil[i-1] * 0.5)
@@ -15,7 +16,7 @@ function UpdateHeatFlux(p::Soil,
   end
 
   S = 0.0
-  for i in 1:p.n_layer
+  for i in 1:n
     p.temp_soil_c[i] = p.temp_soil_p[i] + (p.G[i] - p.G[i+1] + S) / (p.Cs[i] * p.d_soil[i]) * period_in_seconds
     p.temp_soil_c[i] = clamp(p.temp_soil_c[i], -50.0, 50.0)
   end
@@ -83,21 +84,21 @@ end
 
 # Function to compute soil water stress factor
 function soil_water_factor_v2(p::Soil)
-  # ft = zeros(Float64, p.n_layer)
-  # fpsisr = zeros(Float64, p.n_layer)
-  # dtt = zeros(Float64, p.n_layer)
+  # @unpack psim, psi_sat, 
+  θ = p.thetam
+  n = p.n_layer
 
   t1 = -0.02
   t2 = 2.0
 
   if p.psim[1] <= 0.000001
-    for i in 1:p.n_layer
-      p.psim[i] = p.psi_sat[i] * (p.thetam[i] / p.fei[i])^-p.b[i]
+    for i in 1:n
+      p.psim[i] = p.psi_sat[i] * (θ[i] / p.fei[i])^-p.b[i]
       p.psim[i] = max(p.psi_sat[i], p.psim[i])
     end
   end
 
-  for i in 1:p.n_layer
+  for i in 1:n
     # psi_sr in m H2O! This is the old version. LHE.
     p.fpsisr[i] = p.psim[i] > p.psi_min ? 1.0 / (1 + ((p.psim[i] - p.psi_min) / p.psi_min)^p.alpha) : 1.0
 
@@ -106,7 +107,7 @@ function soil_water_factor_v2(p::Soil)
     p.fpsisr[i] *= p.ft[i]
   end
 
-  for i in 1:p.n_layer
+  for i in 1:n
     p.dtt[i] = FW_VERSION == 1 ? p.f_root[i] * p.fpsisr[i] : p.f_root[i]
   end
   dtt_sum = sum(p.dtt)
@@ -115,7 +116,7 @@ function soil_water_factor_v2(p::Soil)
     p.f_soilwater = 0.1
   else
     fpsisr_sum = 0
-    for i in 1:p.n_layer
+    for i in 1:n
       p.dt[i] = p.dtt[i] / dtt_sum
 
       if isnan(p.dt[i])
@@ -128,141 +129,25 @@ function soil_water_factor_v2(p::Soil)
 end
 
 
-function UpdateSoilMoisture(p::Soil, kstep::Float64)
-  inf, inf_max = 0.0, 0.0
-  this_step, total_t, max_Fb = 0.0, 0.0, 0.0
-
-  @unpack fei, b = p
-  dz = p.d_soil
-  # assign the current soil temperature to prev variables.
-  p.thetam_prev .= p.thetam
-
-  # TODO: check this
-  @inbounds for i in 1:p.n_layer
-    if p.temp_soil_c[i] > 0.0
-      p.f_ice[i] = 1.0
-    elseif p.temp_soil_c[i] < -1.0
-      p.f_ice[i] = 0.1
-    else
-      p.f_ice[i] = 0.1 + 0.9 * (p.temp_soil_c[i] + 1.0)
-    end
-  end
-
-  # Max infiltration calculation
-  inf_max = p.f_ice[1] * p.Ksat[1] * (1 + (fei[1] - p.thetam_prev[1]) / dz[1] * p.psi_sat[1] * b[1] / fei[1])
-  inf = max(p.f_ice[1] * (p.Zp / kstep + p.r_rain_g), 0)
-  inf = clamp(inf, 0, inf_max)
-
-  # Ponded water after runoff. This one is related to runoff. LHe.
-  p.Zp = (p.Zp / kstep + p.r_rain_g - inf) * kstep * p.r_drainage
-
-  @inbounds while total_t < kstep
-    for i in 1:p.n_layer
-      p.km[i] = p.f_ice[i] * p.Ksat[i] * ((p.thetam[i] / fei[i])^(2 * b[i] + 3))
-    end
-
-    # soil moisture in the boundaries
-    for i in 1:p.n_layer
-      if i < p.n_layer
-        p.thetab[i] = (p.thetam[i+1] / dz[i+1] + p.thetam[i] / dz[i]) / (1 / dz[i] + 1 / dz[i+1])
-      else
-        d1 = max((p.thetam[i] - p.thetab[i-1]) * 2.0 / dz[i], 0)
-        p.thetab[i] = p.thetam[i] + d1 * dz[i] / 2.0
-        p.thetab[i] = min(p.thetab[i], fei[i])
-      end
-    end
-
-    for i in 1:p.n_layer
-      if i < p.n_layer
-        p.Kb[i] = p.f_ice[i] * (p.Ksat[i] * dz[i] + p.Ksat[i+1] * dz[i+1]) / (dz[i] + dz[i+1]) * (p.thetab[i] / fei[i])^(2 * b[i] + 3)
-      else
-        p.Kb[i] = 0.5 * p.f_ice[i] * p.Ksat[i] * (p.thetab[i] / fei[i])^(2 * b[i] + 3)
-      end
-    end
-
-    # the unsaturated soil water retention. LHe
-    for i in 1:p.n_layer
-      p.psim[i] = p.psi_sat[i] * (p.thetam[i] / fei[i])^(-b[i])
-      p.psim[i] = max(p.psi_sat[i], p.psim[i])
-    end
-
-    # the unsaturated soil water retention @ boundaries. LHe
-    for i in 1:p.n_layer
-      p.psib[i] = p.psi_sat[i] * (p.thetab[i] / fei[i])^(-b[i])
-      p.psib[i] = max(p.psi_sat[i], p.psib[i])
-    end
-
-    # the unsaturated hydraulic conductivity of soil layer @ boundaries
-    for i in 1:p.n_layer
-      if i < p.n_layer
-        p.KK[i] = (p.km[i] * p.psim[i] + p.km[i+1] * p.psim[i+1]) / (p.psim[i] + p.psim[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6)
-      else
-        p.KK[i] = (p.km[i] * p.psim[i] + p.Kb[i] * p.psib[i]) / (p.psim[i] + p.psib[i]) * b[i] / (b[i] + 3)
-      end
-    end
-
-    # Fb, flow speed. Dancy's law. LHE.
-    for i in 1:p.n_layer
-      if i < p.n_layer
-        p.r_waterflow[i] = p.KK[i] * (2 * (p.psim[i+1] - p.psim[i]) / (dz[i] + dz[i+1]) + 1)
-      else
-        p.r_waterflow[i] = 0
-      end
-    end
-
-    # check the r_waterflow further. LHE
-    for i in 1:p.n_layer-1
-      p.r_waterflow[i] = min((fei[i+1] - p.thetam[i+1]) * dz[i+1] / kstep + p.Ett[i+1], p.r_waterflow[i])
-      max_Fb = max(max_Fb, abs(p.r_waterflow[i]))
-    end
-
-    if max_Fb > 1.0e-5
-      this_step = 1.0
-    elseif max_Fb > 1.0e-6
-      this_step = 30.0
-    else
-      this_step = 360.0
-    end
-
-    total_t += this_step
-    total_t > kstep && (this_step -= (total_t - kstep))
-
-    # from there: kstep is replaced by this_step. LHE
-    for i in 1:p.n_layer
-      if i == 1
-        p.thetam[i] += (inf * this_step - p.r_waterflow[i] * this_step - p.Ett[i] * this_step) / dz[i]
-      else
-        p.thetam[i] += (p.r_waterflow[i-1] * this_step - p.r_waterflow[i] * this_step - p.Ett[i] * this_step) / dz[i]
-      end
-
-      p.thetam[i] = clamp(p.thetam[i], p.theta_vwp[i], fei[i])
-    end
-  end
-
-  for i in 1:p.n_layer
-    p.ice_ratio[i] *= p.thetam_prev[i] / p.thetam[i]
-    p.ice_ratio[i] = min(1.0, p.ice_ratio[i])
-  end
-end
-
-
 # Function to calculate soil water uptake from a layer
 function Soil_Water_Uptake(p::Soil, Trans_o::Float64, Trans_u::Float64, Evap_soil::Float64)
-  rho_w = 1025.0
+  ρ_w = 1025.0
   Trans = Trans_o + Trans_u
 
   # for the top layer
-  p.Ett[1] = Trans / rho_w * p.dt[1] + Evap_soil / rho_w
+  p.Ett[1] = Trans / ρ_w * p.dt[1] + Evap_soil / ρ_w
 
   # for each layer:
   for i in 2:p.n_layer
-    p.Ett[i] = Trans / rho_w * p.dt[i]
+    p.Ett[i] = Trans / ρ_w * p.dt[i]
   end
 end
 
-export UpdateHeatFlux, Update_Cs, 
+include("soil_UpdateSoilMoisture.jl")
+
+export UpdateHeatFlux, Update_Cs,
   Update_ice_ratio,
-  UpdateSoilThermalConductivity, 
-  soil_water_factor_v2, 
-  UpdateSoilMoisture, 
+  UpdateSoilThermalConductivity,
+  soil_water_factor_v2,
+  UpdateSoilMoisture,
   Soil_Water_Uptake
