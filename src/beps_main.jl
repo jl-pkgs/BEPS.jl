@@ -56,7 +56,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
       fun(jday, rstep - 1, _lai, par.clumping, param, meteo, CosZs, var_o, var_n, p_soil,
         Ra, mid_res, mid_ET, var; debug)
       
-      Tg[k, :] .= p_soil.temp_soil_c[1:layer]
+      Tg[k, :] .= p_soil.Tsoil_c[1:layer]
       # Store updated variables array in temp array
       v2last .= var_n
 

@@ -1,3 +1,12 @@
+# Campbell 1974, Bonan 2019 Table 8.2
+function cal_ψ(θ::T, θ_sat::T, ψ_sat::T, b::T) where {T<:Real}
+  ψ = ψ_sat * (θ / θ_sat)^(-b)
+  max(ψ, ψ_sat)
+end
+
+cal_K(θ::T, θ_sat::T, K_sat::T, b::T) where {T<:Real} = K_sat * (θ / θ_sat)^(2 * b + 3)
+
+
 # Function to update soil heat flux
 function UpdateHeatFlux(p::Soil,
   Xg_snow::Float64, lambda_snow::Float64, Tsn0::Float64,
@@ -7,9 +16,9 @@ function UpdateHeatFlux(p::Soil,
   # TODO: i may have bug
   @inbounds for i in 2:n+1
     if i <= n
-      p.G[i] = (p.temp_soil_p[i-1] - p.temp_soil_p[i]) / (0.5 * p.d_soil[i-1] / p.lambda[i-1] + 0.5 * p.d_soil[i] / p.lambda[i])
+      p.G[i] = (p.Tsoil_p[i-1] - p.Tsoil_p[i]) / (0.5 * p.dz[i-1] / p.lambda[i-1] + 0.5 * p.dz[i] / p.lambda[i])
     else
-      p.G[i] = p.lambda[i-1] * (p.temp_soil_p[i-1] - Tair_annual_mean) / (DEPTH_F + p.d_soil[i-1] * 0.5)
+      p.G[i] = p.lambda[i-1] * (p.Tsoil_p[i-1] - Tair_annual_mean) / (DEPTH_F + p.dz[i-1] * 0.5)
     end
 
     p.G[i] = clamp(p.G[i], -200, 200)
@@ -17,12 +26,12 @@ function UpdateHeatFlux(p::Soil,
 
   S = 0.0
   for i in 1:n
-    p.temp_soil_c[i] = p.temp_soil_p[i] + (p.G[i] - p.G[i+1] + S) / (p.Cs[i] * p.d_soil[i]) * period_in_seconds
-    p.temp_soil_c[i] = clamp(p.temp_soil_c[i], -50.0, 50.0)
+    p.Tsoil_c[i] = p.Tsoil_p[i] + (p.G[i] - p.G[i+1] + S) / (p.Cs[i] * p.dz[i]) * period_in_seconds
+    p.Tsoil_c[i] = clamp(p.Tsoil_c[i], -50.0, 50.0)
   end
 
   Update_ice_ratio(p)
-  p.temp_soil_p .= p.temp_soil_c
+  p.Tsoil_p .= p.Tsoil_c
 end
 
 
@@ -31,7 +40,7 @@ function Update_Cs(p::Soil)
   for i in 1:p.n_layer
     # Chen B. (2007) Ecological Modelling 209, 277-300  (equation 18)
     term1 = 2.0 * 1.0e+3 * p.density_soil[i] / 2.65
-    term2 = 1.0e+6 * p.thetam[i] * (4.2 * (1 - p.ice_ratio[i]) + 2.09 * p.ice_ratio[i])
+    term2 = 1.0e+6 * p.θ[i] * (4.2 * (1 - p.ice_ratio[i]) + 2.09 * p.ice_ratio[i])
     term3 = 2.5 * 1.0e+6 * p.f_org[i]
 
     p.Cs[i] = term1 + term2 + term3
@@ -45,22 +54,22 @@ function Update_ice_ratio(p::Soil)
 
   @inbounds for i in 1:p.n_layer
     # starting to freeze
-    if p.temp_soil_p[i] >= 0.0 && p.temp_soil_c[i] < 0.0 && p.ice_ratio[i] < 1.0
-      Gsf = (0.0 - p.temp_soil_c[i]) * p.Cs[i] * p.d_soil[i]
-      p.ice_ratio[i] += Gsf / Lf0 / 1000.0 / (p.thetam[i] * p.d_soil[i])
+    if p.Tsoil_p[i] >= 0.0 && p.Tsoil_c[i] < 0.0 && p.ice_ratio[i] < 1.0
+      Gsf = (0.0 - p.Tsoil_c[i]) * p.Cs[i] * p.dz[i]
+      p.ice_ratio[i] += Gsf / Lf0 / 1000.0 / (p.θ[i] * p.dz[i])
       p.ice_ratio[i] = min(1.0, p.ice_ratio[i])
 
-      p.temp_soil_c[i] = 0
+      p.Tsoil_c[i] = 0
       # starting to melt
-    elseif p.temp_soil_p[i] <= 0.0 && p.temp_soil_c[i] > 0.0 && p.ice_ratio[i] > 0.0
-      Gsm = (p.temp_soil_c[i] - 0.0) * p.Cs[i] * p.d_soil[i]
-      p.ice_ratio[i] -= Gsm / Lf0 / 1000.0 / (p.thetam[i] * p.d_soil[i])
+    elseif p.Tsoil_p[i] <= 0.0 && p.Tsoil_c[i] > 0.0 && p.ice_ratio[i] > 0.0
+      Gsm = (p.Tsoil_c[i] - 0.0) * p.Cs[i] * p.dz[i]
+      p.ice_ratio[i] -= Gsm / Lf0 / 1000.0 / (p.θ[i] * p.dz[i])
       p.ice_ratio[i] = max(0.0, p.ice_ratio[i])
 
-      p.temp_soil_c[i] = 0
+      p.Tsoil_c[i] = 0
     end
 
-    p.ice_ratio[i] *= p.thetam_prev[i] / p.thetam[i]
+    p.ice_ratio[i] *= p.θ_prev[i] / p.θ[i]
     p.ice_ratio[i] = min(1.0, p.ice_ratio[i])
   end
 end
@@ -71,12 +80,12 @@ function UpdateSoilThermalConductivity(p::Soil)
   kw = 0.61  # the thermal conductivity of water
 
   @inbounds for i in 1:p.n_layer
-    tmp1 = p.thermal_cond[i]^(1 - p.fei[i])  # dry
-    tmp2 = ki^(1.2 * p.thetam[i] * p.ice_ratio[i])  # ice.  no source for "1.2"
-    tmp3 = kw^(p.thetam[i] * (1 - p.ice_ratio[i]))  # water
-    tmp4 = p.thetam[i] / p.fei[i]  # Sr
+    κ_dry = p.thermal_cond[i]^(1 - p.θ_sat[i])  # dry
+    tmp2 = ki^(1.2 * p.θ[i] * p.ice_ratio[i])  # ice.  no source for "1.2"
+    tmp3 = kw^(p.θ[i] * (1 - p.ice_ratio[i]))  # water
+    tmp4 = p.θ[i] / p.θ_sat[i]  # Sr
 
-    p.lambda[i] = (tmp1 * tmp2 * tmp3 - 0.15) * tmp4 + 0.15  # Note: eq. 8. LHE
+    p.lambda[i] = (κ_dry * tmp2 * tmp3 - 0.15) * tmp4 + 0.15  # Note: eq. 8. LHE
     p.lambda[i] = max(p.lambda[i], 0.15)  # juweimin05
   end
 end
@@ -84,26 +93,24 @@ end
 
 # Function to compute soil water stress factor
 function soil_water_factor_v2(p::Soil)
-  # @unpack psim, psi_sat, 
-  θ = p.thetam
+  # @unpack ψ, ψ_sat, 
+  θ = p.θ
   n = p.n_layer
 
   t1 = -0.02
   t2 = 2.0
 
-  if p.psim[1] <= 0.000001
+  if p.ψ[1] <= 0.000001
     for i in 1:n
-      p.psim[i] = p.psi_sat[i] * (θ[i] / p.fei[i])^-p.b[i]
-      p.psim[i] = max(p.psi_sat[i], p.psim[i])
+      p.ψ[i] = cal_ψ(θ[i], p.θ_sat[i], p.ψ_sat[i], p.b[i])
     end
   end
 
   for i in 1:n
     # psi_sr in m H2O! This is the old version. LHE.
-    p.fpsisr[i] = p.psim[i] > p.psi_min ? 1.0 / (1 + ((p.psim[i] - p.psi_min) / p.psi_min)^p.alpha) : 1.0
+    p.fpsisr[i] = p.ψ[i] > p.ψ_min ? 1.0 / (1 + ((p.ψ[i] - p.ψ_min) / p.ψ_min)^p.alpha) : 1.0
 
-    p.ft[i] = p.temp_soil_p[i] > 0.0 ? 1.0 - exp(t1 * p.temp_soil_p[i]^t2) : 0
-
+    p.ft[i] = p.Tsoil_p[i] > 0.0 ? 1.0 - exp(t1 * p.Tsoil_p[i]^t2) : 0
     p.fpsisr[i] *= p.ft[i]
   end
 
@@ -118,10 +125,8 @@ function soil_water_factor_v2(p::Soil)
     fpsisr_sum = 0
     for i in 1:n
       p.dt[i] = p.dtt[i] / dtt_sum
+      isnan(p.dt[i]) && println(p.dt[1])
 
-      if isnan(p.dt[i])
-        println(p.dt[1])
-      end
       fpsisr_sum += p.fpsisr[i] * p.dt[i]
     end
     p.f_soilwater = max(0.1, fpsisr_sum)

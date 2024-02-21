@@ -45,18 +45,18 @@ function init_soil!(p_soil::Union{Soil_c,Soil}, var_o::Vector,
     var_o[i] = meteo.temp
   end
   for i = 10:15
-    var_o[i] = p_soil.temp_soil_p[i-9]
+    var_o[i] = p_soil.Tsoil_p[i-9]
   end
   for i = 22:27
-    var_o[i] = p_soil.thetam_prev[i-21]
+    var_o[i] = p_soil.θ_prev[i-21]
   end
   for i = 28:33
     var_o[i] = p_soil.ice_ratio[i-27]
   end
   # for (i=0;i<=40;i++)   var_o[i] = 0;
   # for (i=3;i<=8;i++)   var_o[i] = tem;
-  # for(i=9;i<=14;i++) var_o[i] = p_soil->temp_soil_p[i-9];
-  # for(i=21;i<=26;i++) var_o[i] = p_soil->thetam_prev[i-21];
+  # for(i=9;i<=14;i++) var_o[i] = p_soil->Tsoil_p[i-9];
+  # for(i=21;i<=26;i++) var_o[i] = p_soil->θ_prev[i-21];
   # for(i=27;i<=32;i++) var_o[i] = p_soil->ice_ratio[i-27];
   nothing
 end

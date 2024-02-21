@@ -7,7 +7,7 @@ import BEPS: SoilRootFraction,
   Update_ice_ratio,
   UpdateSoilThermalConductivity,
   UpdateHeatFlux,
-  Update_temp_soil_c,
+  Update_Tsoil_c,
   Update_G,
   UpdateSoilMoisture
 
@@ -67,8 +67,8 @@ function UpdateHeatFlux(p::Soil_c, Xg_snow, lambda_snow, Tsn0,
     Ref(p), Xg_snow, lambda_snow, Tsn0, Tair_annual_mean, peroid_in_seconds)
 end
 
-function Update_temp_soil_c(p::Soil_c, value::Cdouble)
-  ccall((:Update_temp_soil_c, libbeps), Cvoid, (Ptr{Soil_c}, Cdouble),
+function Update_Tsoil_c(p::Soil_c, value::Cdouble)
+  ccall((:Update_Tsoil_c, libbeps), Cvoid, (Ptr{Soil_c}, Cdouble),
     Ref(p), value)
 end
 

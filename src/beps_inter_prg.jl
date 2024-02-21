@@ -56,7 +56,7 @@ function inter_prg_jl(
   # LAI = Leaf()
   # PAI = Leaf()
 
-  d_soil = zeros(layer + 1)
+  dz = zeros(layer + 1)
   lambda = zeros(layer + 2)
 
   ra_o = 0.0
@@ -192,12 +192,12 @@ function inter_prg_jl(
       rainfall_stage1_jl(Ta, prcp, var.Wcl_o[kkk-1], var.Wcl_u[kkk-1], lai_o, lai_u, clumping)
 
     # Old version
-    # if(thetam[0][kkk-1]<soilp.theta_vwp[1]*0.5) var.alpha_g = alpha_dry;
-    # else var.alpha_g = (thetam[0][kkk-1]-soilp.theta_vwp[1]*0.5)/(soilp.fei[1]-soilp.theta_vwp[1]*0.5) * (alpha_sat - alpha_dry) + alpha_dry;
-    if (soilp.thetam_prev[2] < soilp.theta_vwp[2] * 0.5)
+    # if(θ[0][kkk-1]<soilp.theta_vwp[1]*0.5) var.alpha_g = alpha_dry;
+    # else var.alpha_g = (θ[0][kkk-1]-soilp.theta_vwp[1]*0.5)/(soilp.θ_sat[1]-soilp.theta_vwp[1]*0.5) * (alpha_sat - alpha_dry) + alpha_dry;
+    if (soilp.θ_prev[2] < soilp.theta_vwp[2] * 0.5)
       alpha_g = alpha_dry
     else
-      alpha_g = (soilp.thetam_prev[2] - soilp.theta_vwp[2] * 0.5) / (soilp.fei[2] - soilp.theta_vwp[2] * 0.5) * (alpha_sat - alpha_dry) + alpha_dry
+      alpha_g = (soilp.θ_prev[2] - soilp.theta_vwp[2] * 0.5) / (soilp.θ_sat[2] - soilp.theta_vwp[2] * 0.5) * (alpha_sat - alpha_dry) + alpha_dry
     end
 
     alpha_v_g = 2.0 / 3.0 * alpha_g
@@ -316,7 +316,7 @@ function inter_prg_jl(
     var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk] = 
       evaporation_soil_jl(temp_grd, var.Ts0[kkk-1], rh_air, radiation_g, Gheat_g,
         Ref(var.Xg_snow, kkk), Zp, Zsp, mass_water_g, Ref(var.Wg_snow, kkk), # Ref
-        var.rho_snow[kkk], soilp.thetam_prev[1], soilp.fei[1])
+        var.rho_snow[kkk], soilp.θ_prev[1], soilp.θ_sat[1])
         # Ref(var.Evap_soil, kkk), Ref(var.Evap_SW, kkk), Ref(var.Evap_SS, kkk)
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
@@ -332,16 +332,16 @@ function inter_prg_jl(
     var.Cs[2, kkk] = soilp.Cs[1]
     var.Tc_u[kkk]  = Tcu           # added
     lambda[2]      = soilp.lambda[1]
-    d_soil[2]      = soilp.d_soil[1]
+    dz[2]      = soilp.dz[1]
 
-    var.Tm[1, kkk-1] = soilp.temp_soil_p[1]
-    var.Tm[2, kkk-1] = soilp.temp_soil_p[2] # first place is temp_soil_p[0]?
+    var.Tm[1, kkk-1] = soilp.Tsoil_p[1]
+    var.Tm[2, kkk-1] = soilp.Tsoil_p[2] # first place is Tsoil_p[0]?
     var.G[2, kkk] = soilp.G[1]
 
     var.G[1, kkk], var.Ts0[kkk], var.Tm[1, kkk], var.Tsm0[kkk],
     var.Tsn0[kkk], var.Tsn1[kkk], var.Tsn2[kkk] =
       surface_temperature_jl(Ta, rh_air, Zsp[], Zp[],
-        var.Cs[2, kkk], var.Cs[1, kkk], Gheat_g, d_soil[2], var.rho_snow[kkk], var.Tc_u[kkk],
+        var.Cs[2, kkk], var.Cs[1, kkk], Gheat_g, dz[2], var.rho_snow[kkk], var.Tc_u[kkk],
         radiation_g, var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk],
         lambda[2], 
         var.Xg_snow[kkk], var.G[2, kkk], 
@@ -350,8 +350,8 @@ function inter_prg_jl(
         var.Tm[2, kkk-1], var.Tm[1, kkk-1], var.Tsm0[kkk-1], 
         var.Tsn0[kkk-1], var.Tsn1[kkk-1], var.Tsn2[kkk-1])
 
-    Update_temp_soil_c(soilp, var.Tm[1, kkk])
-    # soilp.temp_soil_c[1] = var.Tm[1, kkk]
+    Update_Tsoil_c(soilp, var.Tm[1, kkk])
+    # soilp.Tsoil_c[1] = var.Tm[1, kkk]
 
     snowpack_stage3_jl(Ta, var.Tsn0[kkk], var.Tsn0[kkk-1], var.rho_snow[kkk], Zsp, Zp, Ref(var.Wg_snow, kkk)) # X. Luo
 

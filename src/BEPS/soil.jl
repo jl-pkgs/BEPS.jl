@@ -2,14 +2,14 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
   p.n_layer = 5
 
   if landcover == 6 || landcover == 9
-    p.psi_min = 10.0 # ψ_min
+    p.ψ_min = 10.0 # ψ_min
     p.alpha = 1.5
   else
-    p.psi_min = 33.0 # ψ_min
+    p.ψ_min = 33.0 # ψ_min
     p.alpha = 0.4
   end
 
-  p.d_soil[1:5] .= [0.05, 0.10, 0.20, 0.40, 1.25]
+  p.dz[1:5] .= [0.05, 0.10, 0.20, 0.40, 1.25]
 
   p.r_root_decay = r_root_decay
   SoilRootFraction(p)
@@ -128,11 +128,11 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
 
   p.b[1:5] .= b
   p.Ksat[1:5] .= Ksat
-  p.fei[1:5] .= porosity
+  p.θ_sat[1:5] .= porosity
   p.theta_vfc[1:5] .= θ_vfc
   p.theta_vwp[1:5] .= θ_vwp
   p.thermal_cond[1:5] .= thermal_cond
-  p.psi_sat[1:5] .= ψ_sat
+  p.ψ_sat[1:5] .= ψ_sat
   
   p
 end
@@ -145,12 +145,12 @@ function SoilRootFraction(soil::Soil)
   cum_depth = zeros(soil.n_layer)
 
   # For the first layer
-  cum_depth[1] = soil.d_soil[1]
+  cum_depth[1] = soil.dz[1]
   soil.f_root[1] = 1 - (soil.r_root_decay)^(cum_depth[1] * 100)
 
   # For 2 to n_layer - 1
   for i in 2:(soil.n_layer-1)
-    cum_depth[i] = cum_depth[i-1] + soil.d_soil[i]
+    cum_depth[i] = cum_depth[i-1] + soil.dz[i]
     soil.f_root[i] = (soil.r_root_decay)^(cum_depth[i-1] * 100) - (soil.r_root_decay)^(cum_depth[i] * 100)
   end
 
@@ -170,29 +170,29 @@ function Init_Soil_Status(p::Soil, Tsoil::Float64, Tair::Float64, Ms::Float64, s
   moisture_scale_factors = [0.8, 1.0, 1.05, 1.10, 1.15]
 
   for i in 1:5
-    p.temp_soil_c[i] = Tair + temp_scale_factors[i] * d_t
-    p.temp_soil_p[i] = Tair + temp_scale_factors[i] * d_t
-    p.thetam[i] = moisture_scale_factors[i] * Ms
-    p.thetam_prev[i] = moisture_scale_factors[i] * Ms
+    p.Tsoil_c[i] = Tair + temp_scale_factors[i] * d_t
+    p.Tsoil_p[i] = Tair + temp_scale_factors[i] * d_t
+    p.θ[i] = moisture_scale_factors[i] * Ms
+    p.θ_prev[i] = moisture_scale_factors[i] * Ms
   end
 
   for i in 1:p.n_layer
-    if p.temp_soil_c[i] < -1.0
+    if p.Tsoil_c[i] < -1.0
       p.ice_ratio[i] = 1.0
-    elseif p.temp_soil_c[i] > 0
+    elseif p.Tsoil_c[i] > 0
       p.ice_ratio[i] = 0
     else
-      p.ice_ratio[i] = -p.temp_soil_c[i] / 1.0
+      p.ice_ratio[i] = -p.Tsoil_c[i] / 1.0
     end
   end
 end
 
-function Update_temp_soil_c(p::Soil, value::Cdouble)
-  p.temp_soil_c[1] = value
+function Update_Tsoil_c(p::Soil, value::Cdouble)
+  p.Tsoil_c[1] = value
 end
 
 function Update_G(p::Soil, value::Cdouble)
   p.G[1] = value
 end
 
-export Init_Soil_Parameters, Init_Soil_Status, SoilRootFraction, Update_temp_soil_c, Update_G
+export Init_Soil_Parameters, Init_Soil_Status, SoilRootFraction, Update_Tsoil_c, Update_G

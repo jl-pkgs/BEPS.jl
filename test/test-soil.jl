@@ -16,9 +16,11 @@ function is_soil_equal(p_jl, p_c; tol=1e-7, verbose=false)
   for i in eachindex(names_c)
     x_jl = getfield(p_jl, i)
     x_c = getfield(p_c, i)
-    # verbose && println("[$name], c=$x_c, jl=$x_jl")
-    # name_c = 
-    verbose && println("C and Julia: $(names_c[i]), $(names_jl[i])")
+
+    if verbose
+      color = names_c[i] == names_jl[i] ? :black : :red
+      printstyled("C and Julia: $(names_c[i]), $(names_jl[i])\n"; color)
+    end
     @test maximum(abs.(x_c .- x_jl)) <= tol
   end
 end
