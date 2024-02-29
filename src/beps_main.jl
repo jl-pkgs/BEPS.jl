@@ -45,7 +45,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
       fill_meteo!(meteo, d, k)
 
       if (flag == 0)
-        init_soil!(p_soil, var_o, meteo, param, par) # update p_soil and var_o
+        Init_Soil_var_o(p_soil, var_o, meteo, param, par) # update p_soil and var_o
       else
         var_o .= v2last
       end

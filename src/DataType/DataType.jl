@@ -36,9 +36,29 @@ include("OUTPUT.jl")
 # export TSoil
 
 
+## fill values
+const TypeDF = Union{Results,ClimateData,OutputET}
+
+## put struct into a data.frame
+function Base.getindex(x::T, i::Int)::FT where {T<:TypeDF}
+  # key = fieldnames(T)[i]
+  getfield(x, i)
+end
+
+Base.length(x::T) where {T<:TypeDF} = fieldcount(T)
+
+function fill_res!(df::DataFrame, Res::T, k::Int) where {T<:TypeDF}
+  n = length(Res)
+  for i in 1:n
+    df[k, i] = Res[i]
+  end
+  nothing
+end
+
+
 export 
   Leaf, 
-  Soil, 
+  Soil, AbstractSoil, 
   ClimateData, Results, Cpools,
   InterTempVars,
   OutputET, Radiation

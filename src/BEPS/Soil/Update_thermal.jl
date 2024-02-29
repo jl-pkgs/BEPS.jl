@@ -89,5 +89,3 @@ function UpdateSoilThermalConductivity(p::Soil)
     p.lambda[i] = max(p.lambda[i], 0.15)  # juweimin05
   end
 end
-
-

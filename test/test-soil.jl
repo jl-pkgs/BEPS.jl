@@ -39,7 +39,7 @@ end
 end
 
 
-@testset "init_soil!" begin
+@testset "Init_Soil_var_o" begin
   p_jl = Soil()
   p_c = Soil_c()
   var_jl = zeros(41)
@@ -58,8 +58,8 @@ end
 
   param = readparam(par.landcover)      # n = 48
 
-  init_soil!(p_jl, var_jl, meteo, param, par)
-  init_soil!(p_c, var_c, meteo, param, par)
+  Init_Soil_var_o(p_jl, var_jl, meteo, param, par)
+  Init_Soil_var_o(p_c, var_c, meteo, param, par)
 
   
   funs = [Update_Cs, 

@@ -1,4 +1,6 @@
-@with_kw mutable struct Soil
+abstract type AbstractSoil end
+
+@with_kw mutable struct Soil <: AbstractSoil
   flag        ::Cint    = Cint(0)
   n_layer     ::Cint    = Cint(5)
   step_period ::Cint    = Cint(1)
