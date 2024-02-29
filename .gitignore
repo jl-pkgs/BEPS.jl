@@ -17,7 +17,7 @@ deps/BEPC.c
 # *debug*
 *.c
 
-docs
+docs/reference
 .vdoc.jl
 *.csv
 *.html

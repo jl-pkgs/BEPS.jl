@@ -49,12 +49,12 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
 ```
 
 > Figure1: The bias of Julia version compared with C, `bias = (Julia - C)/ C`.
-![](./images/Figure1_bias_of_julia-version.png)
+![](./docs/images/Figure1_bias_of_julia-version.png)
 
 The bias of `SH` is the largest due to double number accuracy, about 1.48%, which is acceptable.
 
 > Figure2: The variation of soil temperature at different depths.
-![](./images/Figure2_variation_of_Tg.png)
+![](./docs/images/Figure2_variation_of_Tg.png)
 
 See [examples/example_01.qmd](examples/example_01.qmd) for details.
 

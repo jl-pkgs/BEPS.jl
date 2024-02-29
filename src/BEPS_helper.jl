@@ -62,6 +62,7 @@ function init_soil!(p_soil::Union{Soil_c,Soil}, var_o::Vector,
 end
 
 
+## fill values
 const TypeDF = Union{Results,ClimateData,OutputET}
 
 ## put struct into a data.frame
