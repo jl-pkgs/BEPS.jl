@@ -101,10 +101,9 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
   return ra_o, ra_u, ra_g, G_o_a, G_o_b, G_u_a, G_u_b
 end
 
-
-function windProfile_factor(canopy_height_u, canopy_height_o, gamma, k=1.0)
-  exp(gamma * (1 - canopy_height_u * k / canopy_height_o))
-end
+# function windProfile_factor(canopy_height_u, canopy_height_o, gamma, k=1.0)
+#   exp(gamma * (1 - canopy_height_u * k / canopy_height_o))
+# end
 
 function cal_Nu(u::FT, nu_lower::FT)::FT
   # lw::T = 0.3 # leaf characteristic width =0.3 for BS
