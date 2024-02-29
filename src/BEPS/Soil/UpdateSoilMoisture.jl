@@ -105,6 +105,8 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
   end
 end
 
+
+
 function guess_step(max_Fb)
   if max_Fb > 1.0e-5
     this_step = 1.0
@@ -115,6 +117,7 @@ function guess_step(max_Fb)
   end
   this_step
 end
+
 
 
 # Function to calculate soil water uptake from a layer

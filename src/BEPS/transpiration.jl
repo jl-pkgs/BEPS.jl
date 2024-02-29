@@ -6,7 +6,7 @@ function transpiration_jl(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, 
   cp = met.cp     # specific heat of moist air above canopy
   VPD = met.VPD    # VPD in air
   Δ = met.slope
-  γ = met.gamma  # psychrometer constant
+  γ = met.gamma  # γ constant
   λ = cal_lambda(Ta)
 
   # Luo, 2018, JGR-Biogeosciences

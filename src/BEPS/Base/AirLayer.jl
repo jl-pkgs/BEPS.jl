@@ -37,5 +37,6 @@ $(TYPEDFIELDS)
   wind::FT = FT(2) 
 end
 
+# args = (Tair, slope, γ, VPD_air, Cp_ca)
 
 export AirLayer

@@ -10,13 +10,14 @@ function Leaf_Temperature_jl(Tair::Float64, Δ::Float64, γ::Float64, VPD::Float
 end
 
 
-function Leaf_Temperatures_jl(Tair::Float64, slope::Float64, psychrometer::Float64, VPD_air::Float64, Cp_ca::Float64,
+function Leaf_Temperatures_jl(Tair::Float64, slope::Float64, γ::Float64, 
+  VPD_air::Float64, Cp_ca::Float64,
   Gw::Leaf, Gww::Leaf, Gh::Leaf,
   Xcs_o::Float64, Xcl_o::Float64, 
   Xcs_u::Float64, Xcl_u::Float64,
   radiation::Leaf, Tc::Leaf)
 
-  args = (Tair, slope, psychrometer, VPD_air, Cp_ca)
+  args = (Tair, slope, γ, VPD_air, Cp_ca)
   Tc.o_sunlit = Leaf_Temperature_jl(args...,
     Gw.o_sunlit, Gww.o_sunlit, Gh.o_sunlit, Xcs_o + Xcl_o, radiation.o_sunlit)
 
