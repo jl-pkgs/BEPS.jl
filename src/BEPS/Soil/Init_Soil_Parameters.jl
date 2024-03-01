@@ -130,7 +130,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
   p.Ksat[1:5] .= Ksat
   p.θ_sat[1:5] .= porosity
   p.theta_vfc[1:5] .= θ_vfc
-  p.theta_vwp[1:5] .= θ_vwp
+  p.θ_vwp[1:5] .= θ_vwp
   p.thermal_cond[1:5] .= thermal_cond
   p.ψ_sat[1:5] .= ψ_sat
   

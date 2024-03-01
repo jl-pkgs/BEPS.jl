@@ -192,12 +192,12 @@ function inter_prg_jl(
       rainfall_stage1_jl(Ta, prcp, var.Wcl_o[kkk-1], var.Wcl_u[kkk-1], lai_o, lai_u, clumping)
 
     # Old version
-    # if(θ[0][kkk-1]<soilp.theta_vwp[1]*0.5) var.alpha_g = alpha_dry;
-    # else var.alpha_g = (θ[0][kkk-1]-soilp.theta_vwp[1]*0.5)/(soilp.θ_sat[1]-soilp.theta_vwp[1]*0.5) * (alpha_sat - alpha_dry) + alpha_dry;
-    if (soilp.θ_prev[2] < soilp.theta_vwp[2] * 0.5)
+    # if(θ[0][kkk-1]<soilp.θ_vwp[1]*0.5) var.alpha_g = alpha_dry;
+    # else var.alpha_g = (θ[0][kkk-1]-soilp.θ_vwp[1]*0.5)/(soilp.θ_sat[1]-soilp.θ_vwp[1]*0.5) * (alpha_sat - alpha_dry) + alpha_dry;
+    if (soilp.θ_prev[2] < soilp.θ_vwp[2] * 0.5)
       alpha_g = alpha_dry
     else
-      alpha_g = (soilp.θ_prev[2] - soilp.theta_vwp[2] * 0.5) / (soilp.θ_sat[2] - soilp.theta_vwp[2] * 0.5) * (alpha_sat - alpha_dry) + alpha_dry
+      alpha_g = (soilp.θ_prev[2] - soilp.θ_vwp[2] * 0.5) / (soilp.θ_sat[2] - soilp.θ_vwp[2] * 0.5) * (alpha_sat - alpha_dry) + alpha_dry
     end
 
     alpha_v_g = 2.0 / 3.0 * alpha_g
@@ -331,8 +331,8 @@ function inter_prg_jl(
     var.Cs[1, kkk] = soilp.Cs[1]  # added
     var.Cs[2, kkk] = soilp.Cs[1]
     var.Tc_u[kkk]  = Tcu           # added
-    lambda[2]      = soilp.lambda[1]
-    dz[2]      = soilp.dz[1]
+    lambda[2] = soilp.lambda[1]
+    dz[2]     = soilp.dz[1]
 
     var.Tm[1, kkk-1] = soilp.Tsoil_p[1]
     var.Tm[2, kkk-1] = soilp.Tsoil_p[2] # first place is Tsoil_p[0]?

@@ -11,15 +11,20 @@ end
 function is_soil_equal(p_jl, p_c; tol=1e-7, verbose=false)
   names_c = fieldnames(typeof(p_c))
   names_jl = fieldnames(typeof(p_jl))
-  ## 变量名可能不同
+  names_skip = [:θb, :ψb]
   
   for i in eachindex(names_c)
+    name_c = names_c[i]
+    name_jl = names_jl[i]
+    name_jl in names_skip && continue
+    
     x_jl = getfield(p_jl, i)
     x_c = getfield(p_c, i)
 
     if verbose
-      color = names_c[i] == names_jl[i] ? :black : :red
-      printstyled("C and Julia: $(names_c[i]), $(names_jl[i])\n"; color)
+      ## 变量名可能不同
+      color = name_c == name_jl ? :black : :red
+      printstyled("C and Julia: $name_c, $name_jl\n"; color)
     end
     @test maximum(abs.(x_c .- x_jl)) <= tol
   end

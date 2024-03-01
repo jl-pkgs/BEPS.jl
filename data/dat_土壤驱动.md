@@ -48,7 +48,7 @@
 - `Ksat`         : saturated hydraulic conductivity
 - `fei`          : porosity
 - `theta_vfc`    : field capacity (ignored)
-- `theta_vwp`    : wilt point
+- `θ_vwp`        : wilt point
 - `thermal_cond` : thermal conductivity
 - `psi_sat`      : water potential at saturated
 

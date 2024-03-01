@@ -1,7 +1,7 @@
 using DocStringExtensions: TYPEDFIELDS
 using DataFrames: DataFrame
 
-include("Ipaper.jl")
+include("LabelledArrays.jl")
 include("helpers.jl")
 include("s_coszs.jl")
 

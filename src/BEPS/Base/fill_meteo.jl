@@ -1,6 +1,3 @@
-using DataFrames: DataFrame
-
-
 function q2RH(hum::FT, tem::FT)::FT
   # Vapour pressure in mbar
   ea = 0.46 * hum * (tem + 273.16) / 100

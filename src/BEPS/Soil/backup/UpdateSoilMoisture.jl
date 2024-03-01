@@ -13,7 +13,7 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
   this_step, total_t, max_Fb = 0.0, 0.0, 0.0
 
   n = p.n_layer
-  @unpack dz, f_water, Ksat, KK, km, b,
+  @unpack dz, f_water, Ksat, Kb, KK, km, b,
   ψ_sat, ψ, 
   θ_sat, θ, θ_prev = p
   θ_prev .= θ # assign current soil moisture to prev
@@ -39,26 +39,41 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
   p.Zp = (p.Zp / kstep + p.r_rain_g - inf) * kstep * p.r_drainage
 
   @inbounds while total_t < kstep
-    # 为了解决相互依赖的关系，循环寻找稳态
+    ## soil moisture in the boundaries
+    # for i in 1:n
+    #   if i < n
+    #     θb[i] = (θ[i+1] / dz[i+1] + θ[i] / dz[i]) / (1 / dz[i] + 1 / dz[i+1])
+    #   else
+    #     d1 = max((θ[i] - θb[i-1]) * 2.0 / dz[i], 0)
+    #     θb[i] = min(θ[i] + d1 * dz[i] / 2.0, θ_sat[i])
+    #   end
+    # end
+
+    # # Kb not used
+    # for i in 1:n-1
+    #   K = f_water[i] * (θb[i] / θ_sat[i])^(2 * b[i] + 3)
+    #   Kb[i] = (Ksat[i] * dz[i] + Ksat[i+1] * dz[i+1]) / (dz[i] + dz[i+1]) * K # bottom
+    # end
+    # Kb[n] = 0.5 * f_water[n] * cal_K(θ[n], θ_sat[n], Ksat[n], b[n])
+
     # the unsaturated soil water retention. LHe
     # Hydraulic conductivity: Bonan, Table 8.2, Campbell 1974, K = K_sat*(θ/θ_sat)^(2b+3)
     for i in 1:n
+      # ψb[i] = cal_ψ(θb[i], θ_sat[i], ψ_sat[i], b[i])
       ψ[i] = cal_ψ(θ[i], θ_sat[i], ψ_sat[i], b[i])
       km[i] = f_water[i] * cal_K(θ[i], θ_sat[i], Ksat[i], b[i]) # Hydraulic conductivity, [m/s]
     end
-
+    
     # the unsaturated hydraulic conductivity of soil layer @ boundaries
     for i in 1:n-1
-      # 计算平均的一种方案？
-      # K * ψ * b / (b + 3): ?
       KK[i] = (km[i] * ψ[i] + km[i+1] * ψ[i+1]) / (ψ[i] + ψ[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6)
     end
+    # KK[n] = (km[n] * ψ[n] + Kb[n] * ψb[n]) / (ψ[n] + ψb[n]) * b[n] / (b[n] + 3)
 
     # Fb, flow speed. Dancy's law. LHE.
     # check the r_waterflow further. LHE
     for i in 1:n-1
-      # 不同层土壤深度不同，能否这样写？
-      Q = KK[i] * (2 * (ψ[i+1] - ψ[i]) / (dz[i] + dz[i+1]) + 1) # z direction, 
+      Q = KK[i] * (2 * (ψ[i+1] - ψ[i]) / (dz[i] + dz[i+1]) + 1) # z direction
       Q_max = (θ_sat[i+1] - θ[i+1]) * dz[i+1] / kstep + p.Ett[i+1]
       Q = min(Q, Q_max)
 
@@ -108,8 +123,10 @@ function Soil_Water_Uptake(p::Soil, Trans_o::Float64, Trans_u::Float64, Evap_soi
   ρ_w = 1025.0
   Trans = Trans_o + Trans_u
 
-  p.Ett[1] = Trans / ρ_w * p.dt[1] + Evap_soil / ρ_w # for the top layer
+  # for the top layer
+  p.Ett[1] = Trans / ρ_w * p.dt[1] + Evap_soil / ρ_w
 
+  # for each layer:
   for i in 2:p.n_layer
     p.Ett[i] = Trans / ρ_w * p.dt[i]
   end

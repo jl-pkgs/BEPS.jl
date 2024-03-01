@@ -3,4 +3,5 @@ ignore:
   - "*/debug/*"
   - "src/*/deprecated"
   - "src/*/temp"
+  - "src/*/backup"
   - "src/clang/*"
