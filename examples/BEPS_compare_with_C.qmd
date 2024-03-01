@@ -7,7 +7,7 @@
 
 ```{julia}
 using BEPS
-using BenchmarkTools
+# using BenchmarkTools
 
 d = deserialize("data/p1_meteo")
 lai = readdlm("examples/input/p1_lai.txt")[:]

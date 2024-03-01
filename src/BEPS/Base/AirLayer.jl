@@ -16,7 +16,7 @@ $(TYPEDFIELDS)
   Tair::FT
   
   "Air density `[kg m⁻³]`"
-  ρ_a::FT
+  ρₐ::FT
   
   "Specific heat of air `[J kg⁻¹ K⁻¹]`"
   Cp_ca::FT

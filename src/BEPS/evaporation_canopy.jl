@@ -6,7 +6,7 @@ function evaporation_canopy_jl(T_leaf::Leaf, Ta::Float64, rh_air::Float64,
   # LHs = Leaf()  # latent heat from leaves W/m2, caused by evaporation of intercepted snow
 
   met = meteo_pack_jl(Ta, rh_air)
-  # ρ_a, cp, vpd, slope, gamma = met
+  # ρₐ, cp, vpd, slope, gamma = met
   latent_water = (2.501 - 0.00237 * Ta) * 1000000
   latent_snow = 2.83 * 1000000
 

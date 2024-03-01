@@ -36,7 +36,7 @@ const depth_f = 6
 
 const CO2_air::Float64 = 380.0    # ppm
 
-const ρ_a::Float64 = 1.292    # density of air, kg m-3
+const ρₐ::Float64 = 1.292    # density of air, kg m-3
 
 const ρ_w::Float64 = 1025.0;  # density of water, kg m-3
 

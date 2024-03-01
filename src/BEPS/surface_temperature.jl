@@ -12,7 +12,7 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, depth_snow::FT, depth_wat
   latent_water::FT = cal_lambda(T_air) # J kg-1
   latent_snow::FT = 2.83 * 1000000
 
-  ρ_air::FT = ρ_a
+  ρₐir::FT = ρₐ
   cp::FT = cal_cp(T_air, rh_air)
 
   ra_g::FT = 1.0 / Gheat_g  # aerodynamic resistance of heat
@@ -33,8 +33,8 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, depth_snow::FT, depth_wat
 
   if depth_snow <= 0.02
     ttt = capacity_heat_soil1 * 0.02 / length_step
-    T_ground = (T_ground_last * ttt * ra_g * depth_soil1 + Gg * ra_g * depth_soil1 + ρ_air * cp * T_air * depth_soil1 + ra_g * λ_soil1 * T_soil1_last) /
-               (ρ_air * cp * depth_soil1 + ra_g * λ_soil1 + ttt * ra_g * depth_soil1)
+    T_ground = (T_ground_last * ttt * ra_g * depth_soil1 + Gg * ra_g * depth_soil1 + ρₐir * cp * T_air * depth_soil1 + ra_g * λ_soil1 * T_soil1_last) /
+               (ρₐir * cp * depth_soil1 + ra_g * λ_soil1 + ttt * ra_g * depth_soil1)
     T_ground = clamp(T_ground, T_ground_last - 25, T_ground_last + 25)
 
     T_any0 = T_ground
@@ -49,14 +49,14 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, depth_snow::FT, depth_wat
   elseif depth_snow > 0.02 && depth_snow <= 0.05
     ttt = capacity_heat_soil1 * 0.02 / length_step  # for soil fraction part
 
-    T_soil0 = (T_soil0_last * ttt * ra_g * depth_soil1 + Gg * ra_g * depth_soil1 + ρ_air * cp * T_air * depth_soil1 + 2 * ra_g * λ_soil1 * T_soil1_last) /
-              (ρ_air * cp * depth_soil1 + 2 * ra_g * λ_soil1 + ttt * ra_g * depth_soil1)
+    T_soil0 = (T_soil0_last * ttt * ra_g * depth_soil1 + Gg * ra_g * depth_soil1 + ρₐir * cp * T_air * depth_soil1 + 2 * ra_g * λ_soil1 * T_soil1_last) /
+              (ρₐir * cp * depth_soil1 + 2 * ra_g * λ_soil1 + ttt * ra_g * depth_soil1)
 
     T_soil0 = clamp(T_soil0, T_air - 25.0, T_air + 25.0)
 
     ttt = cp_ice * ρ_snow * depth_snow / length_step  # for snow part
-    T_snow = (T_snow_last * ttt * ra_g * depth_snow + Gg * ra_g * depth_snow + ρ_air * cp * tempL_u * depth_snow + ra_g * λ_snow * T_any0_last) /
-             (ρ_air * cp * depth_snow + ra_g * λ_snow + ttt * ra_g * depth_snow)
+    T_snow = (T_snow_last * ttt * ra_g * depth_snow + Gg * ra_g * depth_snow + ρₐir * cp * tempL_u * depth_snow + ra_g * λ_snow * T_any0_last) /
+             (ρₐir * cp * depth_snow + ra_g * λ_snow + ttt * ra_g * depth_snow)
 
     T_snow = clamp(T_snow, T_air - 25.0, T_air + 25.0)
 
@@ -89,8 +89,8 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, depth_snow::FT, depth_wat
   elseif depth_snow > 0.05
     ttt = cp_ice * ρ_snow * 0.02 / length_step
 
-    T_snow = (T_snow_last * ttt * ra_g * 0.04 + Gg * ra_g * 0.02 + ρ_air * cp * T_air * 0.04 + ra_g * λ_snow * T_snow1_last) /
-             (ρ_air * cp * 0.04 + ra_g * λ_snow + ttt * ra_g * 0.04)
+    T_snow = (T_snow_last * ttt * ra_g * 0.04 + Gg * ra_g * 0.02 + ρₐir * cp * T_air * 0.04 + ra_g * λ_snow * T_snow1_last) /
+             (ρₐir * cp * 0.04 + ra_g * λ_snow + ttt * ra_g * 0.04)
     T_snow = clamp(T_snow, T_air - 25.0, T_air + 25.0)
 
     G_snow = λ_snow * (T_snow - T_snow1_last) / 0.04

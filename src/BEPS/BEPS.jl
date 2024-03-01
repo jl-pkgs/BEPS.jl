@@ -10,7 +10,7 @@ include("heat_H_and_LE.jl")
 
 include("Leaf_Temperature.jl")
 include("surface_temperature.jl")
-include("transpiration.jl")
+# include("transpiration.jl")
 include("evaporation_soil.jl")
 include("evaporation_canopy.jl")
 
@@ -19,6 +19,7 @@ include("snowpack.jl")
 
 include("netRadiation.jl")
 include("photosynthesis.jl")
+
 
 export s_coszs, lai2, readparam, readcoef, 
   rainfall_stage1_jl, rainfall_stage2_jl, 
