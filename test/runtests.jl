@@ -30,6 +30,7 @@ end
   # max(df_diff_perc)
   
   l = max(df_diff_perc)
+  @show l
   @test nanmax(l) < 1.5 # SH, 1.48%的误差, current 0.09%
 end
 

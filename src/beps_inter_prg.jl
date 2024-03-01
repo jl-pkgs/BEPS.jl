@@ -248,7 +248,7 @@ function inter_prg_jl(
 
       # /*****  Photosynthesis module by B. Chen  *****/
       update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u) # conductance for water
-      latent_heat!(leleaf, Gw, VPD, slope, Tc_old, Ta, rho_a, cp, gamma)
+      latent_heat!(leleaf, Gw, VPD, slope, Tc_old, Ta, ρ_a, cp, gamma)
 
       if (CosZs > 0)
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
@@ -277,8 +277,8 @@ function inter_prg_jl(
         var.Xcs_o[kkk], var.Xcl_o[kkk], var.Xcs_u[kkk], var.Xcl_u[kkk],
         Rn, Tc_new)
 
-      H_o_sunlit = (Tc_new.o_sunlit - Ta) * rho_a * cp * Gh.o_sunlit
-      H_o_shaded = (Tc_new.o_shaded - Ta) * rho_a * cp * Gh.o_shaded
+      H_o_sunlit = (Tc_new.o_sunlit - Ta) * ρ_a * cp * Gh.o_sunlit
+      H_o_shaded = (Tc_new.o_shaded - Ta) * ρ_a * cp * Gh.o_shaded
       GH_o = H_o_sunlit * PAI.o_sunlit + H_o_shaded * PAI.o_shaded  # for next num aerodynamic conductance calculation
 
       if (abs(Tc_new.o_sunlit - Tc_old.o_sunlit) < 0.02 &&
@@ -311,7 +311,7 @@ function inter_prg_jl(
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g
-    mass_water_g[] = rho_w * Zp[]
+    mass_water_g[] = ρ_w * Zp[]
 
     var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk] = 
       evaporation_soil_jl(temp_grd, var.Ts0[kkk-1], rh_air, radiation_g, Gheat_g,

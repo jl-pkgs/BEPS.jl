@@ -1,7 +1,6 @@
 function Leaf_Temperature_jl(Tair::Float64, Δ::Float64, γ::Float64, VPD::Float64, cp::Float64,
   Gw::Float64, Gww::Float64, Gh::Float64, Xc_sl::Float64, radiation::Float64, constrain::Bool=true)
 
-  ρ_a = 1.292 # ρ_air, kg/m3
   p_star = (Gw + Gww * Xc_sl) / γ
   Tc = Tair + (radiation - VPD * ρ_a * cp * p_star) / (ρ_a * cp * (Gh + Δ * p_star))
 

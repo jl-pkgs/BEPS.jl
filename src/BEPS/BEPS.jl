@@ -1,12 +1,13 @@
-
 include("Base/Base.jl")
 include("Param/Param.jl")
 include("Soil/Soil.jl")
 # include("soil_thermal_regime.jl")
 
 include("aerodynamic_conductance.jl")
-include("latent_heat.jl")
-include("sensible_heat.jl")
+# include("latent_heat.jl")
+# include("sensible_heat.jl")
+include("heat_H_and_LE.jl")
+
 include("Leaf_Temperature.jl")
 include("surface_temperature.jl")
 include("transpiration.jl")

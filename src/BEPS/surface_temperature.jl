@@ -12,7 +12,7 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, depth_snow::FT, depth_wat
   latent_water::FT = cal_lambda(T_air) # J kg-1
   latent_snow::FT = 2.83 * 1000000
 
-  ρ_air::FT = rho_a
+  ρ_air::FT = ρ_a
   cp::FT = cal_cp(T_air, rh_air)
 
   ra_g::FT = 1.0 / Gheat_g  # aerodynamic resistance of heat

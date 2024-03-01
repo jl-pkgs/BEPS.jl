@@ -13,7 +13,6 @@ function snowpack_stage1_jl(temp_air::Float64, prcp::Float64,
   length_step = kstep
 
   ρ_new_snow = 67.9 + 51.3 * exp(temp_air / 2.6)
-  ρ_water = 1025
   albedo_v_Newsnow = 0.94
   albedo_n_Newsnow = 0.8
 
@@ -21,7 +20,7 @@ function snowpack_stage1_jl(temp_air::Float64, prcp::Float64,
   mass_snow_u_last = mass_snow_u[]
   mass_snow_g_last = mass_snow_g[]
 
-  snowrate = temp_air > 0 ? 0 : prcp * ρ_water / ρ_new_snow
+  snowrate = temp_air > 0 ? 0 : prcp * ρ_w / ρ_new_snow
   snowrate_o = 0.0
 
   if temp_air < 0
@@ -101,7 +100,7 @@ function snowpack_stage3_jl(temp_air::Float64, temp_snow::Float64, temp_snow_las
   # parameters
   cp_ice = 2228.261
   latent_fusion = 3.34 * 1000000 # J Kg-1
-  ρ_water = 1025 # Kg m-3
+  ρ_w = 1025 # Kg m-3
 
   # simulate snow melt and freeze process
   mass_snow_melt = 0.0
@@ -126,7 +125,7 @@ function snowpack_stage3_jl(temp_air::Float64, temp_snow::Float64, temp_snow_las
 
     if temp_snow <= 0 && temp_snow_last > 0 && depth_water[] > 0  # freezing
       mass_water_frozen = (0 - temp_snow) * cp_ice * ρ_snow * depth_snow_sup / latent_fusion
-      mass_water_frozen = max(mass_water_frozen, depth_water[] * ρ_water)
+      mass_water_frozen = max(mass_water_frozen, depth_water[] * ρ_w)
     else
       mass_water_frozen = 0
     end
@@ -141,7 +140,7 @@ function snowpack_stage3_jl(temp_air::Float64, temp_snow::Float64, temp_snow_las
 
     if temp_snow <= 0 && temp_snow_last > 0 && depth_water[] > 0  # freezing
       mass_water_frozen = (0 - temp_snow) * cp_ice * ρ_snow * depth_snow_sup * 0.02 / latent_fusion
-      mass_water_frozen = max(mass_water_frozen, depth_water[] * ρ_water)
+      mass_water_frozen = max(mass_water_frozen, depth_water[] * ρ_w)
     else
       mass_water_frozen = 0
     end
@@ -158,8 +157,8 @@ function snowpack_stage3_jl(temp_air::Float64, temp_snow::Float64, temp_snow_las
   depth_snow[] = max(0, depth_snow[])
 
   # change of depth in water
-  melt_depth_water = mass_snow_melt / ρ_water
-  frozen_depth_water = mass_water_frozen / ρ_water
+  melt_depth_water = mass_snow_melt / ρ_w
+  frozen_depth_water = mass_water_frozen / ρ_w
   depth_water[] = depth_water[] + melt_depth_water - frozen_depth_water
   depth_water[] = max(0, depth_water[])
 end

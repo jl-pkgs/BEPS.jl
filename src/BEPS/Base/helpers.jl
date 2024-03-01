@@ -38,7 +38,7 @@ end
 
 
 function meteo_pack_jl(Ta::FT, RH::FT)
-  rho_a = 1.292 # ρ_air, kg/m3
+  ρ_a = 1.292 # ρ_air, kg/m3
 
   es = cal_es(Ta)
   ea = es * RH / 100
@@ -51,7 +51,7 @@ function meteo_pack_jl(Ta::FT, RH::FT)
   gamma = 0.066            # γ γ, kPa/C, 
   # lambda = cal_lambda(Ta) # J kg-1
   # psy = cp * 101.13 / (0.622 * lambda)
-  (; rho_a, cp, VPD, slope, gamma, es, ea, q)
+  (; ρ_a, cp, VPD, slope, gamma, es, ea, q)
 end
 
 

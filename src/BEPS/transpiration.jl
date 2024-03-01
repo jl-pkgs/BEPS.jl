@@ -2,7 +2,7 @@ function transpiration_jl(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, 
   T = Leaf() # transpiration
 
   met = meteo_pack_jl(Ta, RH)
-  ρₐ = rho_a
+  ρₐ = ρ_a
   cp = met.cp     # specific heat of moist air above canopy
   VPD = met.VPD    # VPD in air
   Δ = met.slope

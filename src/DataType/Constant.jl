@@ -36,13 +36,17 @@ const depth_f = 6
 
 const CO2_air::Float64 = 380.0    # ppm
 
-const rho_a::Float64 = 1.292    # density of air, kg m-3
+const ρ_a::Float64 = 1.292    # density of air, kg m-3
 
-const rho_w::Float64 = 1025.0;  # density of water, kg m-3
+const ρ_w::Float64 = 1025.0;  # density of water, kg m-3
 
 const Cpd::Float64 = 1004.65;
 
-const Lv_solid::Float64 = 2.83 * 1000000;  # the latent heat of evaporation from solid (snow/ice) at air temperature=Ta, in j+kkk/kg
+const λ_snow::Float64 = 2.83 * 1e6 # J/kg
+
+# the latent heat of evaporation from solid (snow/ice) at air temperature=Ta, in j+kkk/kg
+const Lv_solid::Float64 = 2.83 * 1000000;  
+
 
 ## DB ----------------
 
