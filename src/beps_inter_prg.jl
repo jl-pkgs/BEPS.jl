@@ -170,16 +170,18 @@ function inter_prg_jl(
   var.Wg_snow[1] = var_o[20+1]  # thr fraction of ground surface covered in snow and snow mass
 
   mass_water_g = Ref(0.0)
-  Zsp = Ref(soilp.Zsp)
-  Zp = Ref(soilp.Zp)
-  (Zp[] < 0.001) && (Zp[] = 0.0)
+  Zsp = soilp.Zsp
+  Zp = soilp.Zp
+  (Zp < 0.001) && (Zp = 0.0)
   
   init_leaf_dbl(Tc_old, Ta - 0.5)
+  
+  m = SurfaceMass{FT}()
   
   # /*****  Ten time intervals in a hourly time step.6min or 360s per loop  ******/
   @inbounds for kkk = 2:kloop+1
     
-    var.Xcs_o[kkk], var.Xcs_u[kkk], var.Xg_snow[kkk] = snowpack_stage1_jl(Ta, prcp,
+    var.Xcs_o[kkk], var.Xcs_u[kkk], var.Xg_snow[kkk], Zsp = snowpack_stage1_jl(Ta, prcp,
       # var.Wcs_o[kkk-1], var.Wcs_u[kkk-1], var.Wg_snow[kkk-1],
       Ref(var.Wcs_o, kkk), Ref(var.Wcs_u, kkk), Ref(var.Wg_snow, kkk),
       lai_o, lai_u, clumping,
@@ -311,9 +313,9 @@ function inter_prg_jl(
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g
-    mass_water_g[] = ρ_w * Zp[]
+    mass_water_g = ρ_w * Zp[]
 
-    var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk] = 
+    var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk], mass_water_g, Zp, Zsp =
       evaporation_soil_jl(temp_grd, var.Ts0[kkk-1], rh_air, radiation_g, Gheat_g,
         Ref(var.Xg_snow, kkk), Zp, Zsp, mass_water_g, Ref(var.Wg_snow, kkk), # Ref
         var.rho_snow[kkk], soilp.θ_prev[1], soilp.θ_sat[1])
@@ -340,7 +342,7 @@ function inter_prg_jl(
 
     var.G[1, kkk], var.Ts0[kkk], var.Tm[1, kkk], var.Tsm0[kkk],
     var.Tsn0[kkk], var.Tsn1[kkk], var.Tsn2[kkk] =
-      surface_temperature_jl(Ta, rh_air, Zsp[], Zp[],
+      surface_temperature_jl(Ta, rh_air, Zsp, Zp,
         var.Cs[2, kkk], var.Cs[1, kkk], Gheat_g, dz[2], var.rho_snow[kkk], var.Tc_u[kkk],
         radiation_g, var.Evap_soil[kkk], var.Evap_SW[kkk], var.Evap_SS[kkk],
         lambda[2], 
@@ -353,14 +355,15 @@ function inter_prg_jl(
     Update_Tsoil_c(soilp, var.Tm[1, kkk])
     # soilp.Tsoil_c[1] = var.Tm[1, kkk]
 
-    snowpack_stage3_jl(Ta, var.Tsn0[kkk], var.Tsn0[kkk-1], var.rho_snow[kkk], Zsp, Zp, Ref(var.Wg_snow, kkk)) # X. Luo
+    Zsp, Zp = snowpack_stage3_jl(Ta, var.Tsn0[kkk], var.Tsn0[kkk-1], var.rho_snow[kkk], 
+      Zsp, Zp, Ref(var.Wg_snow, kkk)) # X. Luo
 
     var.Qhc_o[kkk], var.Qhc_u[kkk], var.Qhg[kkk] =
       sensible_heat_jl(Tc_new, var.Ts0[kkk], Ta, rh_air,
         Gh, Gheat_g, PAI) # X. Luo
 
     # /*****  Soil water module by L. He  *****/
-    soilp.Zsp = Zsp[]
+    soilp.Zsp = Zsp
     Update_G(soilp, var.G[1, kkk])
     # soilp.G[1] = G[1][kkk]
 
@@ -368,10 +371,10 @@ function inter_prg_jl(
     Soil_Water_Uptake(soilp, var.Trans_o[kkk], var.Trans_u[kkk], var.Evap_soil[kkk])
 
     soilp.r_rain_g = var.r_rain_g[kkk]
-    soilp.Zp = Zp[]
+    soilp.Zp = Zp
 
     UpdateSoilMoisture(soilp, kstep)
-    Zp[] = soilp.Zp
+    Zp = soilp.Zp
   end  # The end of kkk loop
 
   kkk = kloop + 1# the last step
