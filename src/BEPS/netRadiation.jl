@@ -2,7 +2,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   temp_o::FT, temp_u::FT, temp_g::FT,
   lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
   lai::Leaf,
-  Ω::FT, temp_air::FT, rh::FT,
+  Ω::FT, Tair::FT, RH::FT,
   α_snow_v::FT, α_snow_n::FT,
   percArea_snow_o::FT, percArea_snow_u::FT, perc_snow_g::FT,
   α_v_o::FT, α_n_o::FT, α_v_u::FT, α_n_u::FT,
@@ -11,8 +11,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Rn_Leaf::Leaf,
   Rns_Leaf::Leaf,
   Rnl_Leaf::Leaf, Ra::Radiation)
-  # Rnl_Leaf::Leaf = Leaf()
-
+  
   # calculate α of canopy in this step
   α_v_os::FT = α_v_o * (1.0 - percArea_snow_o) + α_snow_v * percArea_snow_o  # visible, overstory
   α_n_os::FT = α_n_o * (1.0 - percArea_snow_o) + α_snow_n * percArea_snow_o  # near infrared
@@ -56,7 +55,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   τ_us_df::FT = exp(-0.5 * Ω * lai_us / cosQ_u)
 
   # net short direct radiation on canopy and ground
-  if Rs_global > zero && CosZs > zero
+  if Rs_global > 0.0 && CosZs > 0.0
     Ra.Rns_o_dir = Ra.Rs_dir * ((1.0 - α_o) - (1.0 - α_u) * τ_o_dir)  # dir into dif_under
     Ra.Rns_u_dir = Ra.Rs_dir * τ_o_dir * ((1.0 - α_u) - (1.0 - α_g) * τ_u_dir)
     Ra.Rns_g_dir = Ra.Rs_dir * τ_o_dir * τ_u_dir * (1.0 - α_g)
@@ -67,7 +66,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   end
 
   # net short diffuse radiation on canopy and ground
-  if Rs_global > zero && CosZs > zero
+  if Rs_global > 0.0 && CosZs > 0.0
     Ra.Rns_o_df = Ra.Rs_df * ((1.0 - α_o) - (1.0 - α_u) * τ_o_df) +
                0.21 * Ω * Ra.Rs_dir * (1.1 - 0.1 * lai_o) * exp(-CosZs)  # A8
     Ra.Rns_u_df = Ra.Rs_df * τ_o_df * ((1.0 - α_u) - (1.0 - α_g) * τ_u_df) +
@@ -84,14 +83,14 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Rns_u = Ra.Rns_u_dir + Ra.Rns_u_df
   Rns_g = Ra.Rns_g_dir + Ra.Rns_g_df
 
-  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(temp_air, rh, temp_o, temp_u, temp_g, lai_o, lai_u, Ω)
+  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(Tair, RH, temp_o, temp_u, temp_g, lai_o, lai_u, Ω)
 
   # 计算植被和地面的总净辐射
   Rn_o = Rns_o + Rnl_o
   Rn_u = Rns_u + Rnl_u
   Rn_g = Rns_g + Rnl_g
 
-  if Rs_global > zero && CosZs > zero # only happens in day time, when sun is out
+  if Rs_global > 0.0 && CosZs > 0.0 # only happens in day time, when sun is out
     Rs_o_dir = 0.5 * Ra.Rs_dir / CosZs
     Rs_o_dir = min(Rs_o_dir, 0.7 * 1362)
     Rs_u_dir = Rs_o_dir

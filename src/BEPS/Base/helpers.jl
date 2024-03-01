@@ -2,8 +2,8 @@
 pow(x::FT, y)::FT = x^y
 
 function blackbody(T::FT)
-  sb_constant = 5.67 / 100000000    # stephen-boltzman constant
-  sb_constant * (T + 273.15)^4
+  σ = 5.67 / 100000000    # stephen-boltzman constant
+  σ * (T + 273.15)^4
 end
 
 function cal_Rln(emiss::FT, T::FT)
@@ -34,7 +34,7 @@ cal_cp(q::FT)::FT = 1004.65 * (1 + 0.84 * q)
 function cal_cp(Ta::FT, RH::FT)::FT
   q = RH2q(Ta, RH)
   cal_cp(q)
-end 
+end
 
 
 function meteo_pack_jl(Ta::FT, RH::FT)
@@ -46,18 +46,18 @@ function meteo_pack_jl(Ta::FT, RH::FT)
 
   q = ea2q(ea)
   cp = cal_cp(q)
-  
+
+  λ = cal_lambda(Ta)
   Δ = cal_slope(Ta) # slope of es
   γ = 0.066         # kPa/K, 
   # lambda = cal_lambda(Ta) # J kg-1
   # psy = cp * 101.13 / (0.622 * lambda)  
-  
-  (; ρₐ, cp, VPD, Δ, γ, es, ea, q)
+  (; ρₐ, cp, VPD, λ, Δ, γ, es, ea, q)
 end
 
 
 
-export pow, cal_ea, cal_es, 
+export pow, cal_ea, cal_es,
   cal_slope, cal_lambda, cal_cp, ea2q, RH2q,
-  cal_Rln, 
+  cal_Rln,
   meteo_pack_jl, blackbody

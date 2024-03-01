@@ -52,13 +52,13 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
 
     ra_o::FT = 1 / (k * ustar) * (log((z_wind - d) / z0) + (n * (z_wind - d) * L))
     ra_o = clamp(ra_o, 2, 100)
-
+    
     if L > 0
-      psi = 1 + 5 * (z_wind - d) * L
+      ψ = 1 + 5 * (z_wind - d) * L
     else
-      psi = (1 - 16 * (z_wind - d) * L)^(-0.5)
+      ψ = (1 - 16 * (z_wind - d) * L)^(-0.5)
     end
-    psi = min(10.0, psi)
+    ψ = min(10.0, ψ)
 
     #******** Leaf boundary layer resistance ******************/
     # Wind speed at tree top */
@@ -77,7 +77,7 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
     G_o_b = 1.0 / rb_o
 
     gamma = 0.1 + lai_o^0.75
-    kh_o = 0.41 * ustar * (canopy_height_o - canopy_height_o * 0.8) / psi
+    kh_o = 0.41 * ustar * (canopy_height_o - canopy_height_o * 0.8) / ψ
 
     # wind speed at the zero displacement of canopy
     un_d = uh * exp(-gamma * (1 - canopy_height_u * 0.8 / canopy_height_o))

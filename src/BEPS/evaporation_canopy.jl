@@ -1,15 +1,12 @@
-function evaporation_canopy_jl(T_leaf::Leaf, Ta::Float64, rh_air::Float64,
+function evaporation_canopy_jl(T_leaf::Leaf, Ta::Float64, RH::Float64,
   Gwater::Leaf, lai::Leaf,
   perc_water_o::Float64, perc_water_u::Float64, perc_snow_o::Float64, perc_snow_u::Float64)
 
   # LHw = Leaf()  # latent heat from leaves W/m2, caused by evaporation of intercepted rain
   # LHs = Leaf()  # latent heat from leaves W/m2, caused by evaporation of intercepted snow
-
-  met = meteo_pack_jl(Ta, rh_air)
-  # ρₐ, cp, vpd, slope, gamma = met
-  latent_water = (2.501 - 0.00237 * Ta) * 1000000
-  latent_snow = 2.83 * 1000000
-
+  met = meteo_pack_jl(Ta, RH)
+  λ = met.λ # 2.5*e6 J / kg
+  
   # leaf level latent heat caused by evaporation or sublimation
   LHw_o_sunlit = perc_water_o * latent_heat(Ta, T_leaf.o_sunlit, Gwater.o_sunlit, met)
   LHw_o_shaded = perc_water_o * latent_heat(Ta, T_leaf.o_shaded, Gwater.o_shaded, met)  
@@ -21,11 +18,11 @@ function evaporation_canopy_jl(T_leaf::Leaf, Ta::Float64, rh_air::Float64,
   LHs_u_sunlit = perc_snow_u * latent_heat(Ta, T_leaf.u_sunlit, Gwater.u_sunlit, met)
   LHs_u_shaded = perc_snow_u * latent_heat(Ta, T_leaf.u_shaded, Gwater.u_shaded, met)
 
-  evapo_water_o = 1 / (latent_water) * (LHw_o_sunlit * lai.o_sunlit + LHw_o_shaded * lai.o_shaded)
-  evapo_water_u = 1 / (latent_water) * (LHw_u_sunlit * lai.u_sunlit + LHw_u_shaded * lai.u_shaded)
+  E_water_o = (LHw_o_sunlit * lai.o_sunlit + LHw_o_shaded * lai.o_shaded) / λ
+  E_water_u = (LHw_u_sunlit * lai.u_sunlit + LHw_u_shaded * lai.u_shaded) / λ
 
-  evapo_snow_o = 1 / (latent_snow) * (LHs_o_sunlit * lai.o_sunlit + LHs_o_shaded * lai.o_shaded)
-  evapo_snow_u = 1 / (latent_snow) * (LHs_u_sunlit * lai.u_sunlit + LHs_u_shaded * lai.u_shaded)
+  E_snow_o = (LHs_o_sunlit * lai.o_sunlit + LHs_o_shaded * lai.o_shaded) / λ_snow
+  E_snow_u = (LHs_u_sunlit * lai.u_sunlit + LHs_u_shaded * lai.u_shaded) / λ_snow
 
-  return evapo_water_o, evapo_water_u, evapo_snow_o, evapo_snow_u
+  return E_water_o, E_water_u, E_snow_o, E_snow_u
 end

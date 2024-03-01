@@ -12,12 +12,11 @@ function latent_heat!(leleaf::Leaf, Gw::Leaf, VPD, slope, Tc_old::Leaf, Tair, ρ
 end
 
 function transpiration_jl(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, lai::Leaf)
-  T = Leaf() # transpiration
 
   met = meteo_pack_jl(Ta, RH)
-  (; ρₐ, cp, VPD, Δ, γ) = met
-  λ = cal_lambda(Ta)
+  (; ρₐ, cp, VPD, λ, Δ, γ) = met
 
+  T = Leaf() # transpiration
   # Luo, 2018, JGR-Biogeosciences
   T.o_sunlit = (VPD + Δ * (T_leaf.o_sunlit - Ta)) * ρₐ * cp * Gtrans.o_sunlit / γ
   T.o_shaded = (VPD + Δ * (T_leaf.o_shaded - Ta)) * ρₐ * cp * Gtrans.o_shaded / γ
@@ -61,4 +60,37 @@ function sensible_heat_jl(T_leaf::Leaf, T_ground::FT, Ta::FT, RH::FT,
   SH_g::FT = (T_ground - Ta) * ρₐ * cp * Gheat_g
 
   SH_o, SH_u, SH_g
+end
+
+
+function Leaf_Temperature_jl(Tair::Float64, Δ::Float64, γ::Float64, VPD::Float64, cp::Float64,
+  Gw::Float64, Gww::Float64, Gh::Float64, Xc_sl::Float64, Rn::Float64, constrain::Bool=true)
+
+  p_star = (Gw + Gww * Xc_sl) / γ
+  Tc = Tair + (Rn - VPD * ρₐ * cp * p_star) / (ρₐ * cp * (Gh + Δ * p_star))
+
+  constrain && (Tc = clamp(Tc, Tair - 3.0, Tair + 5.0))
+  return Tc
+end
+
+
+function Leaf_Temperatures_jl(Tair::Float64, Δ::Float64, γ::Float64,
+  VPD::Float64, cp::Float64,
+  Gw::Leaf, Gww::Leaf, Gh::Leaf,
+  Xcs_o::Float64, Xcl_o::Float64,
+  Xcs_u::Float64, Xcl_u::Float64,
+  Rn::Leaf, Tc::Leaf)
+
+  args = (Tair, Δ, γ, VPD, cp)
+  Tc.o_sunlit = Leaf_Temperature_jl(args...,
+    Gw.o_sunlit, Gww.o_sunlit, Gh.o_sunlit, Xcs_o + Xcl_o, Rn.o_sunlit)
+
+  Tc.o_shaded = Leaf_Temperature_jl(args...,
+    Gw.o_shaded, Gww.o_shaded, Gh.o_shaded, Xcs_o + Xcl_o, Rn.o_shaded)
+
+  Tc.u_sunlit = Leaf_Temperature_jl(args...,
+    Gw.u_sunlit, Gww.u_sunlit, Gh.u_sunlit, Xcs_u + Xcl_u, Rn.u_sunlit)
+
+  Tc.u_shaded = Leaf_Temperature_jl(args...,
+    Gw.u_shaded, Gww.u_shaded, Gh.u_shaded, Xcs_u + Xcl_u, Rn.u_shaded)
 end
