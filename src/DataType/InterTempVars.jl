@@ -51,7 +51,7 @@ export SurfaceMass
 
   perc_snow_o  ::FT = 0.0 # Xcs_o
   perc_snow_u  ::FT = 0.0 # Xcs_u
-  perc_snow_g  ::FT = 0.0 # Xg_snow
+  perc_snow_g  ::FT = 0.0 # Xcs_g
 
   perc_water_o ::FT = 0.0 # Xcl_o
   perc_water_u ::FT = 0.0 # Xcl_u
@@ -83,25 +83,37 @@ end
   Tsn0::Vector{FT} = zeros(MAX_Loop)
   Tsn1::Vector{FT} = zeros(MAX_Loop)
   Tsn2::Vector{FT} = zeros(MAX_Loop)
+
   Qhc_o::Vector{FT} = zeros(MAX_Loop)
   Qhc_u::Vector{FT} = zeros(MAX_Loop)
   Qhg::Vector{FT} = zeros(MAX_Loop)
+
+  # the masses of liquid and snow on the canopy
   Wcl_o::Vector{FT} = zeros(MAX_Loop)
-  Wcs_o::Vector{FT} = zeros(MAX_Loop) # the masses of liquid and snow on the canopy
-  Xcl_o::Vector{FT} = zeros(MAX_Loop)
-  Xcs_o::Vector{FT} = zeros(MAX_Loop) # the fraction of rain and snow on the canopy
   Wcl_u::Vector{FT} = zeros(MAX_Loop)
-  Wcs_u::Vector{FT} = zeros(MAX_Loop) # the masses of rain and snow on the canopy
-  Wg_snow::Vector{FT} = zeros(MAX_Loop)
+
+  Wcs_o::Vector{FT} = zeros(MAX_Loop)
+  Wcs_u::Vector{FT} = zeros(MAX_Loop)
+  Wcs_g::Vector{FT} = zeros(MAX_Loop)
+
+  # the fraction of rain and snow on the canopy
+  Xcl_o::Vector{FT} = zeros(MAX_Loop)
   Xcl_u::Vector{FT} = zeros(MAX_Loop)
-  Xcs_u::Vector{FT} = zeros(MAX_Loop) # the fraction of rain and snow on the canopy
+
+  Xcs_o::Vector{FT} = zeros(MAX_Loop)
+  Xcs_u::Vector{FT} = zeros(MAX_Loop)
+  Xcs_g::Vector{FT} = zeros(MAX_Loop)
+
+  # area
   Ac_snow_o::Vector{FT} = zeros(MAX_Loop)
   Ac_snow_u::Vector{FT} = zeros(MAX_Loop)
-  Xg_snow::Vector{FT} = zeros(MAX_Loop)
+  
   rho_snow::Vector{FT} = zeros(MAX_Loop)
+  r_rain_g::Vector{FT} = zeros(MAX_Loop)
+  
   alpha_v_sw::Vector{FT} = zeros(MAX_Loop)
   alpha_n_sw::Vector{FT} = zeros(MAX_Loop)
-  r_rain_g::Vector{FT} = zeros(MAX_Loop)
+  
   Trans_o::Vector{FT} = zeros(MAX_Loop)
   Trans_u::Vector{FT} = zeros(MAX_Loop)
   Eil_o::Vector{FT} = zeros(MAX_Loop)
@@ -133,17 +145,20 @@ function init_vars!(x::InterTempVars)
   # x.Qhc_u .= 0.
   # x.Qhg .= 0.
   x.Wcl_o .= 0.
-  x.Wcs_o .= 0.
-  x.Xcl_o .= 0.
-  x.Xcs_o .= 0.
-  x.Wcl_u .= 0.
-  x.Wcs_u .= 0.
-  x.Wg_snow .= 0.
-  x.Xcl_u .= 0.
-  x.Xcs_u .= 0.
-  x.Xg_snow .= 0.0
-  x.rho_snow .= 0.0
+  x.Wcl_u .= 0.0
 
+  x.Wcs_o .= 0.0
+  x.Wcs_u .= 0.0
+  x.Wcs_g .= 0.0
+
+  x.Xcl_o .= 0.  
+  x.Xcl_u .= 0.
+
+  x.Xcs_o .= 0.0
+  x.Xcs_u .= 0.
+  x.Xcs_g .= 0.0
+
+  x.rho_snow .= 0.0
   # x.Ac_snow_o .= 0.
   # x.Ac_snow_u .= 0.  
   # x.alpha_v_sw .= 0.

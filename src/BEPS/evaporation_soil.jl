@@ -60,5 +60,5 @@ function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
     Esoil = max(0.0, Esoil)
   end
 
-  Esoil, Ewater_g, Esoil_g, mass_water_g, depth_water, depth_snow
+  Esoil, Ewater_g, Esoil_g, depth_water, depth_snow
 end

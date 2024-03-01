@@ -77,7 +77,7 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, depth_snow::FT, depth_wat
       T_snow = 0.0
     end
 
-    # perc_snow_g =min(1.0,Wg_snow[kkk] / (0.05 * rho_snow[kkk])); # use the fraction before
+    # perc_snow_g =min(1.0,Wcs_g[kkk] / (0.05 * rho_snow[kkk])); # use the fraction before
     T_ground = T_snow * perc_snow_g + T_soil0 * (1 - perc_snow_g)
     T_ground = clamp(T_ground, T_air - 25.0, T_air + 25.0)
 

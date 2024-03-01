@@ -9,7 +9,7 @@ cal_K(θ::T, θ_sat::T, K_sat::T, b::T) where {T<:Real} = K_sat * (θ / θ_sat)^
 
 # Function to update soil heat flux
 function UpdateHeatFlux(p::Soil,
-  Xg_snow::Float64, lambda_snow::Float64, Tsn0::Float64,
+  Xcs_g::Float64, lambda_snow::Float64, Tsn0::Float64,
   Tair_annual_mean::Float64, period_in_seconds::Float64)
 
   n = p.n_layer

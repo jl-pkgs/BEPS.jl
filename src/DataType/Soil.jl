@@ -5,8 +5,9 @@ abstract type AbstractSoil end
   n_layer     ::Cint    = Cint(5)
   step_period ::Cint    = Cint(1)
 
-  Zp          ::Cdouble = Cdouble(0)
-  Zsp         ::Cdouble = Cdouble(0)
+  depth_water ::Cdouble = Cdouble(0)
+  depth_snow  ::Cdouble = Cdouble(0)
+
   r_rain_g    ::Cdouble = Cdouble(0)
   soil_r      ::Cdouble = Cdouble(0)
   r_drainage  ::Cdouble = Cdouble(0)
@@ -35,7 +36,7 @@ abstract type AbstractSoil end
 
   f_water     ::Vector{Float64} = zeros(10) 
   ψ           ::Vector{Float64} = zeros(10)
-  θb          ::Vector{Float64} = zeros(10) # not used, soil water content at the bottom of each layer
+  θb          ::Vector{Float64} = zeros(10) # not used, θ at the bottom of each layer
   ψb          ::Vector{Float64} = zeros(10) # not used
   r_waterflow ::Vector{Float64} = zeros(10)
   km          ::Vector{Float64} = zeros(10) # hydraulic conductivity

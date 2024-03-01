@@ -1,69 +1,75 @@
+"""
+  snowpack_stage1_jl
+
+- `ms`: mass_snow
+- `mw`: mass_water
+- `d_s`: snow depth
+- `d_w`: water depth
+"""
 function snowpack_stage1_jl(temp_air::Float64, prcp::Float64,
-  # mass_snow_o_last::Float64, mass_snow_u_last::Float64, mass_snow_g_last::Float64, 
-  mass_snow_o::Ref{Float64}, mass_snow_u::Ref{Float64}, mass_snow_g::Ref{Float64},
+  # ms_o_last::Float64, ms_u_last::Float64, ms_g_last::Float64, 
+  ms_o::Ref{Float64}, ms_u::Ref{Float64}, ms_g::Ref{Float64},
   lai_o::Float64, lai_u::Float64, clumping::Float64, area_snow_o::Ref{Float64}, area_snow_u::Ref{Float64},
   # perc_snow_o::Ref{Float64}, perc_snow_u::Ref{Float64}, perc_snow_g::Ref{Float64},
-  ρ_snow::Ref{Float64}, depth_snow, albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
+  ρ_snow::Ref{Float64}, d_s, albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
 
   massMax_snow_o = 0.1 * lai_o
   massMax_snow_u = 0.1 * lai_u
   areaMax_snow_o = lai_o * 0.01
   areaMax_snow_u = lai_u * 0.01
 
-  # kstep = kstep
   ρ_new_snow = 67.9 + 51.3 * exp(temp_air / 2.6)
   albedo_v_Newsnow = 0.94
   albedo_n_Newsnow = 0.8
 
-  mass_snow_o_last = mass_snow_o[]
-  mass_snow_u_last = mass_snow_u[]
-  mass_snow_g_last = mass_snow_g[]
+  ms_o_last = ms_o[]
+  ms_u_last = ms_u[]
+  ms_g_last = ms_g[]
 
   snowrate = temp_air > 0 ? 0 : prcp * ρ_w / ρ_new_snow
   snowrate_o = 0.0
 
   if temp_air < 0
     snowrate_o = snowrate
-    mass_snow_o[] = mass_snow_o_last + snowrate_o * kstep * ρ_new_snow * (1 - exp(-lai_o * clumping))
-    perc_snow_o = mass_snow_o[] / massMax_snow_o
+    ms_o[] = ms_o_last + snowrate_o * kstep * ρ_new_snow * (1 - exp(-lai_o * clumping))
+    perc_snow_o = ms_o[] / massMax_snow_o
     perc_snow_o = clamp(perc_snow_o, 0, 1)
     area_snow_o[] = perc_snow_o * areaMax_snow_o
-    massStep_snow_o = mass_snow_o[] - mass_snow_o_last
+    massStep_snow_o = ms_o[] - ms_o_last
 
     snowrate_u = max(0, snowrate_o - (massStep_snow_o) / ρ_new_snow / kstep)
-    mass_snow_u[] = mass_snow_u_last + snowrate_u * kstep * ρ_new_snow * (1 - exp(-lai_u * clumping))
-    perc_snow_u = mass_snow_u[] / massMax_snow_u
+    ms_u[] = ms_u_last + snowrate_u * kstep * ρ_new_snow * (1 - exp(-lai_u * clumping))
+    perc_snow_u = ms_u[] / massMax_snow_u
     perc_snow_u = clamp(perc_snow_u, 0, 1)
     area_snow_u[] = perc_snow_u * areaMax_snow_u
-    massStep_snow_u = mass_snow_u[] - mass_snow_u_last
+    massStep_snow_u = ms_u[] - ms_u_last
 
     snowrate_g = max(0, snowrate_u - (massStep_snow_u) / ρ_new_snow / kstep)
-    change_depth_snow = snowrate_g * kstep
+    δ_d_s = snowrate_g * kstep
   else
-    mass_snow_o[] = mass_snow_o_last
-    perc_snow_o = clamp(mass_snow_o[] / massMax_snow_o, 0, 1)
+    ms_o[] = ms_o_last
+    perc_snow_o = clamp(ms_o[] / massMax_snow_o, 0, 1)
     area_snow_o[] = area_snow_o[]
 
-    mass_snow_u[] = mass_snow_u_last
-    perc_snow_u = mass_snow_u[] / massMax_snow_u
+    ms_u[] = ms_u_last
+    perc_snow_u = ms_u[] / massMax_snow_u
     perc_snow_u = clamp(perc_snow_u, 0, 1)
     area_snow_u[] = area_snow_u[]
 
-    change_depth_snow = 0
+    δ_d_s = 0
   end
 
-  change_depth_snow = max(0, change_depth_snow)
-  mass_snow_g[] = mass_snow_g_last + change_depth_snow * ρ_new_snow
-  mass_snow_g[] = max(0, mass_snow_g[])
+  δ_d_s = max(0, δ_d_s)
+  ms_g[] = max(0, ms_g_last + δ_d_s * ρ_new_snow)
 
-  if change_depth_snow > 0
-    ρ_snow[] = (ρ_snow[] * depth_snow + ρ_new_snow * change_depth_snow) / (depth_snow + change_depth_snow)
+  if δ_d_s > 0
+    ρ_snow[] = (ρ_snow[] * d_s + ρ_new_snow * δ_d_s) / (d_s + δ_d_s)
   else
     ρ_snow[] = (ρ_snow[] - 250) * exp(-0.001 * kstep / 3600.0) + 250.0
   end
 
-  depth_snow = mass_snow_g[] > 0 ? mass_snow_g[] / ρ_snow[] : 0.0
-  perc_snow_g = min(mass_snow_g[] / (0.05 * ρ_snow[]), 1.0)
+  d_s = ms_g[] > 0 ? ms_g[] / ρ_snow[] : 0.0
+  perc_snow_g = min(ms_g[] / (0.05 * ρ_snow[]), 1.0)
 
   if snowrate_o > 0
     albedo_v_snow[] = (albedo_v_snow[] - 0.70) * exp(-0.005 * kstep / 3600) + 0.7
@@ -73,28 +79,28 @@ function snowpack_stage1_jl(temp_air::Float64, prcp::Float64,
     albedo_n_snow[] = albedo_n_Newsnow
   end
 
-  perc_snow_o, perc_snow_u, perc_snow_g, depth_snow
+  perc_snow_o, perc_snow_u, perc_snow_g, d_s
 end
 
 
 function snowpack_stage2_jl(evapo_snow_o::Float64, evapo_snow_u::Float64,
-  mass_snow_o::Ref{Float64}, mass_snow_u::Ref{Float64})
+  ms_o::Ref{Float64}, ms_u::Ref{Float64})
 
   # kstep::Float64 = kstep  # length of step
-  mass_snow_o[] = max(0, mass_snow_o[] - evapo_snow_o * kstep)
-  mass_snow_u[] = max(0, mass_snow_u[] - evapo_snow_u * kstep)
+  ms_o[] = max(0, ms_o[] - evapo_snow_o * kstep)
+  ms_u[] = max(0, ms_u[] - evapo_snow_u * kstep)
 end
 
 
 function snowpack_stage3_jl(temp_air::Float64, temp_snow::Float64, temp_snow_last::Float64, ρ_snow::Float64,
-  depth_snow, depth_water, 
-  # depth_snow::Ref{Float64}, depth_water::Ref{Float64}, 
-  mass_snow_g::Ref{Float64})
+  d_s, d_w,
+  # d_s::Ref{Float64}, d_w::Ref{Float64}, 
+  ms_g::Ref{Float64})
 
   # kstep = kstep  # kstep in model
   # it is assumed sublimation happens before the melting and freezing process
-  depth_snow_sup = depth_snow  # this snow depth has already considered sublimation
-  mass_snow_sup = mass_snow_g[]
+  d_s_sup = d_s  # this snow depth has already considered sublimation
+  ms_sup = ms_g[]
 
   # parameters
   cp_ice = 2228.261
@@ -102,64 +108,64 @@ function snowpack_stage3_jl(temp_air::Float64, temp_snow::Float64, temp_snow_las
   ρ_w = 1025 # Kg m-3
 
   # simulate snow melt and freeze process
-  mass_snow_melt = 0.0
-  mass_water_frozen = 0.0
+  ms_melt = 0.0
+  mw_frozen = 0.0
 
   # case 1 depth of snow <0.02 m
-  if depth_snow_sup <= 0.02
-    if temp_air > 0 && depth_snow_sup > 0
-      mass_snow_melt = temp_air * 0.0075 * kstep / 3600 * 0.3
-      mass_snow_melt = min(mass_snow_sup, mass_snow_melt)  # the amount of melted snow could not be larger than supply
+  if d_s_sup <= 0.02
+    if temp_air > 0 && d_s_sup > 0
+      ms_melt = temp_air * 0.0075 * kstep / 3600 * 0.3
+      ms_melt = min(ms_sup, ms_melt)  # the amount of melted snow could not be larger than supply
     else
-      mass_snow_melt = 0
+      ms_melt = 0
     end
     # case 2 depth of snow > 0.02 < 0.05 m
-  elseif depth_snow_sup > 0.02 && depth_snow_sup <= 0.05
-    if temp_snow > 0 && temp_snow_last < 0 && mass_snow_sup > 0  # melting
-      mass_snow_melt = temp_snow * cp_ice * ρ_snow * depth_snow_sup / latent_fusion
-      mass_snow_melt = min(mass_snow_sup, mass_snow_melt)  # the amount of melted snow could not be larger than supply
+  elseif d_s_sup > 0.02 && d_s_sup <= 0.05
+    if temp_snow > 0 && temp_snow_last < 0 && ms_sup > 0  # melting
+      ms_melt = temp_snow * cp_ice * ρ_snow * d_s_sup / latent_fusion
+      ms_melt = min(ms_sup, ms_melt)  # the amount of melted snow could not be larger than supply
     else
-      mass_snow_melt = 0
+      ms_melt = 0
     end
 
-    if temp_snow <= 0 && temp_snow_last > 0 && depth_water > 0  # freezing
-      mass_water_frozen = (0 - temp_snow) * cp_ice * ρ_snow * depth_snow_sup / latent_fusion
-      mass_water_frozen = max(mass_water_frozen, depth_water * ρ_w)
+    if temp_snow <= 0 && temp_snow_last > 0 && d_w > 0  # freezing
+      mw_frozen = (0 - temp_snow) * cp_ice * ρ_snow * d_s_sup / latent_fusion
+      mw_frozen = max(mw_frozen, d_w * ρ_w)
     else
-      mass_water_frozen = 0
+      mw_frozen = 0
     end
     # case 3 depth of snow > 0.05 m
-  elseif depth_snow_sup > 0.05
-    if temp_snow > 0 && temp_snow_last <= 0 && mass_snow_sup > 0  # melting
-      mass_snow_melt = temp_snow * cp_ice * ρ_snow * depth_snow_sup * 0.02 / latent_fusion
-      mass_snow_melt = min(mass_snow_sup, mass_snow_melt)  # the amount of melted snow could not be larger than supply
+  elseif d_s_sup > 0.05
+    if temp_snow > 0 && temp_snow_last <= 0 && ms_sup > 0  # melting
+      ms_melt = temp_snow * cp_ice * ρ_snow * d_s_sup * 0.02 / latent_fusion
+      ms_melt = min(ms_sup, ms_melt)  # the amount of melted snow could not be larger than supply
     else
-      mass_snow_melt = 0
+      ms_melt = 0
     end
 
-    if temp_snow <= 0 && temp_snow_last > 0 && depth_water > 0  # freezing
-      mass_water_frozen = (0 - temp_snow) * cp_ice * ρ_snow * depth_snow_sup * 0.02 / latent_fusion
-      mass_water_frozen = max(mass_water_frozen, depth_water * ρ_w)
+    if temp_snow <= 0 && temp_snow_last > 0 && d_w > 0  # freezing
+      mw_frozen = (0 - temp_snow) * cp_ice * ρ_snow * d_s_sup * 0.02 / latent_fusion
+      mw_frozen = max(mw_frozen, d_w * ρ_w)
     else
-      mass_water_frozen = 0
+      mw_frozen = 0
     end
   end
 
-  # change in mass of snow on ground
-  mass_snow_g[] = mass_snow_g[] - mass_snow_melt + mass_water_frozen
-  mass_snow_g[] = max(0, mass_snow_g[])
+  # δ in mass of snow on ground
+  ms_g[] = ms_g[] - ms_melt + mw_frozen
+  ms_g[] = max(0, ms_g[])
 
-  # change of depth in snow
-  melt_depth_snow = mass_snow_melt / ρ_snow
-  frozen_depth_snow = mass_water_frozen / ρ_snow
-  depth_snow = depth_snow_sup - melt_depth_snow + frozen_depth_snow
-  depth_snow = max(0, depth_snow)
+  # δ of depth in snow
+  melt_d_s = ms_melt / ρ_snow
+  frozen_d_s = mw_frozen / ρ_snow
+  d_s = d_s_sup - melt_d_s + frozen_d_s
+  d_s = max(0, d_s)
 
-  # change of depth in water
-  melt_depth_water = mass_snow_melt / ρ_w
-  frozen_depth_water = mass_water_frozen / ρ_w
-  depth_water = depth_water + melt_depth_water - frozen_depth_water
-  depth_water = max(0, depth_water)
-  
-  depth_snow, depth_water
+  # δ of depth in water
+  melt_d_w = ms_melt / ρ_w
+  frozen_d_w = mw_frozen / ρ_w
+  d_w = d_w + melt_d_w - frozen_d_w
+  d_w = max(0, d_w)
+
+  d_s, d_w
 end
