@@ -117,13 +117,14 @@ function inter_prg_jl(
   # m = SurfaceMass{FT}()
 
   f_snow = Layer3(0.0) # perc_snow
-  m_snow = Layer3(var_o[16+1], var_o[19+1], var_o[20+1]) # mass_snow
+  m_snow = Layer3(0.0) # mass_snow
+  m_snow_pre = Layer3(var_o[16+1], var_o[19+1], var_o[20+1]) # mass_snow
+  set!(m_snow_pre, m_snow)
 
   # the mass of intercepted liquid water and snow, overstory 
   f_water = Layer2() # perc_water
   m_water = Layer2() # mass_water
   m_water_pre = Layer2(var_o[15+1], var_o[18+1])
-
   A_snow = Layer2()
 
   ## TODO: debug at here
@@ -139,15 +140,11 @@ function inter_prg_jl(
     α_v_sw = init_dbl()
     α_n_sw = init_dbl()
     ρ_snow = init_dbl()
-
-    # 它一直未0，导致的错误；值没有传进去
-    # Wcs = Layer3() # TODO: fix bug at here
-    m_snow.o, m_snow.u, m_snow.g = var.Wcs_o[k], var.Wcs_u[k], var.Wcs_g[k]
-
+    
     depth_snow = snowpack_stage1_jl(Ta, prcp,
       lai_o, lai_u,
       clumping,
-      m_snow, f_snow, A_snow,
+      m_snow_pre, m_snow, f_snow, A_snow,
       depth_snow, ρ_snow,
       α_v_sw, α_n_sw) # by X. Luo 
 
@@ -268,6 +265,7 @@ function inter_prg_jl(
     rainfall_stage2_jl(var.Eil_o[k], var.Eil_u[k], m_water) # X. Luo
     snowpack_stage2_jl(var.EiS_o[k], var.EiS_u[k], m_snow) # X. Luo
 
+    # set!(m_water_pre, m_water)
     m_water_pre.o = m_water.o
     m_water_pre.u = m_water.u
 
@@ -315,8 +313,9 @@ function inter_prg_jl(
     # Update_Tsoil_c(soilp, var.Tm[1, k])
     soil.Tsoil_c[1] = var.Tm[1, k]
 
-    depth_snow, depth_water = snowpack_stage3_jl(Ta, var.Tsn0[k], var.Tsn0[k-1], ρ_snow[],
-      depth_snow, depth_water, m_snow) # X. Luo
+    depth_snow, depth_water = snowpack_stage3_jl(Ta, var.Tsn0[k], var.Tsn0[k-1], 
+      ρ_snow[], depth_snow, depth_water, m_snow) # X. Luo
+    # set!(m_snow_pre, m_snow) # update snow_pre
 
     var.Qhc_o[k], var.Qhc_u[k], var.Qhg[k] =
       sensible_heat_jl(Tc_new, var.Ts0[k], Ta, RH,
@@ -335,7 +334,6 @@ function inter_prg_jl(
 
     UpdateSoilMoisture(soil, kstep)
     depth_water = soil.depth_water
-
   end  # The end of k loop
 
   k = kloop + 1# the last step
@@ -352,9 +350,9 @@ function inter_prg_jl(
   var_n[15+1] = m_water.o
   var_n[18+1] = m_water.u
 
-  var_n[16+1] = m_snow.o # var.Wcs_o[k]     # the mass of intercepted liquid water and snow, overstory
-  var_n[19+1] = m_snow.u # var.Wcs_u[k]     # the mass of intercepted liquid water and snow, overstory
-  var_n[20+1] = m_snow.g # var.Wcs_g[k]   # the fraction of ground surface covered by snow and snow mass
+  var_n[16+1] = m_snow.o
+  var_n[19+1] = m_snow.u
+  var_n[20+1] = m_snow.g
 
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 
