@@ -125,6 +125,8 @@ function inter_prg_jl(
   init_leaf_dbl(Tc_old, Ta - 0.5)
   m = SurfaceMass{FT}()
 
+  Wcs = CanopyLayer(0.0) # might have error
+
   # /*****  Ten time intervals in a hourly time step.6min or 360s per loop  ******/
   @inbounds for k = 2:kloop+1
     # 这里需要对k-1时刻的Wcs进行更新
@@ -136,10 +138,7 @@ function inter_prg_jl(
     Ac_snow_o = init_dbl()
     Ac_snow_u = init_dbl()
     
-    pre_Wcs_o = init_dbl()
-    pre_Wcs_u = init_dbl()
-    
-    Wcs = CanopyLayer(var.Wcs_o[k], var.Wcs_u[k], var.Wcs_g[k])
+    Wcs.o, Wcs.u, Wcs.g = var.Wcs_o[k], var.Wcs_u[k], var.Wcs_g[k]
     
     # var.Xcs_o[k], var.Xcs_u[k], var.Xcs_g[k], 
     # Xcs_o, Xcs_u, Xcs_g, 
@@ -339,7 +338,7 @@ function inter_prg_jl(
     UpdateSoilMoisture(soilp, kstep)
     depth_water = soilp.depth_water
 
-    var.Wcs_o[k], var.Wcs_u[k], var.Wcs_g[k] = Wcs.o, Wcs.u, Wcs.g
+    # var.Wcs_o[k], var.Wcs_u[k], var.Wcs_g[k] = Wcs.o, Wcs.u, Wcs.g
   end  # The end of k loop
 
   k = kloop + 1# the last step
@@ -354,10 +353,11 @@ function inter_prg_jl(
   var_n[11+1] = var.Qhc_o[k]
   
   var_n[15+1] = var.Wcl_o[k]
-  var_n[16+1] = var.Wcs_o[k]     # the mass of intercepted liquid water and snow, overstory
   var_n[18+1] = var.Wcl_u[k]
-  var_n[19+1] = var.Wcs_u[k]     # the mass of intercepted liquid water and snow, overstory
-  var_n[20+1] = var.Wcs_g[k]   # the fraction of ground surface covered by snow and snow mass
+
+  var_n[16+1] = Wcs.o # var.Wcs_o[k]     # the mass of intercepted liquid water and snow, overstory
+  var_n[19+1] = Wcs.u # var.Wcs_u[k]     # the mass of intercepted liquid water and snow, overstory
+  var_n[20+1] = Wcs.g # var.Wcs_g[k]   # the fraction of ground surface covered by snow and snow mass
 
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 
