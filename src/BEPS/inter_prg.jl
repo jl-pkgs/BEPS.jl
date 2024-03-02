@@ -119,7 +119,7 @@ function inter_prg_jl(
   f_snow = Layer3(0.0) # perc_snow
   m_snow = Layer3(0.0) # mass_snow
   m_snow_pre = Layer3(var_o[16+1], var_o[19+1], var_o[20+1]) # mass_snow
-  set!(m_snow_pre, m_snow)
+  # set!(m_snow_pre, m_snow)
 
   # the mass of intercepted liquid water and snow, overstory 
   f_water = Layer2() # perc_water
@@ -213,7 +213,7 @@ function inter_prg_jl(
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
           Ta, ea, f_soilwater, b_h2o, m_h2o,
           Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
-          Gs_new, Ac, Ci_new; version="julia")
+          Gs_new, Ac, Ci_new; version="c")
       else
         init_leaf_dbl(Gs_new, 0.0001)
         init_leaf_dbl(Ac, 0.0)
@@ -315,7 +315,7 @@ function inter_prg_jl(
 
     depth_snow, depth_water = snowpack_stage3_jl(Ta, var.Tsn0[k], var.Tsn0[k-1], 
       ρ_snow[], depth_snow, depth_water, m_snow) # X. Luo
-    # set!(m_snow_pre, m_snow) # update snow_pre
+    set!(m_snow_pre, m_snow) # update snow_pre
 
     var.Qhc_o[k], var.Qhc_u[k], var.Qhg[k] =
       sensible_heat_jl(Tc_new, var.Ts0[k], Ta, RH,

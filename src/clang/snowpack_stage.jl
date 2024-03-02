@@ -61,8 +61,10 @@ function snowpack_stage1(Tair::Float64, prcp::Float64,
   perc_snow.g = _perc_snow_g[]
   area_snow.o = _area_snow_o[]
   area_snow.u = _area_snow_u[]
-  depth_snow = _depth_snow[]
+  
+  return _depth_snow[]
 end
+
 
 
 function snowpack_stage2(evapo_snow_o::FT, evapo_snow_u::FT, mass_snow_o::TypeRef, mass_snow_u::TypeRef)
@@ -77,6 +79,8 @@ function snowpack_stage2(evapo_snow_o::FT, evapo_snow_u::FT, mass_snow::Layer3{F
   mass_snow.o = _mass_snow_o[]
   mass_snow.u = _mass_snow_u[]
 end
+
+
 
 function snowpack_stage3(Tair::FT, temp_snow::FT, temp_snow_last::FT, density_snow::FT,
   depth_snow::TypeRef, depth_water::TypeRef, mass_snow_g::TypeRef)

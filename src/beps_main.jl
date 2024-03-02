@@ -32,9 +32,8 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
   end
 
   for jday = 1:365
-    if mod(jday, 50) == 0
-      @show jday
-    end
+    mod(jday, 50) == 0 && @show jday
+    
     _lai = lai[jday] * param[3] / par.clumping # re-calculate LAI & renew clump index
 
     for rstep = 1:24
