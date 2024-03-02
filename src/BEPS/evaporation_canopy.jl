@@ -1,6 +1,7 @@
 function evaporation_canopy_jl(T_leaf::Leaf, Ta::Float64, RH::Float64,
   Gwater::Leaf, lai::Leaf,
-  perc_water_o::Float64, perc_water_u::Float64, perc_snow_o::Float64, perc_snow_u::Float64)
+  perc_water_o::Float64, perc_water_u::Float64, 
+  perc_snow_o::Float64, perc_snow_u::Float64)
 
   # LHw = Leaf()  # latent heat from leaves W/m2, caused by evaporation of intercepted rain
   # LHs = Leaf()  # latent heat from leaves W/m2, caused by evaporation of intercepted snow

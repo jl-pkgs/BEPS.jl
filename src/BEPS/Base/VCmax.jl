@@ -1,4 +1,6 @@
-function VCmax(lai, clumping, CosZs, param)
+function VCmax(lai::FT, clumping::FT, CosZs::FT, param::AbstractVector{FT})
+  CosZs <= 0 && return 0.0, 0.0 # 光合仅发生在白天
+  
   # parameters for Vcmax-Nitrogen calculations
   G_theta = 0.5 # assuming a spherical leaf angle distribution
   K = G_theta * clumping / CosZs

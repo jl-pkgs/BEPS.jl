@@ -13,6 +13,7 @@ nzero(n) = tuple(zeros(n)...) # n double zero
 
 include("Constant.jl")
 include("Leaf.jl")
+include("CanopyLayer.jl")
 include("Soil.jl")
 
 include("InterTempVars.jl")

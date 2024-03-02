@@ -8,7 +8,7 @@ function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
   perc_snow_g::Ref{FT}, 
   depth_water, depth_snow,
   # depth_water::Ref{FT}, depth_snow::Ref{FT},
-  mass_water_g::FT, mass_snow_g::Ref{FT},
+  mass_water_g::FT, mass_snow::CanopyLayer{FT},
   ρ_snow::FT, swc_g::FT, porosity_g::FT) where {FT<:Real}
 
   met = meteo_pack_jl(Tg, RH)
@@ -18,7 +18,7 @@ function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
   Gwater_g = 1.0 / (4.0 * exp(8.2 - 4.2 * swc_g / porosity_g))
   # kstep = kstep # 360s, 6min
 
-  perc_snow_g[] = depth_snow > 0.02 ? 1.0 : mass_snow_g[] / (0.025 * ρ_snow)
+  perc_snow_g[] = depth_snow > 0.02 ? 1.0 : mass_snow.g / (0.025 * ρ_snow)
   perc_snow_g[] = clamp(perc_snow_g[], 0.0, 1.0)
 
   if depth_water > 0.0 && depth_snow == 0.0
@@ -46,11 +46,11 @@ function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
 
   Esoil_g = max(-0.002 / kstep, Esoil_g)
   if Esoil_g > 0.0
-    Esoil_g = min(Esoil_g, mass_snow_g[] / kstep)
+    Esoil_g = min(Esoil_g, mass_snow.g / kstep)
   end
 
-  mass_snow_g[] = max(mass_snow_g[] - Esoil_g * kstep, 0)
-  depth_snow = mass_snow_g[] > 0.0 ? depth_snow - (Esoil_g / ρ_snow) * kstep : 0.0
+  mass_snow.g = max(mass_snow.g - Esoil_g * kstep, 0)
+  depth_snow = mass_snow.g > 0.0 ? depth_snow - (Esoil_g / ρ_snow) * kstep : 0.0
 
   if depth_water > 0.0 || depth_snow > 0.0
     Esoil = 0.0

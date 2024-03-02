@@ -1,10 +1,4 @@
-export @reset, reset!
-macro reset(x)
-  quote
-    reset!($(esc(x)))
-  end
-end
-
+# they also abstract vector but with name
 @with_kw mutable struct Leaf
   o_sunlit::Cdouble = 0.0
   o_shaded::Cdouble = 0.0
@@ -19,7 +13,6 @@ Leaf(o::Cdouble, u::Cdouble) = Leaf(o, u)
 Base_ops = ((:Base, :+), (:Base, :-), (:Base, :*), (:Base, :/))
 
 for (m, f) in Base_ops
-  # _f = Symbol(m, ".:", f)
   @eval begin
     $m.$f(a::Leaf, b::Leaf) = begin
       Leaf(
@@ -33,6 +26,13 @@ for (m, f) in Base_ops
 end
 
 
+export @reset, reset!
+macro reset(x)
+  quote
+    reset!($(esc(x)))
+  end
+end
+
 reset!(x::Leaf) = init_leaf_dbl(x, 0.0)
 
 function init_leaf_struct(x::Leaf, replacement::Leaf)
@@ -40,7 +40,6 @@ function init_leaf_struct(x::Leaf, replacement::Leaf)
   x.o_shaded = replacement.o_shaded
   x.u_sunlit = replacement.u_sunlit
   x.u_shaded = replacement.u_shaded
-  # ccall((:init_leaf_struct, libbeps), Cvoid, (Ptr{Leaf}, Ptr{Leaf}), Ref(x), Ref(replacement))
 end
 
 function init_leaf_dbl(x::Leaf, replacement::Float64)
@@ -48,16 +47,13 @@ function init_leaf_dbl(x::Leaf, replacement::Float64)
   x.o_shaded = replacement
   x.u_sunlit = replacement
   x.u_shaded = replacement
-  nothing
-  # ccall((:init_leaf_dbl, libbeps), Cvoid, (Ptr{Leaf}, Cdouble), Ref(x), replacement)
 end
 
-function init_leaf_dbl2(x, overstory, understory)
+function init_leaf_dbl2(x::Leaf, overstory, understory)
   x.o_sunlit = overstory
   x.o_shaded = overstory
   x.u_sunlit = understory
   x.u_shaded = understory
-  # ccall((:init_leaf_dbl2, libbeps), Cvoid, (Ptr{Leaf}, Cdouble, Cdouble), Ref(x), overstory, understory)
 end
 
 
