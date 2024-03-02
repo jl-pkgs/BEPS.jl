@@ -35,7 +35,7 @@ end
 
 reset!(x::Leaf) = init_leaf_dbl(x, 0.0)
 
-function init_leaf_struct(x::Leaf, replacement::Leaf)
+function set!(x::Leaf, replacement::Leaf)
   x.o_sunlit = replacement.o_sunlit
   x.o_shaded = replacement.o_shaded
   x.u_sunlit = replacement.u_sunlit

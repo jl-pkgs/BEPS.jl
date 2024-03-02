@@ -22,8 +22,6 @@ include("INPUT.jl")
 include("OUTPUT.jl")
 
 
-
-
 # # current not used
 # @with_kw mutable struct TSoil
 #   T_ground::Cdouble = 0.0

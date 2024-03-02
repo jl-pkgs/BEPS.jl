@@ -28,7 +28,7 @@ include("clang/BEPS_c.jl")
 @reexport import BEPS.clang;
 import BEPS.clang: inter_prg_c, photosynthesis_c, Soil_c
 
-include("beps_inter_prg.jl")
+# include("beps_inter_prg.jl")
 include("beps_main.jl")
 
 end # module BEPS

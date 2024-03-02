@@ -30,5 +30,6 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
 
   l = max(df_diff_perc)
   @show l
+  @show nanmax(l)
   @test nanmax(l) < 1.5 # SH, 1.48%的误差, current 0.09%
 end

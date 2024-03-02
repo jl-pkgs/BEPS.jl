@@ -20,6 +20,7 @@ include("snowpack.jl")
 include("netRadiation.jl")
 include("photosynthesis.jl")
 
+include("inter_prg.jl")
 
 export s_coszs, lai2, readparam, readcoef, 
   rainfall_stage1_jl, rainfall_stage2_jl, 

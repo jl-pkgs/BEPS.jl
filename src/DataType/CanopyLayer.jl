@@ -2,22 +2,55 @@ import Base.show
 
 abstract type AbstractLayer{FT} end
 
+
+## Layer3
 """
-x = CanopyLayer{Float64}()
-x = CanopyLayer{Ref{Float64}}()
+x = Layer3{Float64}()
+x = Layer3{Ref{Float64}}()
 """
-@with_kw_noshow mutable struct CanopyLayer{FT} <: AbstractLayer{FT}
+@with_kw_noshow mutable struct Layer3{FT} <: AbstractLayer{FT}
   o::FT = FT(0.0) # overlayer
   u::FT = FT(0.0) # underlayer
   g::FT = FT(0.0) # ground
 end
 
 # 注意，如果是Ref，将共用相同的地址
-CanopyLayer(o::FT) where {FT} = CanopyLayer{FT}(o, o, o)
+Layer3(o::FT) where {FT} = Layer3{FT}(o, o, o)
 
-CanopyLayer(o::FT, u::FT) where {FT} = CanopyLayer{FT}(; o, u)
+Layer3(o::FT, u::FT) where {FT} = Layer3{FT}(; o, u)
 
-CanopyLayer(x::CanopyLayer{FT}) = CanopyLayer{FT}(; x.o, x.u, x.g)
+Layer3(x::Layer3{FT}) = Layer3{FT}(; x.o, x.u, x.g)
+
+
+## Layer2
+@with_kw_noshow mutable struct Layer2{FT} <: AbstractLayer{FT}
+  o::FT = FT(0.0) # overlayer
+  u::FT = FT(0.0) # underlayer
+end
+
+# 注意，如果是Ref，将共用相同的地址
+Layer2(o::FT) where {FT} = Layer2{FT}(o, o)
+
+Layer2(o::FT, u::FT) where {FT} = Layer2{FT}(; o, u)
+
+Layer2(x::Layer2{FT}) = Layer2{FT}(; x.o, x.u)
+
+
+# Base_ops = ((:Base, :+), (:Base, :-), (:Base, :*), (:Base, :/))
+
+# for (m, f) in Base_ops
+#   @eval begin
+#     $m.$f(a::Leaf, b::Leaf) = begin
+#       Leaf(
+#         $m.$f(a.o_sunlit, b.o_sunlit),
+#         $m.$f(a.o_shaded, b.o_shaded),
+#         $m.$f(a.u_sunlit, b.u_sunlit),
+#         $m.$f(a.u_shaded, b.u_shaded)
+#       )
+#     end
+#   end
+# end
+
 
 function Base.show(io::IO, x::AbstractLayer{FT}) where {FT}
   println(io, typeof(x))
@@ -32,4 +65,4 @@ function Base.show(io::IO, x::AbstractLayer{FT}) where {FT}
 end
 
 
-export CanopyLayer
+export Layer3, Layer2
