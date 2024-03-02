@@ -17,6 +17,7 @@ CanopyLayer(o::FT) where {FT} = CanopyLayer{FT}(o, o, o)
 
 CanopyLayer(o::FT, u::FT) where {FT} = CanopyLayer{FT}(; o, u)
 
+CanopyLayer(x::CanopyLayer{FT}) = CanopyLayer{FT}(; x.o, x.u, x.g)
 
 function Base.show(io::IO, x::AbstractLayer{FT}) where {FT}
   println(io, typeof(x))

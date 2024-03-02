@@ -31,7 +31,7 @@ function photosynthesis(Tc_old::Leaf, R::Leaf, Ci_old::Leaf, leleaf::Leaf,
       Ta, leleaf.u_shaded)
 end
 
-
+# 这里依赖的变量过多，不易核对
 @fastmath function photosynthesis_jl(temp_leaf_p::Cdouble, Rsn_leaf::Cdouble, e_air::Cdouble,
   g_lb_w::Cdouble, vc_opt::Cdouble,
   f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble,
