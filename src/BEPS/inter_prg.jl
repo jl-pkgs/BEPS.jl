@@ -202,8 +202,10 @@ function inter_prg_jl(
         α_v_sw[], α_n_sw[],
         percArea_snow_o, percArea_snow_u,
         f_snow.g,
-        α_v_o, α_n_o, α_v_u, α_n_u,
-        α_v_g, α_n_g, Rn, Rns, Rnl, Ra)
+        α_v_o, α_n_o, 
+        α_v_u, α_n_u,
+        α_v_g, α_n_g, 
+        Rn, Rns, Rnl, Ra)
 
       # /*****  Photosynthesis module by B. Chen  *****/
       update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u) # conductance for water
@@ -213,7 +215,7 @@ function inter_prg_jl(
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
           Ta, ea, f_soilwater, b_h2o, m_h2o,
           Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
-          Gs_new, Ac, Ci_new; version="c")
+          Gs_new, Ac, Ci_new; version="julia")
       else
         init_leaf_dbl(Gs_new, 0.0001)
         init_leaf_dbl(Ac, 0.0)
