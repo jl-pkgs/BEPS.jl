@@ -77,20 +77,21 @@ end
 function Leaf_Temperatures_jl(Tair::Float64, Δ::Float64, γ::Float64,
   VPD::Float64, cp::Float64,
   Gw::Leaf, Gww::Leaf, Gh::Leaf,
-  Xcs_o::Float64, Xcl_o::Float64,
-  Xcs_u::Float64, Xcl_u::Float64,
+  Xcl::Layer2{Float64}, Xcs::Layer3{Float64},
+  # Xcs_o::Float64, Xcl_o::Float64,
+  # Xcs_u::Float64, Xcl_u::Float64,
   Rn::Leaf, Tc::Leaf)
 
   args = (Tair, Δ, γ, VPD, cp)
   Tc.o_sunlit = Leaf_Temperature_jl(args...,
-    Gw.o_sunlit, Gww.o_sunlit, Gh.o_sunlit, Xcs_o + Xcl_o, Rn.o_sunlit)
+    Gw.o_sunlit, Gww.o_sunlit, Gh.o_sunlit, Xcs.o + Xcl.o, Rn.o_sunlit)
 
   Tc.o_shaded = Leaf_Temperature_jl(args...,
-    Gw.o_shaded, Gww.o_shaded, Gh.o_shaded, Xcs_o + Xcl_o, Rn.o_shaded)
+    Gw.o_shaded, Gww.o_shaded, Gh.o_shaded, Xcs.o + Xcl.o, Rn.o_shaded)
 
   Tc.u_sunlit = Leaf_Temperature_jl(args...,
-    Gw.u_sunlit, Gww.u_sunlit, Gh.u_sunlit, Xcs_u + Xcl_u, Rn.u_sunlit)
+    Gw.u_sunlit, Gww.u_sunlit, Gh.u_sunlit, Xcs.u + Xcl.u, Rn.u_sunlit)
 
   Tc.u_shaded = Leaf_Temperature_jl(args...,
-    Gw.u_shaded, Gww.u_shaded, Gh.u_shaded, Xcs_u + Xcl_u, Rn.u_shaded)
+    Gw.u_shaded, Gww.u_shaded, Gh.u_shaded, Xcs.u + Xcl.u, Rn.u_shaded)
 end

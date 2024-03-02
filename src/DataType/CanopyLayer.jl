@@ -31,8 +31,6 @@ end
 # 注意，如果是Ref，将共用相同的地址
 Layer2(o::FT) where {FT} = Layer2{FT}(o, o)
 
-Layer2(o::FT, u::FT) where {FT} = Layer2{FT}(; o, u)
-
 Layer2(x::Layer2{FT}) = Layer2{FT}(; x.o, x.u)
 
 

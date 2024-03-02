@@ -5,7 +5,8 @@ Ewater: evaporation from water
 Esoil: evaporation from soil
 """
 function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
-  perc_snow_g::Ref{FT}, 
+  # perc_snow_g::Ref{FT}, 
+  perc_snow::Layer3{FT}, 
   depth_water, depth_snow,
   # depth_water::Ref{FT}, depth_snow::Ref{FT},
   mass_water_g::FT, mass_snow::Layer3{FT},
@@ -18,8 +19,8 @@ function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
   Gwater_g = 1.0 / (4.0 * exp(8.2 - 4.2 * swc_g / porosity_g))
   # kstep = kstep # 360s, 6min
 
-  perc_snow_g[] = depth_snow > 0.02 ? 1.0 : mass_snow.g / (0.025 * ρ_snow)
-  perc_snow_g[] = clamp(perc_snow_g[], 0.0, 1.0)
+  perc_snow.g = depth_snow > 0.02 ? 1.0 : mass_snow.g / (0.025 * ρ_snow)
+  perc_snow.g = clamp(perc_snow.g, 0.0, 1.0)
 
   if depth_water > 0.0 && depth_snow == 0.0
     Ewater_g = 1.0 / λ * (Δ * (Rn_g * 0.8 - 0) + ρₐ * cp * VPD * Gheat_g) /
@@ -39,7 +40,7 @@ function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
 
   if depth_snow > 0.0
     Esoil_g = 1 / λ_snow * (Δ * (Rn_g * 0.8 - 0) + ρₐ * cp * VPD * Gheat_g) /
-              (Δ + γ * (1 + (Gheat_g) / 0.01)) * perc_snow_g[]
+              (Δ + γ * (1 + (Gheat_g) / 0.01)) * perc_snow.g
   else
     Esoil_g = 0.0
   end
@@ -55,7 +56,7 @@ function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
   if depth_water > 0.0 || depth_snow > 0.0
     Esoil = 0.0
   else
-    Esoil = (1.0 - (perc_snow_g[])) * 1 / (λ) * (Δ * (Rn_g - 0) + ρₐ * cp * VPD * Gheat_g) /
+    Esoil = (1.0 - (perc_snow.g)) * 1 / (λ) * (Δ * (Rn_g - 0) + ρₐ * cp * VPD * Gheat_g) /
             (Δ + γ * (1 + Gheat_g / Gwater_g))
     Esoil = max(0.0, Esoil)
   end

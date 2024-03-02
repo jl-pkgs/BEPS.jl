@@ -108,29 +108,30 @@ function inter_prg_jl(
 
   var.Qhc_o[1] = var_o[11+1]
 
-  # the mass of intercepted liquid water and snow, overstory 
-  var.Wcl_o[1] = var_o[15+1]
-  var.Wcl_u[1] = var_o[18+1]
-
-  # the evaporation rate of rain and snow--in kg/m^2/s, understory
-  # the mass of intercepted liquid water and snow, overstory
-  var.Wcs_o[1] = var_o[16+1]
-  var.Wcs_u[1] = var_o[19+1]
-  var.Wcs_g[1] = var_o[20+1]
-
+  
   depth_snow = soil.depth_snow
   depth_water = soil.depth_water
   (depth_water < 0.001) && (depth_water = 0.0)
 
   init_leaf_dbl(Tc_old, Ta - 0.5)
-  m = SurfaceMass{FT}()
+  # m = SurfaceMass{FT}()
 
-  # X: perc
-  # W: mass
-  Wcs = Layer3(0.0) # mass_snow
-  Xcs = Layer3(0.0) # perc_snow
-  Ac_snow = Layer2()
-  Wcl_pre = Layer2()
+  f_snow = Layer3(0.0) # perc_snow
+  m_snow = Layer3(var_o[16+1], var_o[19+1], var_o[20+1]) # mass_snow
+
+  # the mass of intercepted liquid water and snow, overstory 
+  f_water = Layer2() # perc_water
+  m_water = Layer2() # mass_water
+  m_water_pre = Layer2(var_o[15+1], var_o[18+1])
+
+  A_snow = Layer2()
+
+  ## TODO: debug at here
+  # the evaporation rate of rain and snow--in kg/m^2/s, understory
+  # the mass of intercepted liquid water and snow, overstory
+  var.Wcs_o[1] = var_o[16+1]
+  var.Wcs_u[1] = var_o[19+1]
+  var.Wcs_g[1] = var_o[20+1]
 
   # /*****  Ten time intervals in a hourly time step.6min or 360s per loop  ******/
   @inbounds for k = 2:kloop+1
@@ -139,21 +140,19 @@ function inter_prg_jl(
     α_n_sw = init_dbl()
     ρ_snow = init_dbl()
 
-    Wcs.o, Wcs.u, Wcs.g = var.Wcs_o[k], var.Wcs_u[k], var.Wcs_g[k]
+    # 它一直未0，导致的错误；值没有传进去
+    # Wcs = Layer3() # TODO: fix bug at here
+    m_snow.o, m_snow.u, m_snow.g = var.Wcs_o[k], var.Wcs_u[k], var.Wcs_g[k]
 
     depth_snow = snowpack_stage1_jl(Ta, prcp,
       lai_o, lai_u,
       clumping,
-      Wcs, Xcs, Ac_snow,
+      m_snow, f_snow, A_snow,
       depth_snow, ρ_snow,
       α_v_sw, α_n_sw) # by X. Luo 
-    
-    Wcl_pre.o = var.Wcl_o[k-1]
-    Wcl_pre.u = var.Wcl_u[k-1]
 
     # /*****  Rain fall stage 1 by X. Luo  *****/
-    var.Wcl_o[k], var.Wcl_u[k], Xcl_o, Xcl_u, var.r_rain_g[k] =
-      rainfall_stage1_jl(Ta, prcp, Wcl_pre, lai_o, lai_u, clumping)
+    var.r_rain_g[k] = rainfall_stage1_jl(Ta, prcp, f_water, m_water, m_water_pre, lai_o, lai_u, clumping)
 
     if (soil.θ_prev[2] < soil.θ_vwp[2] * 0.5)
       α_g = α_dry
@@ -173,15 +172,14 @@ function inter_prg_jl(
     init_leaf_dbl(Ci_old, 0.7 * CO2_air)
     init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
 
-    percArea_snow_o = Ac_snow.o / lai_o / 2
-    percArea_snow_u = Ac_snow.u / lai_u / 2
+    percArea_snow_o = A_snow.o / lai_o / 2
+    percArea_snow_u = A_snow.u / lai_u / 2
 
     temp_grd = Ta   # ground temperature substituted by air temperature
 
     num = 0
     while true # iteration for BWB equation until results converge
       num = num + 1
-
       # /***** Aerodynamic_conductance module by G.Mo  *****/
       ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
         aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind, GH_o,
@@ -195,8 +193,10 @@ function inter_prg_jl(
         1.0 / (1.0 / Ga_u + 1.0 / Gb_u + 100))
 
       # temperatures of overstorey and understorey canopies
-      Tco = (Tc_old.o_sunlit * PAI.o_sunlit + Tc_old.o_shaded * PAI.o_shaded) / (PAI.o_sunlit + PAI.o_shaded)
-      Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) / (PAI.u_sunlit + PAI.u_shaded)
+      Tco = (Tc_old.o_sunlit * PAI.o_sunlit + Tc_old.o_shaded * PAI.o_shaded) /
+            (PAI.o_sunlit + PAI.o_shaded)
+      Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) /
+            (PAI.u_sunlit + PAI.u_shaded)
 
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
       radiation_o, radiation_u, radiation_g = netRadiation_jl(Rs, CosZs, Tco, Tcu, temp_grd,
@@ -204,7 +204,7 @@ function inter_prg_jl(
         clumping, Ta, RH,
         α_v_sw[], α_n_sw[],
         percArea_snow_o, percArea_snow_u,
-        var.Xcs_g[k],
+        f_snow.g,
         α_v_o, α_n_o, α_v_u, α_n_u,
         α_v_g, α_n_g, Rn, Rns, Rnl, Ra)
 
@@ -234,15 +234,13 @@ function inter_prg_jl(
       update_Gc!(Gc, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
 
       # /***** Leaf temperatures module by L. He  *****/
-      # Xcs_o, Xcs_u, Xcs_g,
       Leaf_Temperatures_jl(Ta, Δ, γ, VPD, cp,
-        Gw, Gww, Gh,
-        Xcs.o, Xcl_o, Xcs.u, Xcl_u,
-        Rn, Tc_new)
+        Gw, Gww, Gh, f_water, f_snow, Rn, Tc_new)
 
       H_o_sunlit = (Tc_new.o_sunlit - Ta) * ρₐ * cp * Gh.o_sunlit
       H_o_shaded = (Tc_new.o_shaded - Ta) * ρₐ * cp * Gh.o_shaded
-      GH_o = H_o_sunlit * PAI.o_sunlit + H_o_shaded * PAI.o_shaded  # for next num aerodynamic conductance calculation
+      # for next num aerodynamic conductance calculation
+      GH_o = H_o_sunlit * PAI.o_sunlit + H_o_shaded * PAI.o_shaded 
 
       if (abs(Tc_new.o_sunlit - Tc_old.o_sunlit) < 0.02 &&
           abs(Tc_new.o_shaded - Tc_old.o_shaded) < 0.02 &&
@@ -265,14 +263,13 @@ function inter_prg_jl(
     # /*****  Evaporation and sublimation from canopy by X. Luo  *****/
     var.Eil_o[k], var.Eil_u[k], var.EiS_o[k], var.EiS_u[k] = evaporation_canopy_jl(
       Tc_new, Ta, RH,
-      Gww, PAI,
-      Xcl_o, Xcl_u,
-      Xcs.o, Xcs.u)
+      Gww, PAI, f_water, f_snow)
 
-    var.Wcl_o[k], var.Wcl_u[k] =
-      rainfall_stage2_jl(var.Eil_o[k], var.Eil_u[k], var.Wcl_o[k], var.Wcl_u[k]) # X. Luo
+    rainfall_stage2_jl(var.Eil_o[k], var.Eil_u[k], m_water) # X. Luo
+    snowpack_stage2_jl(var.EiS_o[k], var.EiS_u[k], m_snow) # X. Luo
 
-    snowpack_stage2_jl(var.EiS_o[k], var.EiS_u[k], Wcs) # X. Luo
+    m_water_pre.o = m_water.o
+    m_water_pre.u = m_water.u
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g
@@ -280,9 +277,9 @@ function inter_prg_jl(
 
     var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k], depth_water, depth_snow =
       evaporation_soil_jl(temp_grd, var.Ts0[k-1], RH, radiation_g, Gheat_g,
-        Ref(var.Xcs_g, k), depth_water, depth_snow, mass_water_g, Wcs, # Ref
+        f_snow,
+        depth_water, depth_snow, mass_water_g, m_snow, # Ref
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
-    # Ref(var.Evap_soil, k), Ref(var.Evap_SW, k), Ref(var.Evap_SS, k)
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
     UpdateSoilThermalConductivity(soil)
@@ -309,7 +306,7 @@ function inter_prg_jl(
         var.Cs[2, k], var.Cs[1, k], Gheat_g, dz[2], ρ_snow[], var.Tc_u[k],
         radiation_g, var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k],
         lambda[2],
-        var.Xcs_g[k], var.G[2, k],
+        f_snow.g, var.G[2, k],
         var.Ts0[k-1],
         # T_soil1_last::FT, T_any0_last::FT, T_soil0_last::FT,
         var.Tm[2, k-1], var.Tm[1, k-1], var.Tsm0[k-1],
@@ -319,7 +316,7 @@ function inter_prg_jl(
     soil.Tsoil_c[1] = var.Tm[1, k]
 
     depth_snow, depth_water = snowpack_stage3_jl(Ta, var.Tsn0[k], var.Tsn0[k-1], ρ_snow[],
-      depth_snow, depth_water, Wcs) # X. Luo
+      depth_snow, depth_water, m_snow) # X. Luo
 
     var.Qhc_o[k], var.Qhc_u[k], var.Qhg[k] =
       sensible_heat_jl(Tc_new, var.Ts0[k], Ta, RH,
@@ -330,7 +327,7 @@ function inter_prg_jl(
     soil.G[1] = var.G[1, k]
     # Update_G(soilp, var.G[1, k])
 
-    UpdateHeatFlux(soil, var.Xcs_g[k], var.lambda_snow[k], var.Tsn0[k], Ta, kstep)
+    UpdateHeatFlux(soil, f_snow.g, var.lambda_snow[k], var.Tsn0[k], Ta, kstep)
     Soil_Water_Uptake(soil, var.Trans_o[k], var.Trans_u[k], var.Evap_soil[k])
 
     soil.r_rain_g = var.r_rain_g[k]
@@ -339,7 +336,6 @@ function inter_prg_jl(
     UpdateSoilMoisture(soil, kstep)
     depth_water = soil.depth_water
 
-    # var.Wcs_o[k], var.Wcs_u[k], var.Wcs_g[k] = Wcs.o, Wcs.u, Wcs.g
   end  # The end of k loop
 
   k = kloop + 1# the last step
@@ -353,12 +349,12 @@ function inter_prg_jl(
   var_n[7+1] = var.Tsn2[k]       # To: The temperature of ground surface
   var_n[11+1] = var.Qhc_o[k]
 
-  var_n[15+1] = var.Wcl_o[k]
-  var_n[18+1] = var.Wcl_u[k]
+  var_n[15+1] = m_water.o
+  var_n[18+1] = m_water.u
 
-  var_n[16+1] = Wcs.o # var.Wcs_o[k]     # the mass of intercepted liquid water and snow, overstory
-  var_n[19+1] = Wcs.u # var.Wcs_u[k]     # the mass of intercepted liquid water and snow, overstory
-  var_n[20+1] = Wcs.g # var.Wcs_g[k]   # the fraction of ground surface covered by snow and snow mass
+  var_n[16+1] = m_snow.o # var.Wcs_o[k]     # the mass of intercepted liquid water and snow, overstory
+  var_n[19+1] = m_snow.u # var.Wcs_u[k]     # the mass of intercepted liquid water and snow, overstory
+  var_n[20+1] = m_snow.g # var.Wcs_g[k]   # the fraction of ground surface covered by snow and snow mass
 
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 
