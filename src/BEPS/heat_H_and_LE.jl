@@ -23,8 +23,8 @@ function transpiration_jl(T_leaf::Leaf, Ta::Float64, RH::Float64, Gtrans::Leaf, 
   T.u_sunlit = (VPD + Δ * (T_leaf.u_sunlit - Ta)) * ρₐ * cp * Gtrans.u_sunlit / γ
   T.u_shaded = (VPD + Δ * (T_leaf.u_shaded - Ta)) * ρₐ * cp * Gtrans.u_shaded / γ
 
-  trans_o = 1.0 / λ * (T.o_sunlit * lai.o_sunlit + T.o_shaded * lai.o_shaded)
-  trans_u = 1.0 / λ * (T.u_sunlit * lai.u_sunlit + T.u_shaded * lai.u_shaded)
+  trans_o = (T.o_sunlit * lai.o_sunlit + T.o_shaded * lai.o_shaded) / λ
+  trans_u = (T.u_sunlit * lai.u_sunlit + T.u_shaded * lai.u_shaded) / λ
 
   trans_o, trans_u
 end
@@ -41,7 +41,6 @@ function sensible_heat(T_leaf::Leaf, T_a::FT, ρₐ::FT, cp::FT, gH::Leaf)
   SH.o_shaded = (T_leaf.o_shaded - T_a) * ρₐ * cp * gH.o_shaded
   SH.u_sunlit = (T_leaf.u_sunlit - T_a) * ρₐ * cp * gH.u_sunlit
   SH.u_shaded = (T_leaf.u_shaded - T_a) * ρₐ * cp * gH.u_shaded
-
   SH
 end
 
@@ -50,7 +49,7 @@ function sensible_heat_jl(T_leaf::Leaf, T_ground::FT, Ta::FT, RH::FT,
 
   met = meteo_pack_jl(Ta, RH)
   (; ρₐ, cp) = met # cp: specific heat of moist air above canopy
-  
+
   SH = sensible_heat(T_leaf, Ta, ρₐ, cp, Gheat)
   SH_o::FT = SH.o_sunlit * lai.o_sunlit + SH.o_shaded * lai.o_shaded
   SH_u::FT = SH.u_sunlit * lai.u_sunlit + SH.u_shaded * lai.u_shaded

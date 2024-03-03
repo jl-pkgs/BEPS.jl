@@ -9,14 +9,15 @@ cal_K(θ::T, θ_sat::T, K_sat::T, b::T) where {T<:Real} = K_sat * (θ / θ_sat)^
 
 # Function to update soil heat flux
 function UpdateHeatFlux(p::Soil,
-  Xcs_g::Float64, lambda_snow::Float64, Tsn0::Float64,
+  # Xcs_g::Float64, lambda_snow::Float64, Tsn0::Float64,
   Tair_annual_mean::Float64, period_in_seconds::Float64)
 
   n = p.n_layer
   # TODO: i may have bug
   @inbounds for i in 2:n+1
     if i <= n
-      p.G[i] = (p.Tsoil_p[i-1] - p.Tsoil_p[i]) / (0.5 * p.dz[i-1] / p.lambda[i-1] + 0.5 * p.dz[i] / p.lambda[i])
+      p.G[i] = (p.Tsoil_p[i-1] - p.Tsoil_p[i]) /
+               (0.5 * p.dz[i-1] / p.lambda[i-1] + 0.5 * p.dz[i] / p.lambda[i])
     else
       p.G[i] = p.lambda[i-1] * (p.Tsoil_p[i-1] - Tair_annual_mean) / (DEPTH_F + p.dz[i-1] * 0.5)
     end
@@ -31,7 +32,7 @@ function UpdateHeatFlux(p::Soil,
   end
 
   Update_ice_ratio(p)
-  p.Tsoil_p .= p.Tsoil_c
+  p.Tsoil_p[1:n] .= p.Tsoil_c[1:n]
 end
 
 
@@ -51,6 +52,7 @@ end
 # Function to update the frozen status of each soil
 function Update_ice_ratio(p::Soil)
   Lf0 = 3.34 * 100000  # latent heat of fusion (liquid: solid) at 0C
+  # 会不会这里出错了
 
   @inbounds for i in 1:p.n_layer
     # starting to freeze
