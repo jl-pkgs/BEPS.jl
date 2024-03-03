@@ -169,7 +169,7 @@ function Init_Soil_Status(p::Soil, Tsoil::Float64, Tair::Float64, Ms::Float64, s
   temp_scale_factors = [0.4, 0.5, 1.0, 1.2, 1.4]
   moisture_scale_factors = [0.8, 1.0, 1.05, 1.10, 1.15]
 
-  for i in 1:5
+  for i in 1:p.n_layer
     p.Tsoil_c[i] = Tair + temp_scale_factors[i] * d_t
     p.Tsoil_p[i] = Tair + temp_scale_factors[i] * d_t
     p.θ[i] = moisture_scale_factors[i] * Ms

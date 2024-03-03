@@ -65,6 +65,10 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 - [ ] 土壤类型参数
 - [ ] clumping index数据处理
 
+## Bugs
+
+- [ ] snowpack: depth_snow一致增加，一直到无穷
+
 ## Researches
 
 - [ ] 研究土壤温度和空气温度之间的关系，为sentinel-2遥感数据反演提供依据

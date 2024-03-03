@@ -43,8 +43,19 @@ end
   end
 end
 
+function init_soil()
+  par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
+    soil_type=8, Tsoil=2.2,
+    soilwater=0.4115, snowdepth=0.0)
+  param = readparam(par.landcover)      # n = 48
 
-@testset "Init_Soil_var_o" begin
+  rad = 100.0
+  temp = -4.0
+  hum = 7.0
+  pre = 0.0
+  wind = 2.0
+  meteo = ClimateData(rad, 0.0, temp, hum, pre, wind)
+
   Tsoil_p = collect(4.0:-1:-5.0)
   Tsoil_c = collect(-5.0:1:4.0)
   ice_ratio = fill(0.6, 10)
@@ -54,26 +65,39 @@ end
     Tsoil_p=Tuple(Tsoil_p),
     Tsoil_c=Tuple(Tsoil_c),
     ice_ratio=Tuple(ice_ratio))
-  
+
   var_jl = zeros(41)
   var_c = zeros(41)
 
-  par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
-    soil_type=8, Tsoil=2.2,
-    soilwater=0.4115, snowdepth=0.0)
-
-  rad = 400.0
-  temp = 16.0
-  hum = 7.0
-  pre = 0.0
-  wind = 2.0
-  meteo = ClimateData(rad, 0.0, temp, hum, pre, wind)
-
-  param = readparam(par.landcover)      # n = 48
-
   Init_Soil_var_o(p_jl, var_jl, meteo, param, par)
   Init_Soil_var_o(p_c, var_c, meteo, param, par)
+  
+  p_jl, p_c
+end
 
+
+@testset "UpdateHeatFlux" begin
+  p_jl, p_c = init_soil()
+
+  funs = [
+    # Update_Cs,
+    # Update_ice_ratio,
+    UpdateSoilThermalConductivity,
+    soil_water_factor_v2]
+
+  for fun in funs
+    fun(p_jl)
+    fun(p_c)
+  end
+  
+  UpdateHeatFlux(p_jl, 20.0, 3600.0)
+  UpdateHeatFlux(p_c, 20.0, 3600.0)
+  is_soil_equal(p_jl, p_c; tol=1e-7, verbose=true)
+end
+
+
+@testset "Init_Soil_var_o" begin
+  p_jl, p_c = init_soil()
   funs = [
     Update_Cs,
     Update_ice_ratio,
@@ -92,6 +116,3 @@ end
   UpdateHeatFlux(p_c, 20.0, 3600.0)
   is_soil_equal(p_jl, p_c; tol=1e-7, verbose=true)
 end
-
-# r_root_decay
-# f_root

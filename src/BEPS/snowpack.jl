@@ -83,7 +83,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
     albedo_n_snow[] = albedo_n_Newsnow
   end
 
-  depth_snow
+  min(depth_snow, 100)
 end
 
 
