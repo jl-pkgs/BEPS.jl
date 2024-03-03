@@ -7,7 +7,7 @@ Esoil: evaporation from soil
 function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
   # perc_snow_g::Ref{FT}, 
   perc_snow::Layer3{FT}, 
-  depth_water, depth_snow,
+  depth_water::FT, depth_snow::FT,
   # depth_water::Ref{FT}, depth_snow::Ref{FT},
   mass_water_g::FT, mass_snow::Layer3{FT},
   ρ_snow::FT, swc_g::FT, porosity_g::FT) where {FT<:Real}
