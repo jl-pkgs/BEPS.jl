@@ -67,7 +67,7 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 
 ## Bugs
 
-- [ ] snowpack: depth_snow一致增加，一直到无穷
+- [ ] snowpack: depth_snow一直增加，一直到无穷
 
 ## Researches
 
