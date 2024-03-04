@@ -21,8 +21,7 @@ libbeps = path_proj("deps/libbeps.dll")
 # include("Ipaper.jl")
 # include("c2julia.jl")
 include("DataType/DataType.jl")
-
-include("BEPS/BEPS.jl")
+include("BEPS_modules.jl")
 
 include("clang/BEPS_c.jl")
 @reexport import BEPS.clang;
