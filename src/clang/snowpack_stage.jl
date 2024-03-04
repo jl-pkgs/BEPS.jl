@@ -26,8 +26,6 @@ function snowpack_stage1(Tair::Float64, prcp::Float64,
   mass_snow::Layer3{Float64},
   perc_snow::Layer3{Float64},
   area_snow::Layer2{Float64},
-  # area_snow.o::Ref{Float64}, area_snow.u::Ref{Float64},
-  # perc_snow.o::Ref{Float64}, perc_snow.u::Ref{Float64}, perc_snow.g::Ref{Float64},
   depth_snow::Float64, ρ_snow::Ref{Float64},
   albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
 

@@ -1,30 +1,48 @@
+function snow_change(mass_snow_pre::FT, snowrate::FT, kstep::FT,
+  ρ_new_snow::FT, lai::FT, clumping::FT) where {FT<:Real}
+
+  massMax_snow = 0.1 * lai
+  areaMax_snow = 0.01 * lai
+
+  mass_snow = mass_snow_pre + snowrate * kstep * ρ_new_snow * (1 - exp(-lai * clumping))
+  perc_snow = mass_snow / massMax_snow
+  perc_snow = clamp(perc_snow, 0, 1)
+  area_snow = perc_snow * areaMax_snow
+  massStep_snow = mass_snow - mass_snow_pre
+
+  return mass_snow, perc_snow, area_snow, massStep_snow
+end
+
 """
   snowpack_stage1_jl
+
+# Arguments
 
 - `mass_snow`: mass_snow
 - `mw`: mass_water
 - `depth_snow`: snow depth
 - `depth_water`: water depth
 
+*reference variables*
+- mass_snow_pre
+- mass_snow
+- perc_snow
+- area_snow
+
 # add an example of snowpack
 """
 function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   lai_o::Float64, lai_u::Float64, clumping::Float64,
-  # mass_snow_pre.o::Float64, mass_snow_pre.u::Float64, mass_snow_pre.g::Float64, 
-  # ms_o::Ref{Float64}, ms_u::Ref{Float64}, ms_g::Ref{Float64},
   mass_snow_pre::Layer3{Float64},
   mass_snow::Layer3{Float64},
   perc_snow::Layer3{Float64},
   area_snow::Layer2{Float64},
-  # area_snow.o::Ref{Float64}, area_snow.u::Ref{Float64},
-  # perc_snow.o::Ref{Float64}, perc_snow.u::Ref{Float64}, perc_snow.g::Ref{Float64},
-  depth_snow::Float64, ρ_snow::Ref{Float64},
+  depth_snow::Float64,
+  ρ_snow::Ref{Float64},
   albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
 
   massMax_snow_o = 0.1 * lai_o
   massMax_snow_u = 0.1 * lai_u
-  areaMax_snow_o = lai_o * 0.01
-  areaMax_snow_u = lai_u * 0.01
 
   ρ_new_snow = 67.9 + 51.3 * exp(Tair / 2.6)
   albedo_v_Newsnow = 0.94
@@ -36,18 +54,12 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
 
   if Tair < 0
     snowrate_o = snowrate
-    mass_snow.o = mass_snow_pre.o + snowrate_o * kstep * ρ_new_snow * (1 - exp(-lai_o * clumping))
-    perc_snow.o = mass_snow.o / massMax_snow_o
-    perc_snow.o = clamp(perc_snow.o, 0, 1)
-    area_snow.o = perc_snow.o * areaMax_snow_o
-    massStep_snow_o = mass_snow.o - mass_snow_pre.o
+    mass_snow.o, perc_snow.o, area_snow.o, massStep_snow_o =
+      snow_change(mass_snow_pre.o, snowrate_o, kstep, ρ_new_snow, lai_o, clumping)
 
     snowrate_u = max(0, snowrate_o - (massStep_snow_o) / ρ_new_snow / kstep)
-    mass_snow.u = mass_snow_pre.u + snowrate_u * kstep * ρ_new_snow * (1 - exp(-lai_u * clumping))
-    perc_snow.u = mass_snow.u / massMax_snow_u
-    perc_snow.u = clamp(perc_snow.u, 0, 1)
-    area_snow.u = perc_snow.u * areaMax_snow_u
-    massStep_snow_u = mass_snow.u - mass_snow_pre.u
+    mass_snow.u, perc_snow.u, area_snow.u, massStep_snow_u =
+      snow_change(mass_snow_pre.u, snowrate_u, kstep, ρ_new_snow, lai_u, clumping)
 
     snowrate_g = max(0.0, snowrate_u - (massStep_snow_u) / ρ_new_snow / kstep)
     δ_zs = snowrate_g * kstep
@@ -83,7 +95,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
     albedo_n_snow[] = albedo_n_Newsnow
   end
 
-  min(depth_snow, 100)
+  min(depth_snow, 100.0)
 end
 
 
