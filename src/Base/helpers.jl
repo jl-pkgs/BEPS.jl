@@ -38,18 +38,18 @@ end
 
 
 function meteo_pack_jl(Ta::FT, RH::FT)
-  ρₐ = 1.292 # ρₐir, kg/m3
+  ρₐ::FT = 1.292 # ρₐir, kg/m3
 
-  es = cal_es(Ta)
-  ea = es * RH / 100
-  VPD = es - ea
+  es::FT = cal_es(Ta)
+  ea::FT = es * RH / 100
+  VPD::FT = es - ea
 
-  q = ea2q(ea)
-  cp = cal_cp(q)
+  q::FT = ea2q(ea)
+  cp::FT = cal_cp(q)
 
-  λ = cal_lambda(Ta)
-  Δ = cal_slope(Ta) # slope of es
-  γ = 0.066         # kPa/K, 
+  λ::FT = cal_lambda(Ta)
+  Δ::FT = cal_slope(Ta) # slope of es
+  γ::FT = 0.066         # kPa/K, 
   # lambda = cal_lambda(Ta) # J kg-1
   # psy = cp * 101.13 / (0.622 * lambda)  
   (; ρₐ, cp, VPD, λ, Δ, γ, es, ea, q)

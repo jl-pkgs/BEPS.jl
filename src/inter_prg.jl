@@ -22,7 +22,6 @@ function inter_prg_jl(
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; kw...) where {T}
 
-  # var = var2
   # var = InterTempVars()
   init_vars!(var)
   # reset!(var.TempLeafs)
@@ -48,14 +47,6 @@ function inter_prg_jl(
 
   Tco = 0.0
   Tcu = 0.0
-
-  α_sat = param[24+1]       # albedo of saturated/dry soil for module rainfall 1
-  α_dry = param[25+1]       # the albedo of dry soil
-  canopyh_o = param[29+1]       # to be used for module aerodynamic_conductance
-  canopyh_u = param[30+1]
-  height_wind_sp = param[31+1]  # the_height_to_measure_wind_speed, for module aerodynamic_conductance
-  m_h2o = param[33+1]           # to be used for module photosynthesis
-  b_h2o = param[34+1]
 
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, clumping, CosZs, param)
@@ -87,6 +78,14 @@ function inter_prg_jl(
   met = meteo_pack_jl(Ta, RH)
   (; Δ, γ, cp, VPD, ea) = met
 
+  α_sat = param[24+1]       # albedo of saturated/dry soil for module rainfall 1
+  α_dry = param[25+1]       # the albedo of dry soil
+  canopyh_o = param[29+1]       # to be used for module aerodynamic_conductance
+  canopyh_u = param[30+1]
+  height_wind_sp = param[31+1]  # the_height_to_measure_wind_speed, for module aerodynamic_conductance
+  m_h2o = param[33+1]           # to be used for module photosynthesis
+  b_h2o = param[34+1]
+
   if (Rs <= 0)
     α_v_o = 0.0
     α_n_o = 0.0
@@ -99,6 +98,8 @@ function inter_prg_jl(
     α_n_u = param[23+1]
   end
 
+  init_leaf_dbl(Tc_old, Ta - 0.5)
+
   # Ground surface temperature
   var.Ts0[1] = clamp(var_o[3+1], Ta - 2.0, Ta + 2.0)  # ground0
   var.Tsm0[1] = clamp(var_o[5+1], Ta - 2.0, Ta + 2.0) # 
@@ -108,18 +109,15 @@ function inter_prg_jl(
 
   var.Qhc_o[1] = var_o[11+1]
 
-  
   depth_snow = soil.depth_snow
   depth_water = soil.depth_water
   (depth_water < 0.001) && (depth_water = 0.0)
 
-  init_leaf_dbl(Tc_old, Ta - 0.5)
-  # m = SurfaceMass{FT}()
-
+  # the evaporation rate of rain and snow--in kg/m^2/s, 
+  # understory the mass of intercepted liquid water and snow, overstory
   f_snow = Layer3(0.0) # perc_snow
   m_snow = Layer3(0.0) # mass_snow
   m_snow_pre = Layer3(var_o[16+1], var_o[19+1], var_o[20+1]) # mass_snow
-  # set!(m_snow_pre, m_snow)
 
   # the mass of intercepted liquid water and snow, overstory 
   f_water = Layer2() # perc_water
@@ -127,20 +125,15 @@ function inter_prg_jl(
   m_water_pre = Layer2(var_o[15+1], var_o[18+1])
   A_snow = Layer2()
 
-  ## TODO: debug at here
-  # the evaporation rate of rain and snow--in kg/m^2/s, understory
-  # the mass of intercepted liquid water and snow, overstory
-  var.Wcs_o[1] = var_o[16+1]
-  var.Wcs_u[1] = var_o[19+1]
-  var.Wcs_g[1] = var_o[20+1]
+  ρ_snow = init_dbl()
+  α_v_sw = init_dbl()
+  α_n_sw = init_dbl()
 
   # /*****  Ten time intervals in a hourly time step.6min or 360s per loop  ******/
   @inbounds for k = 2:kloop+1
-    # 这里需要对k-1时刻的Wcs进行更新
-    α_v_sw = init_dbl()
-    α_n_sw = init_dbl()
-    ρ_snow = init_dbl()
-    
+    ρ_snow[] = 0.0 # TODO: debug C, might error
+    α_v_sw[], α_n_sw[] = 0.0, 0.0
+
     depth_snow = snowpack_stage1_jl(Ta, prcp,
       lai_o, lai_u,
       clumping,
@@ -202,9 +195,9 @@ function inter_prg_jl(
         α_v_sw[], α_n_sw[],
         percArea_snow_o, percArea_snow_u,
         f_snow.g,
-        α_v_o, α_n_o, 
+        α_v_o, α_n_o,
         α_v_u, α_n_u,
-        α_v_g, α_n_g, 
+        α_v_g, α_n_g,
         Rn, Rns, Rnl, Ra)
 
       # /*****  Photosynthesis module by B. Chen  *****/
@@ -239,7 +232,7 @@ function inter_prg_jl(
       H_o_sunlit = (Tc_new.o_sunlit - Ta) * ρₐ * cp * Gh.o_sunlit
       H_o_shaded = (Tc_new.o_shaded - Ta) * ρₐ * cp * Gh.o_shaded
       # for next num aerodynamic conductance calculation
-      GH_o = H_o_sunlit * PAI.o_sunlit + H_o_shaded * PAI.o_shaded 
+      GH_o = H_o_sunlit * PAI.o_sunlit + H_o_shaded * PAI.o_shaded
 
       if (abs(Tc_new.o_sunlit - Tc_old.o_sunlit) < 0.02 &&
           abs(Tc_new.o_shaded - Tc_old.o_shaded) < 0.02 &&
@@ -265,15 +258,13 @@ function inter_prg_jl(
       Gww, PAI, f_water, f_snow)
 
     rainfall_stage2_jl(var.Eil_o[k], var.Eil_u[k], m_water) # X. Luo
-    snowpack_stage2_jl(var.EiS_o[k], var.EiS_u[k], m_snow) # X. Luo
+    set!(m_water_pre, m_water)
 
-    # set!(m_water_pre, m_water)
-    m_water_pre.o = m_water.o
-    m_water_pre.u = m_water.u
+    snowpack_stage2_jl(var.EiS_o[k], var.EiS_u[k], m_snow) # X. Luo
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g
-    mass_water_g = ρ_w * depth_water[]
+    mass_water_g = ρ_w * depth_water
 
     var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k], depth_water, depth_snow =
       evaporation_soil_jl(temp_grd, var.Ts0[k-1], RH, radiation_g, Gheat_g,
@@ -290,9 +281,9 @@ function inter_prg_jl(
     var.Tm .= 0.0
     var.G .= 0.0
 
-    var.Cs[1, k] = soil.Cs[1]  # added
+    var.Cs[1, k] = soil.Cs[1]
     var.Cs[2, k] = soil.Cs[1]
-    var.Tc_u[k] = Tcu           # added
+    var.Tc_u[k] = Tcu
     lambda[2] = soil.lambda[1]
     dz[2] = soil.dz[1]
 
@@ -315,7 +306,7 @@ function inter_prg_jl(
     # Update_Tsoil_c(soilp, var.Tm[1, k])
     soil.Tsoil_c[1] = var.Tm[1, k]
 
-    depth_snow, depth_water = snowpack_stage3_jl(Ta, var.Tsn0[k], var.Tsn0[k-1], 
+    depth_snow, depth_water = snowpack_stage3_jl(Ta, var.Tsn0[k], var.Tsn0[k-1],
       ρ_snow[], depth_snow, depth_water, m_snow) # X. Luo
     set!(m_snow_pre, m_snow) # update snow_pre
 
@@ -327,7 +318,7 @@ function inter_prg_jl(
     soil.depth_snow = depth_snow
     soil.G[1] = var.G[1, k]
     # Update_G(soilp, var.G[1, k])
-    
+
     UpdateHeatFlux(soil, Ta, kstep) # f_snow.g, var.lambda_snow[k], var.Tsn0[k],
     Soil_Water_Uptake(soil, var.Trans_o[k], var.Trans_u[k], var.Evap_soil[k])
 
@@ -369,8 +360,14 @@ function inter_prg_jl(
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded
   mid_res.gpp_u_shaded = GPP.u_shaded
+  # mid_res.z_water = depth_water
+  # mid_res.z_snow = depth_snow
+  # mid_res.ρ_snow = ρ_snow
 
   # total GPP . gC/m2/step
   mid_res.GPP = (GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded) * 12 * step * 0.000001
   nothing
 end
+
+# TODO: 
+# - var_n: 可以重写为结构体

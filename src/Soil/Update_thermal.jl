@@ -1,10 +1,11 @@
 # Campbell 1974, Bonan 2019 Table 8.2
-function cal_ψ(θ::T, θ_sat::T, ψ_sat::T, b::T) where {T<:Real}
+@fastmath function cal_ψ(θ::T, θ_sat::T, ψ_sat::T, b::T) where {T<:Real}
   ψ = ψ_sat * (θ / θ_sat)^(-b)
   max(ψ, ψ_sat)
 end
 
-cal_K(θ::T, θ_sat::T, K_sat::T, b::T) where {T<:Real} = K_sat * (θ / θ_sat)^(2 * b + 3)
+@fastmath cal_K(θ::T, θ_sat::T, K_sat::T, b::T) where {T<:Real} =
+  K_sat * (θ / θ_sat)^(2 * b + 3)
 
 
 # Function to update soil heat flux
