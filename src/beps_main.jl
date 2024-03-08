@@ -31,37 +31,39 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
     p_soil = Soil_c()
   end
 
-  for jday = 1:365
-    mod(jday, 50) == 0 && @show jday
-    
-    _lai = lai[jday] * param[3] / par.clumping # re-calculate LAI & renew clump index
+  init = true
+  
+  for i = 1:n
+    jday = d.day[i]
+    hour = d.hour[i]
 
-    for rstep = 1:24
-      k = (jday - 1) * 24 + rstep
-      # debug = k == 2072
-      flag = (jday == 1 && rstep == 1) ? 0 : 1
+    _day = ceil(Int, i / 24)
+    mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
-      fill_meteo!(meteo, d, k)
+    _lai = lai[_day] * param[3] / par.clumping # re-calculate LAI & renew clump index
 
-      if (flag == 0)
-        Init_Soil_var_o(p_soil, var_o, meteo, param, par) # update p_soil and var_o
-      else
-        var_o .= v2last
-      end
+    fill_meteo!(meteo, d, i)
 
-      CosZs = s_coszs(jday, rstep - 1, par.lat, par.lon) # cos_solar zenith angle
+    if init
+      Init_Soil_var_o(p_soil, var_o, meteo, param, par) # update p_soil and var_o
+      init = false
+    else
+      var_o .= v2last
+    end
 
-      # /***** start simulation modules *****/
-      fun(jday, rstep - 1, _lai, par.clumping, param, meteo, CosZs, var_o, var_n, p_soil,
-        Ra, mid_res, mid_ET, var; debug)
-      
-      Tg[k, :] .= p_soil.Tsoil_c[1:layer]
-      # Store updated variables array in temp array
-      v2last .= var_n
+    CosZs = s_coszs(jday, hour, par.lat, par.lon) # cos_solar zenith angle
 
-      fill_res!(df_out, mid_res, k)
-      fill_res!(df_ET, mid_ET, k)
-    end # End of hourly loop
-  end # End of daily loop
+    # /***** start simulation modules *****/
+    fun(jday, hour, _lai, par.clumping, param, meteo, CosZs, var_o, var_n, p_soil,
+      Ra, mid_res, mid_ET, var; debug)
+
+    Tg[i, :] .= p_soil.Tsoil_c[1:layer]
+    # Store updated variables array in temp array
+    v2last .= var_n
+
+    fill_res!(df_out, mid_res, i)
+    fill_res!(df_ET, mid_ET, i)
+  end
+
   df_out, df_ET, Tg
 end

@@ -1,6 +1,6 @@
-function q2RH(hum::FT, tem::FT)::FT
+function q2RH(q::FT, tem::FT)::FT
   # Vapour pressure in mbar
-  ea = 0.46 * hum * (tem + 273.16) / 100
+  ea = 0.46 * q * (tem + 273.16) / 100
   es = 6.1078 * exp((17.269 * tem) / (237.3 + tem))
   clamp(ea / es * 100, 0.0, 100.0)
 end

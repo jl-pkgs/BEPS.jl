@@ -4,7 +4,7 @@ The inter-module function between main program and modules
 # Arguments
 
 - `jday`      : day of year
-- `rstep`     : hour of day
+- `hour`     : hour of day
 - `lai`       : leaf area index
 - `clumping`  : clumping index
 - `parameter` : parameter array according to land cover types
@@ -16,7 +16,7 @@ The inter-module function between main program and modules
 - `mid_res`   : results struct
 """
 function inter_prg_jl(
-  jday::Int, rstep::Int,
+  jday::Int, hour::Int,
   lai::T, clumping::T, param::Vector{T}, meteo::ClimateData, CosZs::T,
   var_o::Vector{T}, var_n::Vector{T}, soil::AbstractSoil,
   Ra::Radiation,
@@ -134,6 +134,7 @@ function inter_prg_jl(
     ρ_snow[] = 0.0 # TODO: debug C, might error
     α_v_sw[], α_n_sw[] = 0.0, 0.0
 
+    # set!(m_snow_pre, 0.0);
     depth_snow = snowpack_stage1_jl(Ta, prcp,
       lai_o, lai_u,
       clumping,

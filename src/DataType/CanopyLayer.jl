@@ -27,6 +27,12 @@ set!(x::Layer3{FT}, replacement::Layer3{FT}) where {FT} = begin
   x.g = replacement.g
 end
 
+set!(x::Layer3{FT}, replacement::FT) where {FT} = begin
+  x.o = replacement
+  x.u = replacement
+  x.g = replacement
+end
+
 ## Layer2
 @with_kw_noshow mutable struct Layer2{FT} <: AbstractLayer{FT}
   o::FT = FT(0.0) # overlayer
@@ -41,6 +47,11 @@ Layer2(x::Layer2{FT}) = Layer2{FT}(; x.o, x.u)
 set!(x::Layer2{FT}, replacement::Layer2{FT}) where {FT} = begin
   x.o = replacement.o
   x.u = replacement.u
+end
+
+set!(x::Layer2{FT}, replacement::FT) where {FT} = begin
+  x.o = replacement
+  x.u = replacement
 end
 
 # Base_ops = ((:Base, :+), (:Base, :-), (:Base, :*), (:Base, :/))

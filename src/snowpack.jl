@@ -41,14 +41,14 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   ρ_snow::Ref{Float64},
   albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
 
+  # mass_snow_pre = Layer3(mass_snow)
   massMax_snow_o = 0.1 * lai_o
   massMax_snow_u = 0.1 * lai_u
 
-  ρ_new_snow = 67.9 + 51.3 * exp(Tair / 2.6)
+  ρ_new_snow = 67.9 + 51.3 * exp(Tair / 2.6) # bug at here
   albedo_v_Newsnow = 0.94
   albedo_n_Newsnow = 0.8
 
-  # mass_snow_pre = Layer3(mass_snow)
   snowrate = Tair > 0 ? 0 : prcp * ρ_w / ρ_new_snow
   snowrate_o = 0.0
 
@@ -66,12 +66,11 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   else
     mass_snow.o = mass_snow_pre.o
     perc_snow.o = clamp(mass_snow.o / massMax_snow_o, 0.0, 1.0)
-    area_snow.o = area_snow.o
 
     mass_snow.u = mass_snow_pre.u
-    perc_snow.u = mass_snow.u / massMax_snow_u
-    perc_snow.u = clamp(perc_snow.u, 0.0, 1.0)
-    area_snow.u = area_snow.u
+    perc_snow.u = clamp(mass_snow.u / massMax_snow_u, 0.0, 1.0)
+    # area_snow.o = area_snow.o # area 不变
+    # area_snow.u = area_snow.u
     δ_zs = 0.0
   end
 

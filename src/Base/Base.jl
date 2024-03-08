@@ -9,5 +9,6 @@ include("AirLayer.jl") # TODO: test this part
 include("fill_meteo.jl")
 include("lai2.jl")
 include("Vcmax.jl")
+include("snow_density.jl")
 
 export s_coszs, lai2, fill_meteo!
