@@ -2,7 +2,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
   version="julia", debug=false, kw...)
 
   
-  meteo = ClimateData()
+  meteo = Met()
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
@@ -17,7 +17,10 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
 
   df_out = DataFrame(zeros(n, length(vars)), vars)
   df_ET = DataFrame(zeros(n, length(vars_ET)), vars_ET)
+
+  # TODO: pass depth of soil as a parameter
   Tg = zeros(n, layer)
+  θ = zeros(n, layer)
 
   var_o = zeros(41)
   var_n = zeros(41)
@@ -58,6 +61,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
       Ra, mid_res, mid_ET, var; debug)
 
     Tg[i, :] .= p_soil.Tsoil_c[1:layer]
+    θ[i, :] .= p_soil.θ[1:layer]
     # Store updated variables array in temp array
     v2last .= var_n
 
@@ -65,5 +69,5 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
     fill_res!(df_ET, mid_ET, i)
   end
 
-  df_out, df_ET, Tg
+  df_out, df_ET, Tg, θ
 end

@@ -40,15 +40,16 @@ def shp2df(fc, outfile=None):
   return df
 
 # %%
-points = ee.FeatureCollection("users/kongdd/shp/flux-212")
-points = points.select(["site", "IGBP"])
+# points = ee.FeatureCollection("users/kongdd/shp/flux-212")
+points = ee.FeatureCollection("projects/gee-hydro/assets/wuhan").select(["site"])
 
-img = "OpenLandMap/SOL/SOL_SAND-WFRACTION_USDA-3A1A1A_M/v02"
+# ee.ImageCollection("MODIS/061/MCD12Q1")
+
+# img = "OpenLandMap/SOL/SOL_SAND-WFRACTION_USDA-3A1A1A_M/v02"
 img = "users/kongdd/BEPS/CI_240X_1Y_V1"
 img = ee.Image(img)
 
-proj = img.projection().getInfo()
-
+# proj = img.projection().getInfo()
 r = image_extract_points(img, points)
 r.getInfo()
 df = shp2df(r, "flux212_ClampingIndex.csv")

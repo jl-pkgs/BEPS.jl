@@ -18,9 +18,22 @@ include("Soil.jl")
 
 include("InterTempVars.jl")
 include("Radiation.jl")
-include("INPUT.jl")
+include("Met.jl")
 include("OUTPUT.jl")
 
+
+
+@with_kw mutable struct Cpools
+  Ccd::NTuple{3,Cdouble} = nzero(3)
+  Cssd::NTuple{3,Cdouble} = nzero(3)
+  Csmd::NTuple{3,Cdouble} = nzero(3)
+  Cfsd::NTuple{3,Cdouble} = nzero(3)
+  Cfmd::NTuple{3,Cdouble} = nzero(3)
+  Csm::NTuple{3,Cdouble} = nzero(3)
+  Cm::NTuple{3,Cdouble} = nzero(3)
+  Cs::NTuple{3,Cdouble} = nzero(3)
+  Cp::NTuple{3,Cdouble} = nzero(3)
+end
 
 # # current not used
 # @with_kw mutable struct TSoil
@@ -36,7 +49,7 @@ include("OUTPUT.jl")
 
 
 ## fill values
-const TypeDF = Union{Results,ClimateData,OutputET}
+const TypeDF = Union{Results,Met,OutputET}
 
 ## put struct into a data.frame
 function Base.getindex(x::T, i::Int)::FT where {T<:TypeDF}
@@ -55,10 +68,13 @@ function fill_res!(df::DataFrame, Res::T, k::Int) where {T<:TypeDF}
 end
 
 
+
+
+
 export 
   Leaf, 
   Soil, AbstractSoil, 
-  ClimateData, Results, Cpools,
+  Met, Results, Cpools,
   InterTempVars,
   OutputET, Radiation
 

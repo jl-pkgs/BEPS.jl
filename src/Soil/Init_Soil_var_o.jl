@@ -1,5 +1,5 @@
 function Init_Soil_var_o(p_soil::AbstractSoil, var_o::Vector,
-  meteo::ClimateData, parameter::Vector, par::NamedTuple)
+  meteo::Met, parameter::Vector, par::NamedTuple)
   # landcover::Int, soil_type::Int, Tsoil, soilwater, snowdepth
   # /***** initialize soil conditions, read soil parameters and set depth *****/
   Init_Soil_Parameters(par.landcover, par.soil_type, parameter[28], p_soil)

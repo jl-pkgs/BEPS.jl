@@ -24,3 +24,4 @@ docs/reference
 
 # Figures
 *.pdf
+.ipynb_checkpoints

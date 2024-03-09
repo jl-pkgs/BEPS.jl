@@ -54,7 +54,7 @@ function init_soil()
   hum = 7.0
   pre = 0.0
   wind = 2.0
-  meteo = ClimateData(rad, 0.0, temp, hum, pre, wind)
+  meteo = Met(rad, 0.0, temp, hum, pre, wind)
 
   Tsoil_p = collect(4.0:-1:-5.0)
   Tsoil_c = collect(-5.0:1:4.0)

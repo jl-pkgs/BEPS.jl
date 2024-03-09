@@ -28,6 +28,18 @@ function RH2q(Ta::FT, RH::FT)::FT
   ea2q(ea)
 end
 
+"""
+# Arguments
+- `q`  : specific humidity, g / kg
+- `tem`: air temperature, ℃
+"""
+function q2RH(q::FT, tem::FT)::FT
+  # Vapour pressure in mbar
+  ea = 0.46 * q * (tem + 273.16) / 100
+  es = 6.1078 * exp((17.269 * tem) / (237.3 + tem))
+  clamp(ea / es * 100, 0.0, 100.0)
+end
+
 
 cal_cp(q::FT)::FT = 1004.65 * (1 + 0.84 * q)
 

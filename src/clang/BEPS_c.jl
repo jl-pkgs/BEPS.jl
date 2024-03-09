@@ -25,14 +25,14 @@ include("module.jl")
 # end
 
 function inter_prg_c(jday, rstep,
-  lai::T, clumping::T, parameter::Vector{T}, meteo::ClimateData, CosZs::T,
+  lai::T, clumping::T, parameter::Vector{T}, meteo::Met, CosZs::T,
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; debug=false, kw...) where {T<:Real}
 
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
-      Ptr{ClimateData}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil_c}, Ptr{Results}, Ptr{OutputET}),
+      Ptr{Met}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil_c}, Ptr{Results}, Ptr{OutputET}),
     jday, rstep, lai, clumping, parameter,
     Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res), Ref(mid_ET))
 end

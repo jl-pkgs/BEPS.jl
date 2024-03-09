@@ -17,7 +17,7 @@ The inter-module function between main program and modules
 """
 function inter_prg_jl(
   jday::Int, hour::Int,
-  lai::T, clumping::T, param::Vector{T}, meteo::ClimateData, CosZs::T,
+  lai::T, clumping::T, param::Vector{T}, meteo::Met, CosZs::T,
   var_o::Vector{T}, var_n::Vector{T}, soil::AbstractSoil,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; kw...) where {T}
