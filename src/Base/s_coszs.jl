@@ -3,8 +3,8 @@
 
 # Example
 ```julia
-jday, j, lat, lon = 20, 12, 20., 120.
-s_coszs(jday, j, lat, lon)
+jday, hour, lat, lon = 20, 12, 20., 120.
+s_coszs(jday, hour, lat, lon)
 ```
 """
 function s_coszs(jday::Int, hour::Int, lat::Float64, lon::Float64)

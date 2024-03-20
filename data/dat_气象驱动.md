@@ -6,7 +6,7 @@
 
 - `doy`: day of year
 
-- `hour`: UTC时间，还是local时间，需要核对
+- `hour`: UTC时间
 
 - `rad`: Rs_in, W m-2
 

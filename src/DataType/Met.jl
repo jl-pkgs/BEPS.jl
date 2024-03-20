@@ -1,20 +1,31 @@
 export Met
 
+"""
+# Fields
+$(TYPEDFIELDS)
+"""
 @with_kw mutable struct Met
+  "Inward shortwave radiation, `[W m⁻²]`"
   Srad::Cdouble = 0.0
+  
+  "Inward longwave radiation, `[W m⁻²]`"
   LR::Cdouble = 0.0
+
+  "2m air temperature, `[°C]`"
   temp::Cdouble = 0.0
+  
+  "Relative Humidity, `[%]`"
   rh::Cdouble = 0.0
+  
+  "precipitation, `[mm/h]`"
   rain::Cdouble = 0.0
-  wind::Cdouble = 0.0
-  dr_o::Cdouble = 0.0
-  df_o::Cdouble = 0.0
-  dr_u::Cdouble = 0.0
-  df_u::Cdouble = 0.0
+  
+  "2m wind, `[m/s]`"
+  wind::Cdouble = 0.0  
 end
 
-Met(Srad, LR, temp, rh, rain, wind) = 
-  Met(; Srad, LR, temp, rh, rain, wind)
+# Met(Srad, LR, temp, rh, rain, wind) = 
+#   Met(; Srad, LR, temp, rh, rain, wind)
 
 
 """
