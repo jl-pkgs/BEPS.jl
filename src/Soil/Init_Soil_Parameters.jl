@@ -1,3 +1,15 @@
+"""
+    Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::Float64, p::Soil)
+
+Initialize soil parameters
+
+- `Ksat`         : saturated hydraulic conductivity
+- `porosity`     : porosity
+- `θ_vfc`        : field capacity
+- `θ_vwp`        : wilt point
+- `thermal_cond` : thermal conductivity
+- `ψ_sat`        : water potential at saturate
+"""
 function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::Float64, p::Soil)
   p.n_layer = 5
 
@@ -9,7 +21,12 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     p.alpha = 0.4
   end
 
-  p.dz[1:5] .= [0.05, 0.10, 0.20, 0.40, 1.25]
+  p.dz[1:5] .= [0.05, 0.10, 0.20, 0.40, 1.25] # BEPS V2023
+  # z = [0, 5, 15, 25, 35, 45, 55.0] ./ 100
+  # z_mid = (z[1:end-1] .+ z[2:end]) ./ 2
+  # dz = diff(z)
+  # n = length(z)
+  # p.dz[1:n-1] = dz
 
   p.r_root_decay = r_root_decay
   SoilRootFraction(p)
@@ -19,7 +36,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
 
   if stxt == 1  # sand
     b = [1.7, 1.9, 2.1, 2.3, 2.5]
-    Ksat = [0.000058, 0.000052, 0.000046, 0.000035, 0.000010]  # saturated hydraulic conductivity
+    Ksat = [0.000058, 0.000052, 0.000046, 0.000035, 0.000010]  # 
     porosity = [0.437, 0.437, 0.437, 0.437, 0.437]# porosity
     θ_vfc = [0.09, 0.09, 0.09, 0.09, 0.09]   # field capacity
     θ_vwp = [0.03, 0.03, 0.03, 0.03, 0.03]   # wilt point
@@ -28,7 +45,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
 
   elseif stxt == 2  # loamy sand
     b = [2.1, 2.3, 2.5, 2.7, 2.9]
-    Ksat = [0.000017, 0.000015, 0.000014, 0.000010, 0.000003]  # saturated hydraulic conductivity
+    Ksat = [0.000017, 0.000015, 0.000014, 0.000010, 0.000003] 
     porosity = [0.437, 0.437, 0.437, 0.437, 0.437]  # porosity
     θ_vfc = [0.21, 0.21, 0.21, 0.21, 0.21]  # field capacity
     θ_vwp = [0.06, 0.06, 0.06, 0.06, 0.06]  # wilt point
@@ -37,7 +54,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
 
   elseif stxt == 3  # sandy loam
     b = [3.1, 3.3, 3.5, 3.7, 3.9]
-    Ksat = [0.0000072, 0.00000648, 0.00000576, 0.00000432, 0.00000144]  # saturated hydraulic conductivity
+    Ksat = [0.0000072, 0.00000648, 0.00000576, 0.00000432, 0.00000144]
     porosity = [0.453, 0.453, 0.453, 0.453, 0.453]  # porosity
     θ_vfc = [0.21, 0.21, 0.21, 0.21, 0.21]  # field capacity
     θ_vwp = [0.10, 0.10, 0.10, 0.10, 0.10]  # wilt point
@@ -46,7 +63,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
 
   elseif stxt == 4  # loam
     b = [4.5, 4.7, 4.9, 5.1, 5.3]
-    Ksat = [0.0000037, 0.0000033, 0.00000296, 0.00000222, 0.00000074]  # saturated hydraulic conductivity
+    Ksat = [0.0000037, 0.0000033, 0.00000296, 0.00000222, 0.00000074] 
     porosity = [0.463, 0.463, 0.463, 0.463, 0.463]  # porosity
     θ_vfc = [0.27, 0.27, 0.27, 0.27, 0.27]  # field capacity
     θ_vwp = [0.12, 0.12, 0.12, 0.12, 0.12]  # wilt point
@@ -55,7 +72,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
 
   elseif stxt == 5  # silty loam
     b = [4.7, 4.9, 5.1, 5.3, 5.5]
-    Ksat = [0.0000019, 0.0000017, 0.00000152, 0.00000114, 0.00000038]  # saturated hydraulic conductivity
+    Ksat = [0.0000019, 0.0000017, 0.00000152, 0.00000114, 0.00000038] 
     porosity = [0.501, 0.501, 0.501, 0.501, 0.501]  # porosity
     θ_vfc = [0.33, 0.33, 0.33, 0.33, 0.33]  # field capacity
     θ_vwp = [0.13, 0.13, 0.13, 0.13, 0.13]  # wilt point

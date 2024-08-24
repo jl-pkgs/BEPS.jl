@@ -24,7 +24,7 @@ function soil_water_factor_v2(p::Soil)
   for i in 1:n
     p.dtt[i] = FW_VERSION == 1 ? p.f_root[i] * p.fpsisr[i] : p.f_root[i]
   end
-  dtt_sum = sum(p.dtt)
+  dtt_sum = sum(p.dtt) # 每层的土壤水分限制因子
 
   if dtt_sum < 0.000001
     p.f_soilwater = 0.1

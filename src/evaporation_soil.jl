@@ -1,8 +1,9 @@
 """
 
 # Return
-Ewater: evaporation from water
-Esoil: evaporation from soil
+- `Ewater`: evaporation from water
+- `Esoil`: evaporation from soil
+- `Esoil_g`: evaporation from snow
 """
 function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
   # perc_snow_g::Ref{FT}, 
