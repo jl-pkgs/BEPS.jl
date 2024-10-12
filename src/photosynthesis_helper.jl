@@ -107,15 +107,11 @@ end
   return rh
 end
 
-@fastmath function TEMP_FUNC(rate::T, eact::T, tprime::T, tref::T, t_lk::T)::T where {T<:Real}
-  rate * exp(tprime * eact / (tref * rugc * t_lk))
-end
-
 function LAMBDA(TK::T)::T where {T<:Real}
   y = 3149000.0 - 2370.0 * TK # J kg-1
   # add heat of fusion for melting ice
   if TK < 273.0
-    y += 333.0
+    y += 333.0 # TODO: unit error, `y += 333_000.0`
   end
   return y
 end
@@ -140,6 +136,5 @@ end
   prodt::T = rugc * topt * tl
   numm::T = hkin * exp(eakin * dtlopt / prodt)
   denom::T = hkin - eakin * (1.0 - exp(hkin * dtlopt / prodt))
-
   return rate * numm / denom
 end
