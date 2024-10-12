@@ -58,7 +58,7 @@ end
   km_co2::Cdouble = 0.0     # Michaelis-Menten constant for CO2 (µmol mol-1)
   km_o2::Cdouble = 0.0      # Michaelis-Menten constant for O2 (mmol mol-1)
   tau::Cdouble = 0.0        # the specifity of Rubisco for CO2 compared with O2
-  resp_ld::Cdouble = 0.0    # leaf dark respiration (umol m-2 s-1)
+  Rd::Cdouble = 0.0    # leaf dark respiration (umol m-2 s-1)
   resp_ld25::Cdouble = 0.0  # leaf dark respiration at 25 deg C (umol m-2 s-1)
   Jₓ::Cdouble = 0.0  # the flux of electrons through the thylakoid membrane (umol m-2 s-1)
   α_ps::Cdouble = 0.0
@@ -74,7 +74,7 @@ end
 
   # double root1, root2, root3;
   # double root_min = 0, root_max = 0, root_mid = 0;
-  ang_L::Cdouble = 0.0
+  ψ::Cdouble = 0.0
   j_sucrose::Cdouble = 0.0        # net photosynthesis rate limited by sucrose synthesis (umol m-2 s-1)
   # double wc, wj, psguess;  # gross photosynthesis rate limited by light (umol m-2 s-1)
   # double Aquad, Bquad, Cquad;
@@ -127,7 +127,7 @@ end
   if (2.0 * PPFD > 10)
     resp_ld25 *= 0.4
   end
-  resp_ld = TEMP_FUNC(resp_ld25, erd, tprime25, tk_25, temp_leaf_K)
+  Rd = TEMP_FUNC(resp_ld25, erd, tprime25, tk_25, temp_leaf_K)
 
   #	jmopt = 29.1 + 1.64*vc_opt; Chen 1999, Eq. 7
   jmopt = 2.39 * vc_opt - 14.2
@@ -184,57 +184,49 @@ end
     d_ps = Γ
   end
 
-  # If `wj` or `wc` are less than resp_ld then A would probably be less than
-  # zero. This would yield a negative stomatal conductance. In this case, assume
-  # `gs` equals the cuticular value. This assumptions yields a quadratic rather
-  # than cubic solution for A.
-  if (wj <= resp_ld || wc <= resp_ld)
+  # If `wj` or `wc` are less than resp_ld then A would probably be less than 0.
+  # This would yield a negative stomatal conductance. In this case, assume `gs`
+  # equals the cuticular value. This assumptions yields a quadratic rather than
+  # cubic solution for A.
+  if (wj <= Rd || wc <= Rd)
     @goto quad
   end
 
-  # cubic solution:
-  #  A^3 + p A^2 + q A + r = 0
-  denom = e_ps * α_ps
+  """
+  Cubic solution: `A^3 + p A^2 + q A + r = 0`. Let `A = x - p / 3`, => `x^3 + ax + b = 0`
+  Rank roots #1, #2 and #3 according to the minimum, intermediate and maximum value
+  """
+  function solve_cubic(α::T, β::T, γ::T, θ::T, Rd::T, a::T, b::T, d::T, e::T, ca::T) where {T<:Real}
+    m = e * α
 
-  p_cubic = (e_ps * β_ps + b_ps * θ_ps - a_ps * α_ps + e_ps * resp_ld * α_ps)
-  p_cubic /= denom
+    p = (e * β + b * θ - a * α + e * Rd * α) / m
+    q = (e * γ + (b * γ / ca) - a * β + a * d * θ + e * Rd * β + Rd * b * θ) / m
+    r = (-a * γ + a * d * γ / ca + e * Rd * γ + Rd * b * γ / ca) / m
 
-  q_cubic = (e_ps * γ_ps + (b_ps * γ_ps / ca) - a_ps * β_ps + a_ps * d_ps * θ_ps +
-             e_ps * resp_ld * β_ps + resp_ld * b_ps * θ_ps)
-  q_cubic /= denom
+    # Use solution from Numerical Recipes from Press
+    Q = (p * p - 3.0 * q) / 9.0
+    U = (2.0 * p * p * p - 9.0 * p * q + 27.0 * r) / 54.0
+    (Q < 0) && return T(NaN)
 
-  r_cubic = -a_ps * γ_ps + a_ps * d_ps * γ_ps / ca +
-            e_ps * resp_ld * γ_ps + resp_ld * b_ps * γ_ps / ca
-  r_cubic /= denom
+    r3q = U / sqrt(Q * Q * Q)
+    r3q = clamp(r3q, -1, 1) #  by G. Mo
+    ψ = acos(r3q)
 
-  # Use solution from Numerical Recipes from Press
-  Qroot = (p_cubic * p_cubic - 3.0 * q_cubic) / 9.0
-  Rroot = (2.0 * p_cubic * p_cubic * p_cubic - 9.0 * p_cubic * q_cubic + 27.0 * r_cubic) / 54.0
-
-  (Qroot < 0) && (@goto quad)
-
-  # @show Qroot
-  r3q = Rroot / sqrt(Qroot * Qroot * Qroot)
-  r3q = clamp(r3q, -1, 1) #  by G. Mo
-  ang_L = acos(r3q)
-
-  root1 = -2.0 * sqrt(Qroot) * cos(ang_L / 3.0) - p_cubic / 3.0  # real roots
-  root2 = -2.0 * sqrt(Qroot) * cos((ang_L + PI2) / 3.0) - p_cubic / 3.0
-  root3 = -2.0 * sqrt(Qroot) * cos((ang_L - PI2) / 3.0) - p_cubic / 3.0
-
-  # Here A = x - p / 3, allowing the cubic expression to be expressed
-  # as: x^3 + ax + b = 0
-  # rank roots #1, #2 and #3 according to the minimum, intermediate and maximum value
-  An = findroot(root1, root2, root3)
+    root1 = -2sqrt(Q) * cos(ψ / 3.0) - p / 3.0  # real roots
+    root2 = -2sqrt(Q) * cos((ψ + 2pi) / 3.0) - p / 3.0
+    root3 = -2sqrt(Q) * cos((ψ - 2pi) / 3.0) - p / 3.0
+    An = findroot(root1, root2, root3)
+    return An
+  end
+  An = solve_cubic(α_ps, β_ps, γ_ps, θ_ps, Rd, a_ps, b_ps, d_ps, e_ps, ca)
+  isnan(An) && (@goto quad)
 
   # also test for sucrose limitation of photosynthesis, as suggested by Collatz.  Js=Vmax/2
-  j_sucrose = Vcmax / 2.0 - resp_ld
+  j_sucrose = Vcmax / 2.0 - Rd
   An = min(An, j_sucrose)
-  # Stomatal conductance for water vapor
-
-  # Forests are hypostomatous.
-  # Hence, we don't divide the total resistance
-  # by 2 since transfer is going on only one side of a leaf.
+  
+  # Forests are hypostomatous. Hence, we don't divide the total resistance by 2
+  # since transfer is going on only one side of a leaf.
 
   # if A < 0 then gs should go to cuticular value and recalculate A
   # using quadratic solution
@@ -262,8 +254,8 @@ end
   denom = g_lb_c * b_co2
 
   Aquad = delta_1 * e_ps
-  Bquad = -ps_1 * e_ps - a_ps * delta_1 + e_ps * resp_ld * delta_1 - b_ps * denom
-  Cquad = a_ps * ps_1 - a_ps * d_ps * denom - e_ps * resp_ld * ps_1 - resp_ld * b_ps * denom
+  Bquad = -ps_1 * e_ps - a_ps * delta_1 + e_ps * Rd * delta_1 - b_ps * denom
+  Cquad = a_ps * ps_1 - a_ps * d_ps * denom - e_ps * Rd * ps_1 - Rd * b_ps * denom
 
   product = Bquad * Bquad - 4.0 * Aquad * Cquad
   if (product >= 0.0)
@@ -287,15 +279,14 @@ end
 
 
 
-@fastmath function SFC_VPD(temp_leaf_K::Float64, leleafpt::Float64,
+@fastmath function SFC_VPD(T_leaf_K::Float64, leleafpt::Float64,
   fact_latent::Float64, bound_vapor::Float64, rhova_kg::Float64)::Float64
-
-  es_leaf = ES(temp_leaf_K)
-  rhov_sfc = (leleafpt / (fact_latent)) * bound_vapor + rhova_kg # kg m-3
-  e_sfc = rhov_sfc * temp_leaf_K / 0.2165 # mb
-  vpd_sfc = es_leaf - e_sfc # mb
-  rhum_leaf = 1.0 - vpd_sfc / es_leaf # 0 to 1.0
-  return rhum_leaf
+  es = ES(T_leaf_K)
+  ρv = (leleafpt / (fact_latent)) * bound_vapor + rhova_kg # kg m-3
+  e = ρv * T_leaf_K / 0.2165 # mb
+  vpd = es - e # mb
+  rh = 1.0 - vpd / es # 0 to 1.0
+  return rh
 end
 
 @fastmath function TEMP_FUNC(rate::Float64, eact::Float64, tprime::Float64, tref::Float64, t_lk::Float64)::Float64
@@ -341,7 +332,7 @@ function findroot(root1::Float64, root2::Float64, root3::Float64)::Float64
   root_min::Float64 = 0.0
   root_mid::Float64 = 0.0
   root_max::Float64 = 0.0
-  aphoto::Float64 = 0.0
+  A::Float64 = 0.0
 
   if root1 <= root2 && root1 <= root3
     root_min = root1
@@ -378,16 +369,15 @@ function findroot(root1::Float64, root2::Float64, root3::Float64)::Float64
 
   # find out where roots plop down relative to the x-y axis
   if root_min > 0 && root_mid > 0 && root_max > 0
-    aphoto = root_min
+    A = root_min
   end
 
   if root_min < 0 && root_mid < 0 && root_max > 0
-    aphoto = root_max
+    A = root_max
   end
 
   if root_min < 0 && root_mid > 0 && root_max > 0
-    aphoto = root_mid
+    A = root_mid
   end
-  # root_min, root_mid, root_max, 
-  aphoto
+  A
 end
