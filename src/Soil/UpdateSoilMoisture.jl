@@ -14,7 +14,7 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
 
   n = p.n_layer
   @unpack dz, f_water, Ksat, KK, km, b,
-  ψ_sat, ψ, 
+  ψ_sat, ψ,
   θ_sat, θ, θ_prev = p
   θ_prev .= θ # assign current soil moisture to prev
 
@@ -31,6 +31,7 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
   end
 
   # Max infiltration calculation
+  # Ksat * (1 + (θ_sat - θ_prev) / dz * ψ_sat / θ_sat * b )
   inf_max = f_water[1] * Ksat[1] * (1 + (θ_sat[1] - θ_prev[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
   inf = max(f_water[1] * (p.depth_water / kstep + p.r_rain_g), 0)
   inf = clamp(inf, 0, inf_max)

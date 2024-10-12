@@ -25,3 +25,5 @@ docs/reference
 # Figures
 *.pdf
 .ipynb_checkpoints
+
+__pycache__

@@ -39,32 +39,32 @@ end
   T_leaf::Cdouble, LH_leaf::Cdouble)
 
   Gs_w::Cdouble = 0.0
-  aphoto::Cdouble = 0.0
+  An::Cdouble = 0.0
   ci::Cdouble = 0.0
 
   g_lb_c::Cdouble = 0.0              # leaf laminar boundary layer condunctance to CO2 (mol m-2 s-1)
-  rh_leaf::Cdouble = 0.0             # relative humidity at leaf surface (0-1)
+  RH_leaf::Cdouble = 0.0             # relative humidity at leaf surface (0-1)
   temp_leaf_K::Cdouble = 0.0         # leaf temperature (K)
   gs_co2_mole::Cdouble = 0.0         # stomatal conductance to CO2 (mol m-2 s-1)
   gs_h2o_mole::Cdouble = 0.0         # stomatal conductance to h2o (mol m-2 s-1)
-  bc::Cdouble = 0.0                  # temporary variable
+  K::Cdouble = 0.0                  # temporary variable
   cs::Cdouble = 0.0                  # CO2 concentration at leaf surface (ppm)
   b_co2::Cdouble = 0.0      # the intercept term in BWB model (mol CO2 m-2 s-1): b_h2o/1.6
   m_co2::Cdouble = 0.0      # the slope in BWB model: m_h2o/1.6
-  gammac::Cdouble = 0.0     # CO2 compensation point (ppm)
+  Γ::Cdouble = 0.0     # CO2 compensation point (ppm)
   jmopt::Cdouble = 0.0      # the maximum potential electron transport rate at 25 deg C (umol m-2 s-1)
-  jmax::Cdouble = 0.0       # the maximum potential electron transport rate (umol m-2 s-1)
-  vcmax::Cdouble = 0.0      # the maximum velocities of carboxylation of Rubisco (umol m-2 s-1)
+  Jmax::Cdouble = 0.0       # the maximum potential electron transport rate (umol m-2 s-1)
+  Vcmax::Cdouble = 0.0      # the maximum velocities of carboxylation of Rubisco (umol m-2 s-1)
   km_co2::Cdouble = 0.0     # Michaelis-Menten constant for CO2 (µmol mol-1)
   km_o2::Cdouble = 0.0      # Michaelis-Menten constant for O2 (mmol mol-1)
   tau::Cdouble = 0.0        # the specifity of Rubisco for CO2 compared with O2
   resp_ld::Cdouble = 0.0    # leaf dark respiration (umol m-2 s-1)
   resp_ld25::Cdouble = 0.0  # leaf dark respiration at 25 deg C (umol m-2 s-1)
-  j_photon::Cdouble = 0.0  # the flux of electrons through the thylakoid membrane (umol m-2 s-1)
-  alpha_ps::Cdouble = 0.0
-  beta_ps::Cdouble = 0.0
-  gamma_ps::Cdouble = 0.0
-  theta_ps::Cdouble = 0.0
+  Jₓ::Cdouble = 0.0  # the flux of electrons through the thylakoid membrane (umol m-2 s-1)
+  α_ps::Cdouble = 0.0
+  β_ps::Cdouble = 0.0
+  γ_ps::Cdouble = 0.0
+  θ_ps::Cdouble = 0.0
   denom::Cdouble = 0.0
   p_cubic::Cdouble = 0.0
   q_cubic::Cdouble = 0.0
@@ -86,9 +86,9 @@ end
   tprime25::Cdouble = 0.0
 
   ca::Cdouble = CO2_air                    # atmospheric co2 concentration (ppm)
-  iphoton::Cdouble = 4.55 * 0.5 * Rsn_leaf # incident photosynthetic photon flux density (PPFD) umol m-2 s-1
-  if (2 * iphoton < 1)
-    iphoton = 0.0
+  PPFD::Cdouble = 4.55 * 0.5 * Rsn_leaf # incident photosynthetic photon flux density (PPFD) umol m-2 s-1
+  if (2 * PPFD < 1)
+    PPFD = 0.0
   end
 
   temp_leaf_K = T_leaf + 273.13
@@ -102,7 +102,7 @@ end
   pstat273 = 0.022624 / (273.16 * press_bars)
 
   T_Kelvin = T_leaf + 273.13
-  rhova_g = e_air * 2165 / T_Kelvin  # absolute humidity, g m-3
+  rhova_g = e_air * 2165 / T_Kelvin   # absolute humidity, g m-3
   rhova_kg = rhova_g / 1000.0         # absolute humidity, kg m-3
 
   g_lb_c = 1.0 / (1.0 / g_lb_w * 1.6 * temp_leaf_K * (pstat273))
@@ -110,7 +110,7 @@ end
   m_co2 = m_h2o / 1.6
   b_co2 = b_h2o / 1.6
 
-  rh_leaf = SFC_VPD(temp_leaf_K, LH_leaf, fact_latent, bound_vapor, rhova_kg)
+  RH_leaf = SFC_VPD(temp_leaf_K, LH_leaf, fact_latent, bound_vapor, rhova_kg)
   tprime25 = temp_leaf_K - tk_25  # temperature difference
 
   #/*****  Use Arrhenius Eq. to compute KC and km_o2  *****/
@@ -118,23 +118,22 @@ end
   km_o2 = TEMP_FUNC(ko25, eko, tprime25, tk_25, temp_leaf_K)
   tau = TEMP_FUNC(tau25, ektau, tprime25, tk_25, temp_leaf_K)
 
-  bc = km_co2 * (1.0 + o2 / km_o2)
-
-  gammac = 0.5 * o2 / tau * 1000.0  # umol mol-1
+  K = km_co2 * (1.0 + o2 / km_o2)
+  Γ = 0.5 * o2 / tau * 1000.0  # umol mol-1
 
   resp_ld25 = vc_opt * 0.004657
 
   # Bin Chen: check this later. reduce respiration by 40% in light according to Amthor
-  if (2.0 * iphoton > 10)
+  if (2.0 * PPFD > 10)
     resp_ld25 *= 0.4
   end
   resp_ld = TEMP_FUNC(resp_ld25, erd, tprime25, tk_25, temp_leaf_K)
 
-  #	jmopt = 29.1 + 1.64*vc_opt;
+  #	jmopt = 29.1 + 1.64*vc_opt; Chen 1999, Eq. 7
   jmopt = 2.39 * vc_opt - 14.2
 
-  jmax = TBOLTZ(jmopt, ejm, toptjm, temp_leaf_K)    # Apply temperature correction to JMAX
-  vcmax = TBOLTZ(vc_opt, evc, toptvc, temp_leaf_K)  # Apply temperature correction to vcmax
+  Jmax = TBOLTZ(jmopt, ejm, toptjm, temp_leaf_K)    # Apply temperature correction to JMAX
+  Vcmax = TBOLTZ(vc_opt, evc, toptvc, temp_leaf_K)  # Apply temperature correction to vcmax
 
   # /*
   #  * APHOTO = PG - resp_ld, net photosynthesis is the difference
@@ -145,10 +144,10 @@ end
   #  * Gs from Ball-Berry is for water vapor.  It must be divided
   #  * by the ratio of the molecular diffusivities to be valid for A
   #  */
-  alpha_ps = 1.0 + (b_co2 / g_lb_c) - m_co2 * rh_leaf * f_soilwater
-  beta_ps = ca * (g_lb_c * m_co2 * rh_leaf * f_soilwater - 2.0 * b_co2 - g_lb_c)
-  gamma_ps = ca * ca * g_lb_c * b_co2
-  theta_ps = g_lb_c * m_co2 * rh_leaf * f_soilwater - b_co2
+  α_ps = 1.0 + (b_co2 / g_lb_c) - m_co2 * RH_leaf * f_soilwater
+  β_ps = ca * (g_lb_c * m_co2 * RH_leaf * f_soilwater - 2.0 * b_co2 - g_lb_c)
+  γ_ps = ca * ca * g_lb_c * b_co2
+  θ_ps = g_lb_c * m_co2 * RH_leaf * f_soilwater - b_co2
 
   # /*
   #  * Test for the minimum of Wc and Wj.  Both have the form:
@@ -160,51 +159,52 @@ end
   #  * estimate of J according to Farquhar and von Cammerer (1981)
   #  */
   # /*if (jmax > 0)
-  #     j_photon = qalpha * iphoton / sqrt(1. +(qalpha2 * iphoton * iphoton / (jmax * jmax)));
+  #     Jₓ = qalpha * iphoton / sqrt(1. +(qalpha2 * iphoton * iphoton / (jmax * jmax)));
   # else
-  #     j_photon = 0;*/
+  #     Jₓ = 0;*/
   # J photon from Harley
-  j_photon = jmax * iphoton / (iphoton + 2.1 * jmax)
+  Jₓ = Jmax * PPFD / (PPFD + 2.1 * Jmax) # chen1999, eq.6
 
   # initial guess of intercellular CO2 concentration to estimate Wc and Wj:
-  wj = j_photon * (cii - gammac) / (4.0 * cii + 8.0 * gammac)
-  wc = vcmax * (cii - gammac) / (cii + bc)
+  wj = Jₓ * (cii - Γ) / (4.0 * cii + 8.0 * Γ)
+  wc = Vcmax * (cii - Γ) / (cii + K)
 
   if (wj < wc)
     # for Harley and Farquhar type model for Wj
-    psguess = wj
-    a_ps = j_photon
-    b_ps = 8.0 * gammac
+    ps_guess = wj
+    a_ps = Jₓ
+    b_ps = 8.0 * Γ
     e_ps = 4.0
-    d_ps = gammac
+    d_ps = Γ
   else
-    psguess = wc
-    a_ps = vcmax
-    b_ps = bc
+    ps_guess = wc
+    a_ps = Vcmax
+    b_ps = K
     e_ps = 1.0
-    d_ps = gammac
+    d_ps = Γ
   end
 
-  # if wj or wc are less than resp_ld then A would probably be less than zero.  This would yield a
-  # negative stomatal conductance.  In this case, assume gs equals the cuticular value. This
-  # assumptions yields a quadratic rather than cubic solution for A
+  # If `wj` or `wc` are less than resp_ld then A would probably be less than
+  # zero. This would yield a negative stomatal conductance. In this case, assume
+  # `gs` equals the cuticular value. This assumptions yields a quadratic rather
+  # than cubic solution for A.
   if (wj <= resp_ld || wc <= resp_ld)
     @goto quad
   end
 
   # cubic solution:
   #  A^3 + p A^2 + q A + r = 0
-  denom = e_ps * alpha_ps
+  denom = e_ps * α_ps
 
-  p_cubic = (e_ps * beta_ps + b_ps * theta_ps - a_ps * alpha_ps + e_ps * resp_ld * alpha_ps)
+  p_cubic = (e_ps * β_ps + b_ps * θ_ps - a_ps * α_ps + e_ps * resp_ld * α_ps)
   p_cubic /= denom
 
-  q_cubic = (e_ps * gamma_ps + (b_ps * gamma_ps / ca) - a_ps * beta_ps + a_ps * d_ps * theta_ps +
-             e_ps * resp_ld * beta_ps + resp_ld * b_ps * theta_ps)
+  q_cubic = (e_ps * γ_ps + (b_ps * γ_ps / ca) - a_ps * β_ps + a_ps * d_ps * θ_ps +
+             e_ps * resp_ld * β_ps + resp_ld * b_ps * θ_ps)
   q_cubic /= denom
 
-  r_cubic = -a_ps * gamma_ps + a_ps * d_ps * gamma_ps / ca +
-            e_ps * resp_ld * gamma_ps + resp_ld * b_ps * gamma_ps / ca
+  r_cubic = -a_ps * γ_ps + a_ps * d_ps * γ_ps / ca +
+            e_ps * resp_ld * γ_ps + resp_ld * b_ps * γ_ps / ca
   r_cubic /= denom
 
   # Use solution from Numerical Recipes from Press
@@ -225,14 +225,11 @@ end
   # Here A = x - p / 3, allowing the cubic expression to be expressed
   # as: x^3 + ax + b = 0
   # rank roots #1, #2 and #3 according to the minimum, intermediate and maximum value
-  aphoto = findroot(root1, root2, root3)
+  An = findroot(root1, root2, root3)
 
   # also test for sucrose limitation of photosynthesis, as suggested by Collatz.  Js=Vmax/2
-  j_sucrose = vcmax / 2.0 - resp_ld
-
-  if (j_sucrose < aphoto)
-    aphoto = j_sucrose
-  end
+  j_sucrose = Vcmax / 2.0 - resp_ld
+  An = min(An, j_sucrose)
   # Stomatal conductance for water vapor
 
   # Forests are hypostomatous.
@@ -241,7 +238,7 @@ end
 
   # if A < 0 then gs should go to cuticular value and recalculate A
   # using quadratic solution
-  if aphoto <= 0.0
+  if An <= 0.0
     @goto quad
   else
     @goto OUTDAT
@@ -271,22 +268,20 @@ end
   product = Bquad * Bquad - 4.0 * Aquad * Cquad
   if (product >= 0.0)
     #	*aphoto = (-Bquad + sqrt(product)) / (2.0 * Aquad);
-    aphoto = (-Bquad - sqrt(product)) / (2.0 * Aquad)
+    An = (-Bquad - sqrt(product)) / (2.0 * Aquad)
   end
 
-
   @label OUTDAT
-  aphoto = max(0.0, aphoto)
+  An = max(0.0, An)
+  cs = ca - An / g_lb_c
 
-  cs = ca - aphoto / g_lb_c
-
-  gs_h2o_mole = (f_soilwater * m_h2o * rh_leaf * aphoto / cs) + b_h2o  # mol m-2 s-1
+  gs_h2o_mole = (f_soilwater * m_h2o * RH_leaf * An / cs) + b_h2o  # mol m-2 s-1
   gs_co2_mole = gs_h2o_mole / 1.6
 
-  ci = cs - aphoto / gs_co2_mole
+  ci = cs - An / gs_co2_mole
   Gs_w = gs_h2o_mole * temp_leaf_K * (pstat273)  # m s-1
 
-  return Gs_w, aphoto, ci
+  return Gs_w, An, ci
 end
 
 

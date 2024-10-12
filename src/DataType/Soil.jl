@@ -8,10 +8,10 @@ abstract type AbstractSoil end
   depth_water ::Cdouble = Cdouble(0)
   depth_snow  ::Cdouble = Cdouble(0)
 
-  r_rain_g    ::Cdouble = Cdouble(0)
+  r_rain_g    ::Cdouble = Cdouble(0)        # the rainfall rate, un--on understory g--on ground surface  m/s
   soil_r      ::Cdouble = Cdouble(0)
   r_drainage  ::Cdouble = Cdouble(0)
-  r_root_decay::Cdouble = Cdouble(0)
+  r_root_decay::Cdouble = Cdouble(0)        # decay_rate_of_root_distribution, 根系分布衰减率
   ψ_min       ::Cdouble = Cdouble(0)
   alpha       ::Cdouble = Cdouble(0)
   f_soilwater ::Cdouble = Cdouble(0)
