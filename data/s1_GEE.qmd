@@ -3,7 +3,7 @@
 
 ```{julia}
 using EarthEngine
-# Initialize()
+Initialize()
 
 dem = EE.Image("USGS/SRTMGL1_003")
 xy = Point(86.9250, 27.9881)

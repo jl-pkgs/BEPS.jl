@@ -1,8 +1,8 @@
 # BEPS.jl
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://CUG-hydro.github.io/BEPS.jl/dev)
-[![CI](https://github.com/CUG-hydro/BEPS.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/CUG-hydro/BEPS.jl/actions/workflows/CI.yml)
-[![Codecov](https://codecov.io/gh/CUG-hydro/BEPS.jl/branch/master/graph/badge.svg)](https://app.codecov.io/gh/CUG-hydro/BEPS.jl/tree/master)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://jl-pkgs.github.io/BEPS.jl/dev)
+[![CI](https://github.com/jl-pkgs/BEPS.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/jl-pkgs/BEPS.jl/actions/workflows/CI.yml)
+[![Codecov](https://codecov.io/gh/jl-pkgs/BEPS.jl/branch/master/graph/badge.svg)](https://app.codecov.io/gh/jl-pkgs/BEPS.jl/tree/master)
 
 Boreal Ecosystem Productivity Simulator in Julia
 
@@ -22,16 +22,16 @@ Boreal Ecosystem Productivity Simulator in Julia
 - For developers
 
   ```bash
-  git clone https://github.com/CUG-hydro/BEPS.jl
+  git clone https://github.com/jl-pkgs/BEPS.jl
   cd BEPS.jl/deps
-  git clone https://github.com/CUG-hydro/BEPS.c
+  git clone https://github.com/jl-pkgs/BEPS.c
   ```
 
 - For users
 
   ```bash
   # In Julia
-  ] add https://github.com/CUG-hydro/BEPS.jl
+  ] add https://github.com/jl-pkgs/BEPS.jl
   ```
 
 ## Usage

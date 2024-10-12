@@ -1,7 +1,5 @@
-using Test
-using BEPS
+using BEPS, DataFrames, Test
 using BEPS: path_proj
-using DataFrames
 
 function nanmax(x)
   x = collect(x)

@@ -1,4 +1,13 @@
 # %%
+## add pwd to path
+# import os
+# import sys
+# sys.path.append(os.getcwd())
+
+from ee_extract import *
+
+
+# %%
 import argparse
 import ee
 import pandas as pd
@@ -13,23 +22,6 @@ ee.Initialize()
 
 # %%
 # Define the function to extract points from an image (internal)
-def image_extract_points(img, points, proj=None, set_date=False):
-  if proj == None: proj = img.projection().getInfo()
-  options = {
-      'collection': points,
-      'reducer': 'first',
-      'crs': proj['crs'],
-      'crsTransform': proj['transform'],
-      'tileScale': 16
-  }
-  date = ee.Date(img.get('system:time_start')).format('yyyy-MM-dd')
-
-  def tidy_props(f):
-    f = ee.Feature(None).copyProperties(f)
-    if set_date: f = f.set('date', date)
-    return f
-  
-  return img.reduceRegions(**options).map(tidy_props)
 
 def shp2df(fc, outfile=None):
   data = fc.getInfo().get('features')
@@ -57,34 +49,6 @@ df
 
 # %%
 # Define the function to export an image to Drive
-def export_image(img, task, prefix=""):
-    task = prefix + task
-    proj = img.projection().getInfo()
-    
-    # Export the image to Drive as a GeoTIFF file
-    ee.batch.Export.image.toDrive(
-        image=img,
-        description=task,
-        folder="gee",
-        crs=proj['crs'],
-        crsTransform=proj['transform'],
-        maxPixels=1e13,
-        fileNamePrefix=task,
-        fileFormat='GeoTIFF'
-    ).start()
-
-# Define the function to extract points from an image collection
-def col_extract_points(col, task, points):
-    proj = col.first().select(0).projection().getInfo()
-    res = col.map(lambda img: image_extract_points(img, points, proj, set_date=True)).flatten()
-    
-    ee.batch.Export.table.toDrive(
-        collection=res,
-        description=task,
-        folder="gee",
-        fileNamePrefix=task,
-        fileFormat="GeoJSON"
-    ).start()
 
 def main():
     parser = argparse.ArgumentParser(description="Google Earth Engine Command Line Tool")

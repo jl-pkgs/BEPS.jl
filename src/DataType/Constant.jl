@@ -94,7 +94,7 @@ const ekc::Float64 = 80500.0     # Activation energy for K of CO2; J mol-1
 const eko::Float64 = 14500.0     # Activation energy for K of O2, J mol-1
 const erd::Float64 = 38000.0     # activation energy for dark respiration, eg Q10=2
 const ektau::Float64 = -29000.0  # J mol-1 (Jordan and Ogren, 1984)
-const tk_25::Float64 = 298.16    # absolute temperature at 25 C
+const TK25::Float64 = 298.16    # absolute temperature at 25 C
 const toptvc::Float64 = 301.0    # optimum temperature for maximum carboxylation
 const toptjm::Float64 = 301.0    # optimum temperature for maximum electron transport
 const eabole::Float64 = 45162.0    # activation energy for bole respiration for Q10 = 2.02
