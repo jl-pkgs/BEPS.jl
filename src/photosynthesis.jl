@@ -137,7 +137,7 @@ function leaf_lambda(TK::T)::T where {T<:Real}
   y = 3149_000.0 - 2370.0 * TK # J kg-1
   # add heat of fusion for melting ice
   if TK < 273.0
-    y += 333.0 # TODO: unit error, `y += 333_000.0`
+    y += 333_000.0 # TODO: unit error, `y += 333_000.0`
   end
   return y
 end

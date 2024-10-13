@@ -107,7 +107,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
     albedo_v_snow[] = albedo_v_new
     albedo_n_snow[] = albedo_n_new
   end
-  min(depth_snow, 100.0) # 雪深过高，限制为10m即可
+  min(depth_snow, 10.0) # 雪深过高，限制为10m即可
 end
 
 

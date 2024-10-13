@@ -69,10 +69,20 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 
 - [ ] snowpack: depth_snow一直增加，一直到无穷
 
+> 2024-10-13
+
+- [x] `LAMBDA` function in the photosynthesis module, the unit of `lambda_ice`
+  is error, `333 J/kg` should be `333000 J/kg`.
+- [x] snowpack_stage1:
+  + `snowrate_o`未被初始化，导致`snowrate_o > 0`为`true`.
+  + 雪深最大设置为`10m`，防止不合理的不断累积：`*depth_snow=min(*mass_snow_g/(*density_snow), 10.0);`
+- [x] snowpack_stage3: 
+  `max(mass_water_frozen,*depth_water*density_water)`, `max` should be `min`
+
 ## Researches
 
-- [ ] 研究土壤温度和空气温度之间的关系，为sentinel-2遥感数据反演提供依据
-- [ ] 光周期影响测试
+<!-- - [ ] 研究土壤温度和空气温度之间的关系，为sentinel-2遥感数据反演提供依据
+- [ ] 光周期影响测试 -->
 
 ## References
 

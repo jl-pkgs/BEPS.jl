@@ -1,7 +1,7 @@
 name = "BEPS"
 uuid = "28258c4d-138d-4793-867a-264e32c782b1"
 authors = ["Dongdong Kong <kongdd@users.noreply.github.com>"]
-version = "0.1.5"
+version = "0.1.6"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
