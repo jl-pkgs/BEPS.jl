@@ -23,11 +23,11 @@ end
 function snowpack_stage1(Tair::Float64, prcp::Float64,
   lai_o::Float64, lai_u::Float64, clumping::Float64,
   mass_snow_pre::Layer3{Float64},
-  mass_snow::Layer3{Float64},
-  perc_snow::Layer3{Float64},
-  area_snow::Layer2{Float64},
-  depth_snow::Float64, ρ_snow::Ref{Float64},
-  albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
+  mass_snow::Layer3{Float64}, # by reference
+  perc_snow::Layer3{Float64}, # by reference
+  area_snow::Layer2{Float64}, # by reference
+  depth_snow::Float64, 
+  ρ_snow::Ref{Float64}, albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
 
   _mass_snow_o = Ref(mass_snow.o)
   _mass_snow_u = Ref(mass_snow.u)
