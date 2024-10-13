@@ -1,4 +1,4 @@
-export 
+export
   evaporation_soil_c,
   evaporation_canopy_c,
   netRadiation_c,
@@ -37,11 +37,8 @@ end
 function netRadiation_c(shortRad_global, CosZs,
   temp_o, temp_u, temp_g,
   lai_o, lai_u, lai_os, lai_us, lai::Leaf, Ω, temp_air, rh,
-  α_snow_v, α_snow_n,
-  percArea_snow_o, percArea_snow_u, perc_snow_g,
-  α_v_o, α_n_o, α_v_u, α_n_u, α_v_g, α_n_g,
-  # netRad_o::TypeRef, netRad_u::TypeRef, netRad_g::TypeRef,
-  Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
+  α_snow_v, α_snow_n, α_v::Layer3{FT}, α_n::Layer3{FT},
+  percArea_snow_o, percArea_snow_u, perc_snow_g, Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
 
   netRad_o = init_dbl()
   netRad_u = init_dbl()
@@ -51,7 +48,7 @@ function netRadiation_c(shortRad_global, CosZs,
     (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Leaf}, Ptr{Leaf}),
     shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai, Ω, temp_air, rh, α_snow_v, α_snow_n, percArea_snow_o, percArea_snow_u, perc_snow_g,
-    α_v_o, α_n_o, α_v_u, α_n_u, α_v_g, α_n_g,
+    α_v.o, α_n.o, α_v.u, α_n.u, α_v.g, α_n.g,
     netRad_o, netRad_u, netRad_g, Ref(Rn_Leaf), Ref(Rns_Leaf))
 
   netRad_o[], netRad_u[], netRad_g[]

@@ -3,27 +3,24 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
   lai::Leaf,
   Ω::FT, Tair::FT, RH::FT,
-  α_snow_v::FT, α_snow_n::FT,
+  α_snow_v::FT, α_snow_n::FT, α_v::Layer3{FT}, α_n::Layer3{FT},
   percArea_snow_o::FT, percArea_snow_u::FT, perc_snow_g::FT,
-  α_v_o::FT, α_n_o::FT, α_v_u::FT, α_n_u::FT,
-  α_v_g::FT, α_n_g::FT,
-  # Rn_o::FT, Rn_u::FT, Rn_g::FT,
   Rn_Leaf::Leaf,
   Rns_Leaf::Leaf,
   Rnl_Leaf::Leaf, Ra::Radiation)
   
   # calculate α of canopy in this step
-  α_v_os::FT = α_v_o * (1.0 - percArea_snow_o) + α_snow_v * percArea_snow_o  # visible, overstory
-  α_n_os::FT = α_n_o * (1.0 - percArea_snow_o) + α_snow_n * percArea_snow_o  # near infrared
-  α_v_us::FT = α_v_u * (1.0 - percArea_snow_u) + α_snow_v * percArea_snow_u  # understory
-  α_n_us::FT = α_n_u * (1.0 - percArea_snow_u) + α_snow_n * percArea_snow_u
+  α_v_os::FT = α_v.o * (1.0 - percArea_snow_o) + α_snow_v * percArea_snow_o  # visible, overstory
+  α_n_os::FT = α_n.o * (1.0 - percArea_snow_o) + α_snow_n * percArea_snow_o  # near infrared
+  α_v_us::FT = α_v.u * (1.0 - percArea_snow_u) + α_snow_v * percArea_snow_u  # understory
+  α_n_us::FT = α_n.u * (1.0 - percArea_snow_u) + α_snow_n * percArea_snow_u
 
   α_o::FT = 0.5 * (α_v_os + α_n_os)
   α_u::FT = 0.5 * (α_v_us + α_n_us)
 
   # calculate α of ground in this step
-  α_v_gs::FT = α_v_g * (1.0 - perc_snow_g) + α_snow_v * perc_snow_g
-  α_n_gs::FT = α_n_g * (1.0 - perc_snow_g) + α_snow_n * perc_snow_g
+  α_v_gs::FT = α_v.g * (1.0 - perc_snow_g) + α_snow_v * perc_snow_g
+  α_n_gs::FT = α_n.g * (1.0 - perc_snow_g) + α_snow_n * perc_snow_g
   α_g::FT = 0.5 * (α_v_gs + α_n_gs)
 
   # separate global solar radiation into direct and diffuse one

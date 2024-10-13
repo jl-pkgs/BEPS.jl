@@ -87,18 +87,6 @@ function inter_prg_jl(
   g1_w = param[33+1]           # to be used for module photosynthesis
   g0_w = param[34+1]
 
-  if (Rs <= 0)
-    α_v_o = 0.0
-    α_n_o = 0.0
-    α_v_u = 0.0
-    α_n_u = 0.0
-  else
-    α_v_o = param[22+1]
-    α_n_o = param[23+1]
-    α_v_u = param[22+1]
-    α_n_u = param[23+1]
-  end
-
   init_leaf_dbl(Tc_old, Ta - 0.5)
 
   # Ground surface temperature  
@@ -119,13 +107,21 @@ function inter_prg_jl(
 
   # the evaporation rate of rain and snow--in kg/m^2/s, 
   # understory the mass of intercepted liquid water and snow, overstory
-  f_snow = Layer3(0.0) # perc_snow
+  f_snow = Layer3(0.0)    # perc_snow
   m_snow = Layer3(0.0) # mass_snow
   A_snow = Layer2()
   
   # the mass of intercepted liquid water and snow, overstory 
   f_water = Layer2() # perc_water
   m_water = Layer2() # mass_water
+
+  if (Rs <= 0)
+    α_v = Layer3()
+    α_n = Layer3()
+  else
+    α_v = Layer3(param[22+1])
+    α_n = Layer3(param[23+1])
+  end
 
   ρ_snow = init_dbl()
   α_v_sw = init_dbl()
@@ -152,8 +148,8 @@ function inter_prg_jl(
       α_g = (soil.θ_prev[2] - soil.θ_vwp[2] * 0.5) / (soil.θ_sat[2] - soil.θ_vwp[2] * 0.5) * (α_sat - α_dry) + α_dry
     end
 
-    α_v_g = 2.0 / 3.0 * α_g
-    α_n_g = 4.0 / 3.0 * α_g
+    α_v.g = 2.0 / 3.0 * α_g
+    α_n.g = 4.0 / 3.0 * α_g
 
     # /*****  Soil water factor module by L. He  *****/
     soil_water_factor_v2(soil)
@@ -194,12 +190,8 @@ function inter_prg_jl(
       radiation_o, radiation_u, radiation_g = netRadiation_jl(Rs, CosZs, Tco, Tcu, temp_grd,
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
         Ω, Ta, RH,
-        α_v_sw[], α_n_sw[],
-        perc_snow_o, perc_snow_u,
-        f_snow.g,
-        α_v_o, α_n_o,
-        α_v_u, α_n_u,
-        α_v_g, α_n_g,
+        α_v_sw[], α_n_sw[], α_v, α_n,
+        perc_snow_o, perc_snow_o, f_snow.g, 
         Rn, Rns, Rnl, Ra)
 
       # /*****  Photosynthesis module by B. Chen  *****/
