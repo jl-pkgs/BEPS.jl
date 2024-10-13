@@ -361,9 +361,10 @@ function inter_prg_jl(
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded
   mid_res.gpp_u_shaded = GPP.u_shaded
-  # mid_res.z_water = depth_water
-  # mid_res.z_snow = depth_snow
-  # mid_res.ρ_snow = ρ_snow
+
+  mid_res.z_water = depth_water
+  mid_res.z_snow = depth_snow
+  mid_res.ρ_snow = ρ_snow[]
 
   # total GPP . gC/m2/step
   mid_res.GPP = (GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded) * 12 * step * 0.000001

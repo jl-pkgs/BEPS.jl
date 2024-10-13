@@ -18,9 +18,9 @@
   Trans::Cdouble = 0.0
   Evap::Cdouble = 0.0
 
-  # z_water::Cdouble = 0.0
-  # z_snow::Cdouble = 0.0
-  # ρ_snow::Cdouble = 0.0
+  z_water::Cdouble = 0.0
+  z_snow::Cdouble = 0.0
+  ρ_snow::Cdouble = 0.0
 end
 
 
