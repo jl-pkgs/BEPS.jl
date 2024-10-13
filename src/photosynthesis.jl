@@ -48,7 +48,7 @@ since transfer is going on only one side of a leaf.
   (2PPFD < 1) && (PPFD = 0.0)
   T_leaf_K = T_leaf + 273.13
 
-  λ = LAMBDA(T_leaf_p) # [J kg-1], ~2.5MJ kg-1
+  λ = leaf_lambda(T_leaf_p) # [J kg-1], ~2.5MJ kg-1
   rᵥ = 1.0 / gb_w
 
   ρₐ = cal_rho_a(T_leaf, ea) # [kg m-3]
@@ -131,6 +131,15 @@ end
 
 @fastmath function fTᵥ(eact::T, tprime::T, tref::T, t_lk::T)::T where {T<:Real}
   exp(tprime * eact / (tref * rugc * t_lk))
+end
+
+function leaf_lambda(TK::T)::T where {T<:Real}
+  y = 3149_000.0 - 2370.0 * TK # J kg-1
+  # add heat of fusion for melting ice
+  if TK < 273.0
+    y += 333.0 # TODO: unit error, `y += 333_000.0`
+  end
+  return y
 end
 
 """

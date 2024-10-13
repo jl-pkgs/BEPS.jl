@@ -29,3 +29,5 @@ docs/reference
 __pycache__
 data
 examples
+
+deps

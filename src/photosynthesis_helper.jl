@@ -107,15 +107,6 @@ end
   return rh
 end
 
-function LAMBDA(TK::T)::T where {T<:Real}
-  y = 3149000.0 - 2370.0 * TK # J kg-1
-  # add heat of fusion for melting ice
-  if TK < 273.0
-    y += 333.0 # TODO: unit error, `y += 333_000.0`
-  end
-  return y
-end
-
 # Function to calculate saturation vapor pressure function in mb
 @fastmath function ES(t::T)::T where {T<:Real}
   if t > 0.0
