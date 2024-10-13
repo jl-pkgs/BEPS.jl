@@ -1,23 +1,30 @@
+"""
+o, u积雪的变化
+
+- kstep: 360s, [s]
+- snowrate: [m s-1]，注意`snowrate`的单位
+"""
 function snow_change(m_snow_pre::FT, snowrate::FT, kstep::FT,
-  ρ_new_snow::FT, lai::FT, clumping::FT) where {FT<:Real}
+  ρ_new_snow::FT, lai::FT, Ω::FT) where {FT<:Real}
 
   massMax_snow = 0.1 * lai
   areaMax_snow = 0.01 * lai
 
-  m_snow = m_snow_pre + snowrate * kstep * ρ_new_snow * (1 - exp(-lai * clumping))
+  τ = (1 - exp(-lai * Ω)) # 冠层截获的部分
+  m_snow = m_snow_pre + snowrate * kstep * ρ_new_snow * τ
+
   perc_snow = m_snow / massMax_snow
   perc_snow = clamp(perc_snow, 0, 1)
   area_snow = perc_snow * areaMax_snow
-  massStep_snow = m_snow - m_snow_pre
 
-  return m_snow, perc_snow, area_snow, massStep_snow
+  Δm_snow = m_snow - m_snow_pre
+  return m_snow, perc_snow, area_snow, Δm_snow
 end
 
 """
   snowpack_stage1_jl
 
 # Arguments
-
 - `m_snow`: m_snow
 - `mw`: m_water
 - `depth_snow`: snow depth
@@ -28,7 +35,6 @@ end
 - m_snow
 - perc_snow
 - area_snow
-
 
 # add an example of snowpack
 """
@@ -46,23 +52,30 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   massMax_snow_o = 0.1 * lai_o
   massMax_snow_u = 0.1 * lai_u
 
-  ρ_new_snow = 67.9 + 51.3 * exp(Tair / 2.6) # bug at here
-  albedo_v_Newsnow = 0.94
-  albedo_n_Newsnow = 0.8
+  # https://www.eoas.ubc.ca/courses/atsc113/snow/met_concepts/07-met_concepts/07b-newly-fallen-snow-density/
+  ρ_new = 67.9 + 51.3 * exp(Tair / 2.6) # bug at here，新雪的密度
+  # ρ_new = clamp(ρ_new, 50.0, 200.0) # 限制ρ_new的有效值域
 
-  snowrate = Tair > 0 ? 0 : prcp * ρ_w / ρ_new_snow
+  albedo_v_new = 0.94
+  albedo_n_new = 0.8
+
+  snowrate = Tair > 0 ? 0 : prcp * ρ_w / ρ_new
   snowrate_o = 0.0
-  
+
+  mass2rate(Δm) = Δm / ρ_new / kstep # [kg m-2] -> [m s-1]
+  cal_SnowPercent(m_snow, massMax_snow) = clamp(m_snow / massMax_snow, 0.0, 1.0)
+
+  # kg2m 
   if Tair < 0
     snowrate_o = snowrate
-    m_snow.o, perc_snow.o, area_snow.o, massStep_snow_o =
-      snow_change(m_snow_pre.o, snowrate_o, kstep, ρ_new_snow, lai_o, Ω)
+    m_snow.o, perc_snow.o, area_snow.o, Δm_snow_o =
+      snow_change(m_snow_pre.o, snowrate_o, kstep, ρ_new, lai_o, Ω)
 
-    snowrate_u = max(0, snowrate_o - (massStep_snow_o) / ρ_new_snow / kstep)
-    m_snow.u, perc_snow.u, area_snow.u, massStep_snow_u =
-      snow_change(m_snow_pre.u, snowrate_u, kstep, ρ_new_snow, lai_u, Ω)
+    snowrate_u = max(0, snowrate_o - mass2rate(Δm_snow_o))
+    m_snow.u, perc_snow.u, area_snow.u, Δm_snow_u =
+      snow_change(m_snow_pre.u, snowrate_u, kstep, ρ_new, lai_u, Ω)
 
-    snowrate_g = max(0.0, snowrate_u - (massStep_snow_u) / ρ_new_snow / kstep)
+    snowrate_g = max(0.0, snowrate_u - mass2rate(Δm_snow_u))
     δ_zs = snowrate_g * kstep
   else
     m_snow.o = m_snow_pre.o
@@ -76,26 +89,25 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   end
 
   δ_zs = max(0.0, δ_zs)
-  m_snow.g = max(0.0, m_snow_pre.g + δ_zs * ρ_new_snow)
+  m_snow.g = max(0.0, m_snow_pre.g + δ_zs * ρ_new) # [kg m-2]
 
   if δ_zs > 0
-    ρ_snow[] = (ρ_snow[] * depth_snow + ρ_new_snow * δ_zs) / (depth_snow + δ_zs)
+    ρ_snow[] = (ρ_snow[] * depth_snow + ρ_new * δ_zs) / (depth_snow + δ_zs) # 计算混合密度
   else
     ρ_snow[] = (ρ_snow[] - 250) * exp(-0.001 * kstep / 3600.0) + 250.0
   end
 
   depth_snow = m_snow.g > 0 ? m_snow.g / ρ_snow[] : 0.0
-  perc_snow.g = min(m_snow.g / (0.05 * ρ_snow[]), 1.0)
+  perc_snow.g = min(m_snow.g / (0.05 * ρ_snow[]), 1.0) # [m]，认为雪深50cm时，perc_snow=1
 
   if snowrate_o > 0
     albedo_v_snow[] = (albedo_v_snow[] - 0.70) * exp(-0.005 * kstep / 3600) + 0.7
     albedo_n_snow[] = (albedo_n_snow[] - 0.42) * exp(-0.005 * kstep / 3600) + 0.42
   else
-    albedo_v_snow[] = albedo_v_Newsnow
-    albedo_n_snow[] = albedo_n_Newsnow
+    albedo_v_snow[] = albedo_v_new
+    albedo_n_snow[] = albedo_n_new
   end
-
-  min(depth_snow, 100.0)
+  min(depth_snow, 100.0) # 雪深过高，限制为10m即可
 end
 
 
@@ -106,75 +118,62 @@ function snowpack_stage2_jl(evapo_snow_o::Float64, evapo_snow_u::Float64, m_snow
 end
 
 
+# 热量释放用于融雪（Tsnow -> 0）
+# - pos: 融化
+# - neg: 冻结
+function cal_melt(depth_snow::T, ρ_snow::T, Tsnow::T) where {T<:Real}
+  dT = Tsnow - 0
+  cp_ice = 2228.261         # J Kg-1 K-1
+  λ_fusion = 3.34 * 1000000 # J Kg-1
+  m = depth_snow * ρ_snow   # [kg m-2]
+  E = m * dT * cp_ice       # 当前的雪融化，需要这么多能量，
+  return E / λ_fusion       # m_ice, -> kg
+end
+
+"""
+Update Snow on the ground
+
+It is assumed sublimation happens before the melting and freezing process.
+
+> Note: 雪过深时，只有表层的温度(z=0.02)释放。这里存在bug。应该是
+> `max(zs_sup*0.02, 0.02)`，而不是2%。
+
+## Units
+- mass: [kg m-2]
+- depth: [m]
+"""
 function snowpack_stage3_jl(Tair::Float64, Tsnow::Float64, Tsnow_last::Float64, ρ_snow::Float64,
   depth_snow::Float64, depth_water::Float64, m_snow::Layer3{Float64})
 
-  # kstep = kstep  # kstep in model
-  # it is assumed sublimation happens before the melting and freezing process
-  zs_sup = depth_snow  # this snow depth has already considered sublimation
+  zs_sup = depth_snow  # already considered sublimation
   ms_sup = m_snow.g
 
-  # parameters
-  cp_ice = 2228.261
-  latent_fusion = 3.34 * 1000000 # J Kg-1
-  ρ_w = 1025 # Kg m-3
+  ρ_w = 1025                   # [kg m-3]
+  Δm = cal_melt(zs_sup, ρ_snow, Tsnow) # [kg m-2]
+  con_melt = Tsnow > 0 && Tsnow_last <= 0 && ms_sup > 0
+  con_frozen = Tsnow <= 0 && Tsnow_last > 0 && depth_water > 0
 
-  # simulate snow melt and freeze process
   ms_melt = 0.0
   mw_frozen = 0.0
 
-  # case 1 depth of snow <0.02 m
   if zs_sup <= 0.02
+    # case 1 depth of snow <0.02 m
     if Tair > 0 && zs_sup > 0
-      ms_melt = Tair * 0.0075 * kstep / 3600 * 0.3
-      ms_melt = min(ms_sup, ms_melt)  # the amount of melted snow could not be larger than supply
-    else
-      ms_melt = 0.0
+      ms_melt = min(Tair * 0.0075 * kstep / 3600 * 0.3, ms_sup)
     end
-    # case 2 depth of snow > 0.02 < 0.05 m
   elseif 0.02 < zs_sup <= 0.05
-    if Tsnow > 0 && Tsnow_last < 0 && ms_sup > 0  # melting
-      ms_melt = Tsnow * cp_ice * ρ_snow * zs_sup / latent_fusion
-      ms_melt = min(ms_sup, ms_melt)  # the amount of melted snow could not be larger than supply
-    else
-      ms_melt = 0.0
-    end
-
-    if Tsnow <= 0 && Tsnow_last > 0 && depth_water > 0  # freezing
-      mw_frozen = (0 - Tsnow) * cp_ice * ρ_snow * zs_sup / latent_fusion
-      mw_frozen = max(mw_frozen, depth_water * ρ_w)
-    else
-      mw_frozen = 0.0
-    end
-    # case 3 depth of snow > 0.05 m
+    # case 2 depth of snow > 0.02 < 0.05 m
+    con_melt && (ms_melt = min(Δm, ms_sup))
+    con_frozen && (mw_frozen = min(-Δm, depth_water * ρ_w))
   elseif zs_sup > 0.05
-    if Tsnow > 0 && Tsnow_last <= 0 && ms_sup > 0  # melting
-      ms_melt = Tsnow * cp_ice * ρ_snow * zs_sup * 0.02 / latent_fusion
-      ms_melt = min(ms_sup, ms_melt)  # the amount of melted snow could not be larger than supply
-    else
-      ms_melt = 0.0
-    end
-
-    if Tsnow <= 0 && Tsnow_last > 0 && depth_water > 0  # freezing
-      mw_frozen = (0 - Tsnow) * cp_ice * ρ_snow * zs_sup * 0.02 / latent_fusion
-      mw_frozen = max(mw_frozen, depth_water * ρ_w)
-    else
-      mw_frozen = 0.0
-    end
+    # _z = max(zs_sup*0.02, 0.02) # TODO: fix释放热量的深度
+    # _Δm = cal_melt(_z, Tsnow)
+    con_melt && (ms_melt = min(0.02Δm, ms_sup))
+    con_frozen && (mw_frozen = min(-0.02Δm, depth_water * ρ_w))
   end
 
-  # δ in mass of snow on ground
-  m_snow.g = max(0.0, m_snow.g - ms_melt + mw_frozen)
-
-  # δ of depth in snow
-  melt_zs = ms_melt / ρ_snow
-  frozen_zs = mw_frozen / ρ_snow
-  depth_snow = max(0.0, zs_sup - melt_zs + frozen_zs)
-
-  # δ of depth in water
-  melt_zw = ms_melt / ρ_w
-  frozen_zw = mw_frozen / ρ_w
-  depth_water = max(0.0, depth_water + melt_zw - frozen_zw)
-
+  m_snow.g = max(0.0, m_snow.g - ms_melt + mw_frozen) # ground snow
+  depth_snow = max(0.0, zs_sup + (mw_frozen - ms_melt) / ρ_snow)
+  depth_water = max(0.0, depth_water + (ms_melt - mw_frozen) / ρ_w)
   depth_snow, depth_water
 end
