@@ -1,42 +1,40 @@
-function rainfall_stage1_jl(Tair::Float64, prcp::Float64,
-  perc_water::Layer2{Float64},
-  mass_water::Layer2{Float64}, 
-  mass_water_pre::Layer2{Float64}, 
-  lai_o::Float64, lai_u::Float64, clumping::Float64)
+# - m    : [kg m-2]
+# - prcp : [m m-2 s-1]
+function water_change(m_water_pre, prcp, lai, Ω)
+  mMax_water = 0.1 * lai
+  τ = 1 - exp(-lai * Ω)
+  m_water_o = m_water_pre + prcp * kstep * ρ_w * τ
+  m_water_o = clamp(m_water_o, 0, mMax_water)
 
+  Δm_water_o = max(m_water_o - m_water_pre, 0.0)
+  perc_water_o = min(m_water_o / mMax_water, 1.0)
+  m_water_o, perc_water_o, Δm_water_o
+end
+
+# [kg m-2] -> [m s-1]
+kg2m(p) = p / ρ_w / kstep
+m2kg(m) = m * kstep * ρ_w
+
+# - m_water: change
+function rainfall_stage1_jl(Tair::Float64, prcp::Float64,
+  perc_water::Layer2{Float64}, m_water::Layer2{Float64}, m_water_pre::Layer2{Float64},
+  lai_o::Float64, lai_u::Float64, Ω::Float64)
   # Ta > 0, otherwise it is snow fall
   Tair <= 0.0 && (prcp = 0.0)
   prcp_o = prcp
-  prcp_g = 0.0
 
   # overstorey
-  mass_water.o = mass_water_pre.o + prcp_o * kstep * ρ_w * (1 - exp(-lai_o * clumping))
-  massMax_water_o = 0.1 * lai_o
-
-  mass_water.o = clamp(mass_water.o, 0, massMax_water_o)
-  massStep_water_o = max(mass_water.o - mass_water_pre.o, 0.0)
-
-  perc_water.o = min(mass_water.o / massMax_water_o, 1.0)
-
+  m_water.o, perc_water.o, Δm_water_o = water_change(m_water_pre.o, prcp_o, lai_o, Ω)
   # understorey
-  prcp_u = prcp_o - massStep_water_o / ρ_w / kstep
-  mass_water.u = mass_water_pre.u + prcp_u * kstep * ρ_w * (1 - exp(-lai_u * clumping))
-  massMax_water_u = 0.1 * lai_u
+  prcp_u = prcp_o - Δm_water_o / ρ_w / kstep
+  m_water.u, perc_water.u, Δm_water_u = water_change(m_water_pre.u, prcp_u, lai_u, Ω)
 
-  mass_water.u = clamp(mass_water.u, 0, massMax_water_u)
-  massStep_water_u = max(mass_water.u - mass_water_pre.u, 0.0)
-
-  perc_water.u = min(mass_water.u / massMax_water_u, 1.0)
-  prcp_g = prcp_u - massStep_water_u / ρ_w / kstep
-
+  prcp_g = prcp_u - Δm_water_u / ρ_w / kstep
   return prcp_g
 end
 
-
 function rainfall_stage2_jl(evapo_water_o::Float64, evapo_water_u::Float64,
   mass_water::Layer2{Float64})
-
-  # kstep  # 6min or 360s per step
   mass_water.o = max(mass_water.o - evapo_water_o * kstep, 0.0)
   mass_water.u = max(mass_water.u - evapo_water_u * kstep, 0.0)
 end

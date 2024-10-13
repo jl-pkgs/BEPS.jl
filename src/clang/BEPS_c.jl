@@ -19,13 +19,13 @@ include("module.jl")
 # include("beps_main.jl")
 # include("debug_Rln.jl")
 
-# function plantresp(LC, mid_res::Results, lai_yr, lai, temp_air, temp_soil, CosZs)
+# function plantresp(LC, mid_res::Results, lai_yr, lai, Tair, temp_soil, CosZs)
 #     ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Results}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
-#         LC, Ref(mid_res), lai_yr, lai, temp_air, temp_soil, CosZs)
+#         LC, Ref(mid_res), lai_yr, lai, Tair, temp_soil, CosZs)
 # end
 
 function inter_prg_c(jday, rstep,
-  lai::T, clumping::T, parameter::Vector{T}, meteo::Met, CosZs::T,
+  lai::T, Ω::T, parameter::Vector{T}, meteo::Met, CosZs::T,
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; debug=false, kw...) where {T<:Real}
@@ -33,15 +33,15 @@ function inter_prg_c(jday, rstep,
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
       Ptr{Met}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil_c}, Ptr{Results}, Ptr{OutputET}),
-    jday, rstep, lai, clumping, parameter,
+    jday, rstep, lai, Ω, parameter,
     Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res), Ref(mid_ET))
 end
 
 
-function Vcmax_Jmax(lai_o, clumping, Vcmax0, slope_Vcmax_N, leaf_N, CosZs, Vcmax_sunlit, Vcmax_shaded, Jmax_sunlit, Jmax_shaded)
+function Vcmax_Jmax(lai_o, Ω, Vcmax0, slope_Vcmax_N, leaf_N, CosZs, Vcmax_sunlit, Vcmax_shaded, Jmax_sunlit, Jmax_shaded)
   ccall((:Vcmax_Jmax, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    lai_o, clumping, Vcmax0, slope_Vcmax_N, leaf_N, CosZs,
+    lai_o, Ω, Vcmax0, slope_Vcmax_N, leaf_N, CosZs,
     Vcmax_sunlit, Vcmax_shaded, Jmax_sunlit, Jmax_shaded)
 end
 
@@ -82,37 +82,44 @@ end
 
 # passed test
 # lai2(0.8, 0.6, 0.2, 0.4, 0.2, 0.4)
-function lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u)
+function lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u)
   LAI = Leaf()
   PAI = Leaf()
-  lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
+  lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
   LAI, PAI
 end
 
 ## add Leaf struct
-function lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI::Leaf, PAI::Leaf)
+function lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI::Leaf, PAI::Leaf)
   ccall((:lai2, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Leaf}, Ptr{Leaf}),
-    clumping, CosZs, stem_o, stem_u, lai_o, lai_u, Ref(LAI), Ref(PAI))
+    Ω, CosZs, stem_o, stem_u, lai_o, lai_u, Ref(LAI), Ref(PAI))
 end
 
 function meteo_pack(temp, rh, meteo_pack_output)
   ccall((:meteo_pack, libbeps), Cvoid, (Cdouble, Cdouble, Ptr{Cdouble}), temp, rh, meteo_pack_output)
 end
 
-function rainfall_stage1(temp_air, prcp, mass_water_o_last, mass_water_u_last, lai_o, lai_u, clumping)
-  mass_water_o = init_dbl()
-  mass_water_u = init_dbl()
+function rainfall_stage1(Tair, prcp, m_water_o_last, m_water_u_last, lai_o, lai_u, Ω)
+  m_water_o = init_dbl()
+  m_water_u = init_dbl()
   percent_water_o = init_dbl()
   percent_water_u = init_dbl()
   prcp_g = init_dbl()
 
-  ccall((:rainfall_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), temp_air, prcp, mass_water_o_last, mass_water_u_last, lai_o, lai_u, clumping, mass_water_o, mass_water_u, percent_water_o, percent_water_u, prcp_g)
+  ccall((:rainfall_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), Tair, prcp, m_water_o_last, m_water_u_last, lai_o, lai_u, Ω, m_water_o, m_water_u, percent_water_o, percent_water_u, prcp_g)
 
-  mass_water_o[], mass_water_u[], percent_water_o[], percent_water_u[], prcp_g[]
+  m_water_o[], m_water_u[], percent_water_o[], percent_water_u[], prcp_g[]
 end
 
-function rainfall_stage2(evapo_water_o, evapo_water_u, mass_water_o::Ref, mass_water_u::Ref)
-  ccall((:rainfall_stage2, libbeps), Cvoid, (Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}), evapo_water_o, evapo_water_u, mass_water_o, mass_water_u)
+function rainfall_stage1(Tair, prcp, perc_water, m_water, m_water_pre, lai_o, lai_u, Ω)
+  # m_water_o_last, m_water_u_last, 
+  # perc_water = Layer2{Float64}()
+  # m_water = Layer2{Float64}()
+  prcp_g = rainfall_stage1_jl(Tair, prcp, perc_water, m_water, m_water_pre, lai_o, lai_u, Ω)
+end
+
+function rainfall_stage2(evapo_water_o, evapo_water_u, m_water_o::Ref, m_water_u::Ref)
+  ccall((:rainfall_stage2, libbeps), Cvoid, (Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}), evapo_water_o, evapo_water_u, m_water_o, m_water_u)
 end
 
 include("snowpack_stage.jl")

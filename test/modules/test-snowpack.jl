@@ -1,7 +1,8 @@
 using BEPS, Test
 using BEPS: snowpack_stage3
 
-@testset "snowpack_stage1" begin
+# @testset "snowpack_stage1" 
+begin
   function call_jl()
     ρ_snow = Ref{Float64}(0.3)
     albedo_v_snow = Ref{Float64}(0.8)
@@ -39,14 +40,15 @@ using BEPS: snowpack_stage3
   m_snow = Layer3(0.1, 0.2, 0.3)
   perc_snow = Layer3(0.1, 0.2, 0.3)
   area_snow = Layer2(0.1, 0.2)
+  r1 = call_jl()
+  r2 = call_c()
+
   @test call_jl() == call_c()
 
   Tair = 0.0001 # near zero, 精度不足存在一定问题
   m_snow = Layer3(0.1, 0.2, 0.3)   # value was changed
   perc_snow = Layer3(0.1, 0.2, 0.3)
   area_snow = Layer2(0.1, 0.2)
-  r1 = call_jl()
-  r2 = call_c()
   @test call_jl() == call_c()
 end
 

@@ -60,10 +60,9 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   albedo_n_new = 0.8
 
   snowrate = Tair > 0 ? 0 : prcp * ρ_w / ρ_new
-  snowrate_o = 0.0
 
   mass2rate(Δm) = Δm / ρ_new / kstep # [kg m-2] -> [m s-1]
-  cal_SnowPercent(m_snow, massMax_snow) = clamp(m_snow / massMax_snow, 0.0, 1.0)
+  cal_SnowPerc(m_snow, massMax_snow) = clamp(m_snow / massMax_snow, 0.0, 1.0)
 
   # kg2m 
   if Tair < 0
@@ -78,6 +77,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
     snowrate_g = max(0.0, snowrate_u - mass2rate(Δm_snow_u))
     δ_zs = snowrate_g * kstep
   else
+    snowrate_o = 0.0
     m_snow.o = m_snow_pre.o
     perc_snow.o = clamp(m_snow.o / massMax_snow_o, 0.0, 1.0)
 
@@ -148,7 +148,6 @@ function snowpack_stage3_jl(Tair::Float64, Tsnow::Float64, Tsnow_last::Float64, 
   zs_sup = depth_snow  # already considered sublimation
   ms_sup = m_snow.g
 
-  ρ_w = 1025                   # [kg m-3]
   Δm = cal_melt(zs_sup, ρ_snow, Tsnow) # [kg m-2]
   con_melt = Tsnow > 0 && Tsnow_last <= 0 && ms_sup > 0
   con_frozen = Tsnow <= 0 && Tsnow_last > 0 && depth_water > 0

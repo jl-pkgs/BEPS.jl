@@ -106,7 +106,6 @@ end
 
 # Function to calculate soil water uptake from a layer
 function Soil_Water_Uptake(p::Soil, Trans_o::Float64, Trans_u::Float64, Evap_soil::Float64)
-  ρ_w = 1025.0
   Trans = Trans_o + Trans_u
 
   p.Ett[1] = Trans / ρ_w * p.dt[1] + Evap_soil / ρ_w # for the top layer

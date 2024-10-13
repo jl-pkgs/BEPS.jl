@@ -16,7 +16,7 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
 @testset "besp_main julia" begin
   d = deserialize(path_proj("data/p1_meteo"))
   d.tem = d.tem .- 5.0
-  
+
   @time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia")
   @time df_c, df_ET_c = besp_main(d, lai, par; version="c")
   r = sum(df_jl)
@@ -35,7 +35,7 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
   @show l
   @show nanmax(l)
   @test true
-  
+
   # @test nanmax(l) < 1.5 # SH, 1.48%的误差, current 0.09%
   @test nanmax(l) < 2.5 # GPP, 2.38%的误差, current 0.09%
 end
