@@ -27,8 +27,8 @@ end
 # Arguments
 - `m_snow`: m_snow
 - `mw`: m_water
-- `depth_snow`: snow depth
-- `depth_water`: water depth
+- `z_snow`: snow depth
+- `z_water`: water depth
 
 *reference variables*
 - m_snow_pre
@@ -44,7 +44,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   m_snow::Layer3{Float64},
   perc_snow::Layer3{Float64},
   area_snow::Layer2{Float64},
-  depth_snow::Float64,
+  z_snow::Float64,
   ρ_snow::Ref{Float64},
   albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
 
@@ -92,12 +92,13 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   m_snow.g = max(0.0, m_snow_pre.g + δ_zs * ρ_new) # [kg m-2]
 
   if δ_zs > 0
-    ρ_snow[] = (ρ_snow[] * depth_snow + ρ_new * δ_zs) / (depth_snow + δ_zs) # 计算混合密度
+    # 可能导致了ρ_snow的极低。
+    ρ_snow[] = (ρ_snow[] * z_snow + ρ_new * δ_zs) / (z_snow + δ_zs) # 计算混合密度
   else
     ρ_snow[] = (ρ_snow[] - 250) * exp(-0.001 * kstep / 3600.0) + 250.0
   end
 
-  depth_snow = m_snow.g > 0 ? m_snow.g / ρ_snow[] : 0.0
+  z_snow = m_snow.g > 0 ? m_snow.g / ρ_snow[] : 0.0
   perc_snow.g = min(m_snow.g / (0.05 * ρ_snow[]), 1.0) # [m]，认为雪深50cm时，perc_snow=1
 
   if snowrate_o > 0
@@ -107,7 +108,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
     albedo_v_snow[] = albedo_v_new
     albedo_n_snow[] = albedo_n_new
   end
-  min(depth_snow, 10.0) # 雪深过高，限制为10m即可
+  min(z_snow, 10.0) # 雪深过高，限制为10m即可
 end
 
 
@@ -121,11 +122,11 @@ end
 # 热量释放用于融雪（Tsnow -> 0）
 # - pos: 融化
 # - neg: 冻结
-function cal_melt(depth_snow::T, ρ_snow::T, Tsnow::T) where {T<:Real}
+function cal_melt(z_snow::T, ρ_snow::T, Tsnow::T) where {T<:Real}
   dT = Tsnow - 0
   cp_ice = 2228.261         # J Kg-1 K-1
   λ_fusion = 3.34 * 1000000 # J Kg-1
-  m = depth_snow * ρ_snow   # [kg m-2]
+  m = z_snow * ρ_snow   # [kg m-2]
   E = m * dT * cp_ice       # 当前的雪融化，需要这么多能量，
   return E / λ_fusion       # m_ice, -> kg
 end
@@ -143,14 +144,14 @@ It is assumed sublimation happens before the melting and freezing process.
 - depth: [m]
 """
 function snowpack_stage3_jl(Tair::Float64, Tsnow::Float64, Tsnow_last::Float64, ρ_snow::Float64,
-  depth_snow::Float64, depth_water::Float64, m_snow::Layer3{Float64})
+  z_snow::Float64, z_water::Float64, m_snow::Layer3{Float64})
 
-  zs_sup = depth_snow  # already considered sublimation
+  zs_sup = z_snow  # already considered sublimation
   ms_sup = m_snow.g
 
   Δm = cal_melt(zs_sup, ρ_snow, Tsnow) # [kg m-2]
   con_melt = Tsnow > 0 && Tsnow_last <= 0 && ms_sup > 0
-  con_frozen = Tsnow <= 0 && Tsnow_last > 0 && depth_water > 0
+  con_frozen = Tsnow <= 0 && Tsnow_last > 0 && z_water > 0
 
   ms_melt = 0.0
   mw_frozen = 0.0
@@ -163,16 +164,16 @@ function snowpack_stage3_jl(Tair::Float64, Tsnow::Float64, Tsnow_last::Float64, 
   elseif 0.02 < zs_sup <= 0.05
     # case 2 depth of snow > 0.02 < 0.05 m
     con_melt && (ms_melt = min(Δm, ms_sup))
-    con_frozen && (mw_frozen = min(-Δm, depth_water * ρ_w))
+    con_frozen && (mw_frozen = min(-Δm, z_water * ρ_w))
   elseif zs_sup > 0.05
     # _z = max(zs_sup*0.02, 0.02) # TODO: fix释放热量的深度
     # _Δm = cal_melt(_z, Tsnow)
     con_melt && (ms_melt = min(0.02Δm, ms_sup))
-    con_frozen && (mw_frozen = min(-0.02Δm, depth_water * ρ_w))
+    con_frozen && (mw_frozen = min(-0.02Δm, z_water * ρ_w))
   end
 
   m_snow.g = max(0.0, m_snow.g - ms_melt + mw_frozen) # ground snow
-  depth_snow = max(0.0, zs_sup + (mw_frozen - ms_melt) / ρ_snow)
-  depth_water = max(0.0, depth_water + (ms_melt - mw_frozen) / ρ_w)
-  depth_snow, depth_water
+  z_snow = max(0.0, zs_sup + (mw_frozen - ms_melt) / ρ_snow)
+  z_water = max(0.0, z_water + (ms_melt - mw_frozen) / ρ_w)
+  z_snow, z_water
 end

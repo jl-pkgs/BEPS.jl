@@ -17,7 +17,7 @@ The inter-module function between main program and modules
 """
 function inter_prg_jl(
   jday::Int, hour::Int,
-  lai::T, clumping::T, param::Vector{T}, meteo::Met, CosZs::T,
+  lai::T, Ω::T, param::Vector{T}, meteo::Met, CosZs::T,
   var_o::Vector{T}, var_n::Vector{T}, soil::AbstractSoil,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; kw...) where {T}
@@ -49,7 +49,7 @@ function inter_prg_jl(
   Tcu = 0.0
 
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
-  Vcmax_sunlit, Vcmax_shaded = VCmax(lai, clumping, CosZs, param)
+  Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, param)
 
   # /*****  LAI calculation module, by B. Chen  *****/
   lai_o = lai < 0.1 ? 0.1 : lai
@@ -66,7 +66,7 @@ function inter_prg_jl(
   stem_u = param[9+1] * 0.2    # parameter[9].LAI max understory
 
   # lai2: separate lai into sunlit and shaded portions
-  lai2(clumping, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
+  lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
 
   # /*****  Initialization of this time step  *****/
   Rs = meteo.Srad
@@ -136,14 +136,13 @@ function inter_prg_jl(
 
     # set!(m_snow_pre, 0.0);
     depth_snow = snowpack_stage1_jl(Ta, prcp,
-      lai_o, lai_u,
-      clumping,
+      lai_o, lai_u, Ω,
       m_snow_pre, m_snow, f_snow, A_snow,
       depth_snow, ρ_snow,
       α_v_sw, α_n_sw) # by X. Luo 
 
     # /*****  Rain fall stage 1 by X. Luo  *****/
-    var.r_rain_g[k] = rainfall_stage1_jl(Ta, prcp, f_water, m_water, m_water_pre, lai_o, lai_u, clumping)
+    var.r_rain_g[k] = rainfall_stage1_jl(Ta, prcp, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
 
     if (soil.θ_prev[2] < soil.θ_vwp[2] * 0.5)
       α_g = α_dry
@@ -173,7 +172,7 @@ function inter_prg_jl(
       num = num + 1
       # /***** Aerodynamic_conductance module by G.Mo  *****/
       ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
-        aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind, GH_o,
+        aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, Ω, Ta, wind, GH_o,
           lai_o + stem_o, lai_u + stem_u)
 
       init_leaf_dbl2(Gh,
@@ -192,7 +191,7 @@ function inter_prg_jl(
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
       radiation_o, radiation_u, radiation_g = netRadiation_jl(Rs, CosZs, Tco, Tcu, temp_grd,
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
-        clumping, Ta, RH,
+        Ω, Ta, RH,
         α_v_sw[], α_n_sw[],
         percArea_snow_o, percArea_snow_u,
         f_snow.g,
