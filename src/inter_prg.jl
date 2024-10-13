@@ -45,9 +45,6 @@ function inter_prg_jl(
   radiation_u = 0.0
   radiation_g = 0.0
 
-  Tco = 0.0
-  Tcu = 0.0
-
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
   VCmax25, N_leaf, slope = param[37], param[47], param[48]
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope)
@@ -100,7 +97,7 @@ function inter_prg_jl(
 
   m_snow_pre = state.m_snow# mass_snow
   m_water_pre = state.m_water
-  
+
   z_snow = soil.z_snow
   z_water = soil.z_water
   (z_water < 0.001) && (z_water = 0.0)
@@ -110,7 +107,7 @@ function inter_prg_jl(
   f_snow = Layer3(0.0)    # perc_snow
   m_snow = Layer3(0.0) # mass_snow
   A_snow = Layer2()
-  
+
   # the mass of intercepted liquid water and snow, overstory 
   f_water = Layer2() # perc_water
   m_water = Layer2() # mass_water
@@ -126,8 +123,9 @@ function inter_prg_jl(
   ρ_snow = init_dbl()
   α_v_sw = init_dbl()
   α_n_sw = init_dbl()
+  Tc = Layer3() # temperatures of o, u, g
 
-  # /*****  Ten time intervals in a hourly time step.6min or 360s per loop  ******/
+  # ten time intervals in a hourly time step.6min or 360s per loop
   @inbounds for k = 2:kloop+1
     ρ_snow[] = 0.0 # TODO: debug C, might error
     α_v_sw[], α_n_sw[] = 0.0, 0.0
@@ -163,7 +161,7 @@ function inter_prg_jl(
     perc_snow_o = A_snow.o / lai_o / 2 # area
     perc_snow_u = A_snow.u / lai_u / 2 # area
 
-    temp_grd = Ta   # ground temperature substituted by air temperature
+    Tc.g = Ta   # ground temperature substituted by air temperature
 
     num = 0
     while true # iteration for BWB equation until results converge
@@ -181,17 +179,18 @@ function inter_prg_jl(
         1.0 / (1.0 / Ga_u + 1.0 / Gb_u + 100))
 
       # temperatures of overstorey and understorey canopies
-      Tco = (Tc_old.o_sunlit * PAI.o_sunlit + Tc_old.o_shaded * PAI.o_shaded) /
-            (PAI.o_sunlit + PAI.o_shaded)
-      Tcu = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) /
-            (PAI.u_sunlit + PAI.u_shaded)
+      Tc.o = (Tc_old.o_sunlit * PAI.o_sunlit + Tc_old.o_shaded * PAI.o_shaded) /
+             (PAI.o_sunlit + PAI.o_shaded)
+      Tc.u = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) /
+             (PAI.u_sunlit + PAI.u_shaded)
 
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
-      radiation_o, radiation_u, radiation_g = netRadiation_jl(Rs, CosZs, Tco, Tcu, temp_grd,
+      radiation_o, radiation_u, radiation_g = netRadiation_jl(
+        Rs, CosZs, Tc, 
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
         Ω, Ta, RH,
         α_v_sw[], α_n_sw[], α_v, α_n,
-        perc_snow_o, perc_snow_o, f_snow.g, 
+        perc_snow_o, perc_snow_u, f_snow.g,
         Rn, Rns, Rnl, Ra)
 
       # /*****  Photosynthesis module by B. Chen  *****/
@@ -261,7 +260,7 @@ function inter_prg_jl(
     mass_water_g = ρ_w * z_water
 
     var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k], z_water, z_snow =
-      evaporation_soil_jl(temp_grd, var.Ts0[k-1], RH, radiation_g, Gheat_g,
+      evaporation_soil_jl(Tc.g, var.Ts0[k-1], RH, radiation_g, Gheat_g,
         f_snow,
         z_water, z_snow, mass_water_g, m_snow, # Ref
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
@@ -277,7 +276,7 @@ function inter_prg_jl(
 
     var.Cs[1, k] = soil.Cs[1]
     var.Cs[2, k] = soil.Cs[1]
-    var.Tc_u[k] = Tcu
+    var.Tc_u[k] = Tc.u
     lambda[2] = soil.lambda[1]
     dz[2] = soil.dz[1]
 
@@ -336,7 +335,7 @@ function inter_prg_jl(
   state.Qhc_o = var.Qhc_o[k]
   set!(state.m_water, m_water)
   set!(state.m_snow, m_snow)
-  
+
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 
   OutputET!(mid_ET,
@@ -346,7 +345,7 @@ function inter_prg_jl(
     var.Evap_soil, var.Evap_SW, var.Evap_SS, var.Qhc_o, var.Qhc_u, var.Qhg, k)
   update_ET!(mid_ET, mid_res, Ta)
 
-  mid_res.gpp_o_sunlit = GPP.o_sunlit   # umol C/m2/s
+  mid_res.gpp_o_sunlit = GPP.o_sunlit   # [umol C/m2/s], !note
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded
   mid_res.gpp_u_shaded = GPP.u_shaded
@@ -355,7 +354,7 @@ function inter_prg_jl(
   mid_res.z_snow = z_snow
   mid_res.ρ_snow = ρ_snow[]
 
-  # total GPP . gC/m2/step
-  mid_res.GPP = (GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded) * 12 * step * 0.000001
+  GPP = GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded
+  mid_res.GPP = GPP * 12 * step * 1e-6 # [umol m-2 s-1] -> [gC m-2]
   nothing
 end

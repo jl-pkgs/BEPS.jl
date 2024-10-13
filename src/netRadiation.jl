@@ -1,13 +1,19 @@
+"""
+## Arguments
+- `T`                 : temperature of o, u, g
+- `α_v, α_n`          : albedo of visible, near infrared
+- `percentArea_snow_o`: percentage of snow on overstorey (by area)
+- `percentArea_snow_u`: percentage of snow on understorey (by area)
+- `percent_snow_g`    : percentage of snow on ground (by mass)
+"""
 function netRadiation_jl(Rs_global::FT, CosZs::FT,
-  temp_o::FT, temp_u::FT, temp_g::FT,
+  T::Layer3{FT}, 
   lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
   lai::Leaf,
   Ω::FT, Tair::FT, RH::FT,
   α_snow_v::FT, α_snow_n::FT, α_v::Layer3{FT}, α_n::Layer3{FT},
   percArea_snow_o::FT, percArea_snow_u::FT, perc_snow_g::FT,
-  Rn_Leaf::Leaf,
-  Rns_Leaf::Leaf,
-  Rnl_Leaf::Leaf, Ra::Radiation)
+  Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
   
   # calculate α of canopy in this step
   α_v_os::FT = α_v.o * (1.0 - percArea_snow_o) + α_snow_v * percArea_snow_o  # visible, overstory
@@ -80,7 +86,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Rns_u = Ra.Rns_u_dir + Ra.Rns_u_df
   Rns_g = Ra.Rns_g_dir + Ra.Rns_g_df
 
-  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(Tair, RH, temp_o, temp_u, temp_g, lai_o, lai_u, Ω)
+  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(Tair, RH, T, lai_o, lai_u, Ω)
 
   # 计算植被和地面的总净辐射
   Rn_o = Rns_o + Rnl_o
@@ -128,8 +134,8 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
 end
 
 
-function cal_Rln_Longwave(temp_air::FT, rh::FT, temp_o::FT, 
-  temp_u::FT, temp_g::FT, lai_o::FT, lai_u::FT, Ω::FT) where {FT<:Real}
+function cal_Rln_Longwave(temp_air::FT, rh::FT, T::Layer3{FT}, 
+  lai_o::FT, lai_u::FT, Ω::FT) where {FT<:Real}
 
   # indicators to describe leaf distribution angles in canopy. slightly related with LAI
   cosQ_o::FT = 0.537 + 0.025 * lai_o  # Luo2018, A10, a representative zenith angle for diffuse radiation transmission
@@ -149,9 +155,9 @@ function cal_Rln_Longwave(temp_air::FT, rh::FT, temp_o::FT,
 
   # 计算植被和地面的净长波辐射
   Rl_air = cal_Rln(ϵ_air, temp_air)
-  Rl_o = cal_Rln(ϵ_o, temp_o)
-  Rl_u = cal_Rln(ϵ_u, temp_u)
-  Rl_g = cal_Rln(ϵ_g, temp_g)
+  Rl_o = cal_Rln(ϵ_o, T.o)
+  Rl_u = cal_Rln(ϵ_u, T.u)
+  Rl_g = cal_Rln(ϵ_g, T.g)
 
   Rnl_o = (ϵ_o * (Rl_air + Rl_u * (1.0 - τ_u_df) + Rl_g * τ_u_df) - 2 * Rl_o) *
           (1.0 - τ_o_df) +

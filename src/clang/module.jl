@@ -35,10 +35,11 @@ function photosynthesis_c(temp_leaf_p::Cdouble, rad_leaf::Cdouble, e_air::Cdoubl
 end
 
 function netRadiation_c(shortRad_global, CosZs,
-  temp_o, temp_u, temp_g,
+  T::Layer3{FT},
   lai_o, lai_u, lai_os, lai_us, lai::Leaf, Ω, temp_air, rh,
   α_snow_v, α_snow_n, α_v::Layer3{FT}, α_n::Layer3{FT},
-  percArea_snow_o, percArea_snow_u, perc_snow_g, Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
+  percArea_snow_o, percArea_snow_u, perc_snow_g, 
+  Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
 
   netRad_o = init_dbl()
   netRad_u = init_dbl()
@@ -47,7 +48,8 @@ function netRadiation_c(shortRad_global, CosZs,
   ccall((:netRadiation, libbeps), Cvoid,
     (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Leaf}, Ptr{Leaf}),
-    shortRad_global, CosZs, temp_o, temp_u, temp_g, lai_o, lai_u, lai_os, lai_us, lai, Ω, temp_air, rh, α_snow_v, α_snow_n, percArea_snow_o, percArea_snow_u, perc_snow_g,
+    shortRad_global, CosZs, T.o, T.u, T.g, 
+    lai_o, lai_u, lai_os, lai_us, lai, Ω, temp_air, rh, α_snow_v, α_snow_n, percArea_snow_o, percArea_snow_u, perc_snow_g,
     α_v.o, α_n.o, α_v.u, α_n.u, α_v.g, α_n.g,
     netRad_o, netRad_u, netRad_g, Ref(Rn_Leaf), Ref(Rns_Leaf))
 
