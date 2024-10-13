@@ -5,8 +5,8 @@ abstract type AbstractSoil end
   n_layer     ::Cint    = Cint(5)
   step_period ::Cint    = Cint(1)
 
-  depth_water ::Cdouble = Cdouble(0)
-  depth_snow  ::Cdouble = Cdouble(0)
+  z_water ::Cdouble = Cdouble(0)
+  z_snow  ::Cdouble = Cdouble(0)
 
   r_rain_g    ::Cdouble = Cdouble(0)        # the rainfall rate, un--on understory g--on ground surface  m/s
   soil_r      ::Cdouble = Cdouble(0)

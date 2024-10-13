@@ -112,9 +112,9 @@ function inter_prg_jl(
   m_snow_pre = state.m_snow# mass_snow
   m_water_pre = state.m_water
   
-  depth_snow = soil.depth_snow
-  depth_water = soil.depth_water
-  (depth_water < 0.001) && (depth_water = 0.0)
+  z_snow = soil.z_snow
+  z_water = soil.z_water
+  (z_water < 0.001) && (z_water = 0.0)
 
   # the evaporation rate of rain and snow--in kg/m^2/s, 
   # understory the mass of intercepted liquid water and snow, overstory
@@ -136,10 +136,10 @@ function inter_prg_jl(
     α_v_sw[], α_n_sw[] = 0.0, 0.0
 
     # set!(m_snow_pre, 0.0);
-    depth_snow = snowpack_stage1_jl(Ta, prcp,
+    z_snow = snowpack_stage1_jl(Ta, prcp,
       lai_o, lai_u, Ω,
       m_snow_pre, m_snow, f_snow, A_snow,
-      depth_snow, ρ_snow,
+      z_snow, ρ_snow,
       α_v_sw, α_n_sw) # by X. Luo 
 
     # /*****  Rain fall stage 1 by X. Luo  *****/
@@ -163,8 +163,8 @@ function inter_prg_jl(
     init_leaf_dbl(Ci_old, 0.7 * CO2_air)
     init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
 
-    percArea_snow_o = A_snow.o / lai_o / 2
-    percArea_snow_u = A_snow.u / lai_u / 2
+    perc_snow_o = A_snow.o / lai_o / 2 # area
+    perc_snow_u = A_snow.u / lai_u / 2 # area
 
     temp_grd = Ta   # ground temperature substituted by air temperature
 
@@ -194,7 +194,7 @@ function inter_prg_jl(
         lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
         Ω, Ta, RH,
         α_v_sw[], α_n_sw[],
-        percArea_snow_o, percArea_snow_u,
+        perc_snow_o, perc_snow_u,
         f_snow.g,
         α_v_o, α_n_o,
         α_v_u, α_n_u,
@@ -265,12 +265,12 @@ function inter_prg_jl(
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g
-    mass_water_g = ρ_w * depth_water
+    mass_water_g = ρ_w * z_water
 
-    var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k], depth_water, depth_snow =
+    var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k], z_water, z_snow =
       evaporation_soil_jl(temp_grd, var.Ts0[k-1], RH, radiation_g, Gheat_g,
         f_snow,
-        depth_water, depth_snow, mass_water_g, m_snow, # Ref
+        z_water, z_snow, mass_water_g, m_snow, # Ref
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
@@ -294,7 +294,7 @@ function inter_prg_jl(
 
     var.G[1, k], var.Ts0[k], var.Tm[1, k], var.Tsm0[k],
     var.Tsn0[k], var.Tsn1[k], var.Tsn2[k] =
-      surface_temperature_jl(Ta, RH, depth_snow, depth_water,
+      surface_temperature_jl(Ta, RH, z_snow, z_water,
         var.Cs[2, k], var.Cs[1, k], Gheat_g, dz[2], ρ_snow[], var.Tc_u[k],
         radiation_g, var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k],
         lambda[2],
@@ -307,8 +307,8 @@ function inter_prg_jl(
     # Update_Tsoil_c(soilp, var.Tm[1, k])
     soil.Tsoil_c[1] = var.Tm[1, k]
 
-    depth_snow, depth_water = snowpack_stage3_jl(Ta, var.Tsn0[k], var.Tsn0[k-1],
-      ρ_snow[], depth_snow, depth_water, m_snow) # X. Luo
+    z_snow, z_water = snowpack_stage3_jl(Ta, var.Tsn0[k], var.Tsn0[k-1],
+      ρ_snow[], z_snow, z_water, m_snow) # X. Luo
     set!(m_snow_pre, m_snow) # update snow_pre
 
     var.Qhc_o[k], var.Qhc_u[k], var.Qhg[k] =
@@ -316,7 +316,7 @@ function inter_prg_jl(
         Gh, Gheat_g, PAI) # X. Luo
 
     # /*****  Soil water module by L. He  *****/
-    soil.depth_snow = depth_snow
+    soil.z_snow = z_snow
     soil.G[1] = var.G[1, k]
     # Update_G(soilp, var.G[1, k])
 
@@ -324,10 +324,10 @@ function inter_prg_jl(
     Soil_Water_Uptake(soil, var.Trans_o[k], var.Trans_u[k], var.Evap_soil[k])
 
     soil.r_rain_g = var.r_rain_g[k]
-    soil.depth_water = depth_water
+    soil.z_water = z_water
 
     UpdateSoilMoisture(soil, kstep)
-    depth_water = soil.depth_water
+    z_water = soil.z_water
   end  # The end of k loop
 
   k = kloop + 1# the last step
@@ -358,8 +358,8 @@ function inter_prg_jl(
   mid_res.gpp_o_shaded = GPP.o_shaded
   mid_res.gpp_u_shaded = GPP.u_shaded
 
-  mid_res.z_water = depth_water
-  mid_res.z_snow = depth_snow
+  mid_res.z_water = z_water
+  mid_res.z_snow = z_snow
   mid_res.ρ_snow = ρ_snow[]
 
   # total GPP . gC/m2/step

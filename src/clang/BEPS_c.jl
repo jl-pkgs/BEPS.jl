@@ -102,13 +102,13 @@ end
 function rainfall_stage1(Tair, prcp, m_water_o_last, m_water_u_last, lai_o, lai_u, Ω)
   m_water_o = init_dbl()
   m_water_u = init_dbl()
-  percent_water_o = init_dbl()
-  percent_water_u = init_dbl()
+  perc_water_o = init_dbl()
+  perc_water_u = init_dbl()
   prcp_g = init_dbl()
 
-  ccall((:rainfall_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), Tair, prcp, m_water_o_last, m_water_u_last, lai_o, lai_u, Ω, m_water_o, m_water_u, percent_water_o, percent_water_u, prcp_g)
+  ccall((:rainfall_stage1, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), Tair, prcp, m_water_o_last, m_water_u_last, lai_o, lai_u, Ω, m_water_o, m_water_u, perc_water_o, perc_water_u, prcp_g)
 
-  m_water_o[], m_water_u[], percent_water_o[], percent_water_u[], prcp_g[]
+  m_water_o[], m_water_u[], perc_water_o[], perc_water_u[], prcp_g[]
 end
 
 function rainfall_stage1(Tair, prcp, perc_water, m_water, m_water_pre, lai_o, lai_u, Ω)

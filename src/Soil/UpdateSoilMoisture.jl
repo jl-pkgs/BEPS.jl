@@ -33,11 +33,11 @@ function UpdateSoilMoisture(p::Soil, kstep::Float64)
   # Max infiltration calculation
   # Ksat * (1 + (θ_sat - θ_prev) / dz * ψ_sat / θ_sat * b )
   inf_max = f_water[1] * Ksat[1] * (1 + (θ_sat[1] - θ_prev[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
-  inf = max(f_water[1] * (p.depth_water / kstep + p.r_rain_g), 0)
+  inf = max(f_water[1] * (p.z_water / kstep + p.r_rain_g), 0)
   inf = clamp(inf, 0, inf_max)
 
   # Ponded water after runoff. This one is related to runoff. LHe.
-  p.depth_water = (p.depth_water / kstep + p.r_rain_g - inf) * kstep * p.r_drainage
+  p.z_water = (p.z_water / kstep + p.r_rain_g - inf) * kstep * p.r_drainage
 
   @inbounds while total_t < kstep
     # 为了解决相互依赖的关系，循环寻找稳态

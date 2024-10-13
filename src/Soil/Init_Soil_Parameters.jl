@@ -179,8 +179,8 @@ end
 function Init_Soil_Status(p::Soil, Tsoil::Float64, Tair::Float64, Ms::Float64, snowdepth::Float64)
   d_t = clamp(Tsoil - Tair, -5.0, 5.0)
 
-  p.depth_water = 0.0
-  p.depth_snow = snowdepth
+  p.z_water = 0.0
+  p.z_snow = snowdepth
   p.r_rain_g = 0.0
 
   temp_scale_factors = [0.4, 0.5, 1.0, 1.2, 1.4]

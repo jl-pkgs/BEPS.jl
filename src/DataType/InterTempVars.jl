@@ -46,8 +46,8 @@ export SurfaceMass
   ρ_snow::FT = 0.0
   prcp_g::FT = 0.0
 
-  depth_water::FT = 0.0
-  depth_snow::FT = 0.0
+  z_water::FT = 0.0
+  z_snow::FT = 0.0
 
   perc_snow_o::FT = 0.0 # Xcs_o
   perc_snow_u::FT = 0.0 # Xcs_u

@@ -1,8 +1,8 @@
 @testset "surface_temperature_jl tests" begin
   T_air = 2.0  # Air temperature in Celsius
   rh_air = 0.5  # Relative humidity
-  depth_snow = 0.03  # Depth of snow in meters
-  depth_water = 0.1  # Depth of water in meters
+  z_snow = 0.03  # Depth of snow in meters
+  z_water = 0.1  # Depth of water in meters
   cp_soil1 = 1000.0  # Heat capacity of soil layer 1
   cp_soil0 = 800.0  # Heat capacity of soil layer 0
   Gheat_g = 0.1  # Ground heat flux
@@ -25,17 +25,17 @@
   T_snow2_last = 0.001 # Last snow layer 2 temperature in Celsius
 
   # T_ground, T_any0, T_soil0, T_snow, T_snow1, T_snow2, G
-  for depth_snow = [0.01, 0.03, 0.06]
+  for z_snow = [0.01, 0.03, 0.06]
     r_jl = surface_temperature_jl(
       T_air, rh_air,
-      depth_snow, depth_water,
+      z_snow, z_water,
       cp_soil1, cp_soil0, Gheat_g,
       depth_soil1, ρ_snow, tempL_u, Rn_g, E_soil, E_water_g, E_snow_g, λ_soil1, perc_snow_g, G_soil1,
       T_ground_last, T_soil1_last, T_any0_last, T_soil0_last, T_snow_last, T_snow1_last, T_snow2_last
     )
     r_c = clang.surface_temperature_c(
       T_air, rh_air,
-      depth_snow, depth_water,
+      z_snow, z_water,
       cp_soil1, cp_soil0, Gheat_g,
       depth_soil1, ρ_snow, tempL_u, Rn_g, E_soil, E_water_g, E_snow_g, λ_soil1, perc_snow_g, G_soil1,
       T_ground_last, T_soil1_last, T_any0_last, T_soil0_last, T_snow_last, T_snow1_last, T_snow2_last

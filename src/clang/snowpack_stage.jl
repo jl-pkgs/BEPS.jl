@@ -3,8 +3,8 @@ function snowpack_stage1(Tair, prcp,
   mass_snow_o::TypeRef, mass_snow_u::TypeRef, mass_snow_g::TypeRef,
   lai_o::T, lai_u::T, clumping::T,
   area_snow_o::TypeRef, area_snow_u::TypeRef,
-  percent_snow_o::TypeRef, percent_snow_u::TypeRef, percent_snow_g::TypeRef,
-  density_snow::TypeRef, depth_snow::TypeRef, albedo_v_snow::TypeRef, albedo_n_snow::TypeRef) where {T<:Real}
+  perc_snow_o::TypeRef, perc_snow_u::TypeRef, perc_snow_g::TypeRef,
+  density_snow::TypeRef, z_snow::TypeRef, albedo_v_snow::TypeRef, albedo_n_snow::TypeRef) where {T<:Real}
 
   # mass_snow_o_last = mass_snow_o[]
   # mass_snow_u_last = mass_snow_u[]
@@ -15,9 +15,9 @@ function snowpack_stage1(Tair, prcp,
     mass_snow_o_last, mass_snow_u_last, mass_snow_g_last,
     mass_snow_o, mass_snow_u, mass_snow_g, # by reference
     lai_o, lai_u, clumping,
-    area_snow_o, area_snow_u, percent_snow_o, percent_snow_u, percent_snow_g, density_snow, depth_snow, albedo_v_snow, albedo_n_snow)
+    area_snow_o, area_snow_u, perc_snow_o, perc_snow_u, perc_snow_g, density_snow, z_snow, albedo_v_snow, albedo_n_snow)
 
-  # percent_snow_o[], percent_snow_u[], percent_snow_g[]
+  # perc_snow_o[], perc_snow_u[], perc_snow_g[]
 end
 
 function snowpack_stage1(Tair::Float64, prcp::Float64,
@@ -26,7 +26,7 @@ function snowpack_stage1(Tair::Float64, prcp::Float64,
   mass_snow::Layer3{Float64}, # by reference
   perc_snow::Layer3{Float64}, # by reference
   area_snow::Layer2{Float64}, # by reference
-  depth_snow::Float64, 
+  z_snow::Float64, 
   ρ_snow::Ref{Float64}, albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
 
   _mass_snow_o = Ref(mass_snow.o)
@@ -40,7 +40,7 @@ function snowpack_stage1(Tair::Float64, prcp::Float64,
   _area_snow_o = Ref(area_snow.o)
   _area_snow_u = Ref(area_snow.u)
 
-  _depth_snow = Ref(depth_snow)
+  _z_snow = Ref(z_snow)
 
   snowpack_stage1(Tair, prcp,
     mass_snow_pre.o, mass_snow_pre.u, mass_snow_pre.g,
@@ -48,7 +48,7 @@ function snowpack_stage1(Tair::Float64, prcp::Float64,
     lai_o, lai_u, clumping,
     _area_snow_o, _area_snow_u,
     _perc_snow_o, _perc_snow_u, _perc_snow_g,
-    ρ_snow, _depth_snow, albedo_v_snow, albedo_n_snow)
+    ρ_snow, _z_snow, albedo_v_snow, albedo_n_snow)
 
   # update values in Layer3
   mass_snow.o = _mass_snow_o[]
@@ -60,7 +60,7 @@ function snowpack_stage1(Tair::Float64, prcp::Float64,
   area_snow.o = _area_snow_o[]
   area_snow.u = _area_snow_u[]
   
-  return _depth_snow[]
+  return _z_snow[]
 end
 
 
@@ -81,23 +81,23 @@ end
 
 
 function snowpack_stage3(Tair::FT, temp_snow::FT, temp_snow_last::FT, density_snow::FT,
-  depth_snow::TypeRef, depth_water::TypeRef, mass_snow_g::TypeRef)
+  z_snow::TypeRef, z_water::TypeRef, mass_snow_g::TypeRef)
   ccall((:snowpack_stage3, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    Tair, temp_snow, temp_snow_last, density_snow, depth_snow, depth_water, mass_snow_g)
+    Tair, temp_snow, temp_snow_last, density_snow, z_snow, z_water, mass_snow_g)
 end
 
 function snowpack_stage3(Tair::Float64, Tsnow::Float64, Tsnow_last::Float64, ρ_snow::Float64,
-  depth_snow::FT, depth_water::FT, mass_snow::Layer3{Float64})
+  z_snow::FT, z_water::FT, mass_snow::Layer3{Float64})
   # 与julia版本的保持一致
-  _depth_snow = Ref(depth_snow)
-  _depth_water = Ref(depth_water)
+  _z_snow = Ref(z_snow)
+  _z_water = Ref(z_water)
   _mass_snow_g = Ref(mass_snow.g)
 
-  snowpack_stage3(Tair, Tsnow, Tsnow_last, ρ_snow, _depth_snow, _depth_water, _mass_snow_g)
+  snowpack_stage3(Tair, Tsnow, Tsnow_last, ρ_snow, _z_snow, _z_water, _mass_snow_g)
   mass_snow.g = _mass_snow_g[]
 
-  _depth_snow[], _depth_water[]
+  _z_snow[], _z_water[]
 end
 
 
