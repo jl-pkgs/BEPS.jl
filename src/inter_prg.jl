@@ -18,7 +18,7 @@ The inter-module function between main program and modules
 function inter_prg_jl(
   jday::Int, hour::Int,
   lai::T, Ω::T, param::Vector{T}, meteo::Met, CosZs::T,
-  var_o::Vector{T}, var_n::Vector{T}, soil::AbstractSoil,
+  state::State{T}, soil::AbstractSoil,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; kw...) where {T}
 
@@ -82,9 +82,9 @@ function inter_prg_jl(
   α_dry = param[25+1]       # the albedo of dry soil
   canopyh_o = param[29+1]       # to be used for module aerodynamic_conductance
   canopyh_u = param[30+1]
-  height_wind_sp = param[31+1]  # the_height_to_measure_wind_speed, for module aerodynamic_conductance
-  m_h2o = param[33+1]           # to be used for module photosynthesis
-  b_h2o = param[34+1]
+  z_wind = param[31+1]  # the_height_to_measure_wind_speed, for module aerodynamic_conductance
+  g1_w = param[33+1]           # to be used for module photosynthesis
+  g0_w = param[34+1]
 
   if (Rs <= 0)
     α_v_o = 0.0
@@ -100,15 +100,18 @@ function inter_prg_jl(
 
   init_leaf_dbl(Tc_old, Ta - 0.5)
 
-  # Ground surface temperature
-  var.Ts0[1] = clamp(var_o[3+1], Ta - 2.0, Ta + 2.0)  # ground0
-  var.Tsm0[1] = clamp(var_o[5+1], Ta - 2.0, Ta + 2.0) # 
-  var.Tsn0[1] = clamp(var_o[4+1], Ta - 2.0, Ta + 2.0) # snow0
-  var.Tsn1[1] = clamp(var_o[6+1], Ta - 2.0, Ta + 2.0) # snow1
-  var.Tsn2[1] = clamp(var_o[7+1], Ta - 2.0, Ta + 2.0) # snow2
+  # Ground surface temperature  
+  # [Ts0, Tsn, Tsm0, Tsn1, Tsn2]
+  var.Ts0[1] = clamp(state.Ts[1], Ta - 2.0, Ta + 2.0)  # ground0
+  var.Tsn0[1] = clamp(state.Ts[2], Ta - 2.0, Ta + 2.0) # snow0
+  var.Tsm0[1] = clamp(state.Ts[3], Ta - 2.0, Ta + 2.0) # any
+  var.Tsn1[1] = clamp(state.Ts[4], Ta - 2.0, Ta + 2.0) # snow1
+  var.Tsn2[1] = clamp(state.Ts[5], Ta - 2.0, Ta + 2.0) # snow2
+  var.Qhc_o[1] = state.Qhc_o
 
-  var.Qhc_o[1] = var_o[11+1]
-
+  m_snow_pre = state.m_snow# mass_snow
+  m_water_pre = state.m_water
+  
   depth_snow = soil.depth_snow
   depth_water = soil.depth_water
   (depth_water < 0.001) && (depth_water = 0.0)
@@ -117,13 +120,11 @@ function inter_prg_jl(
   # understory the mass of intercepted liquid water and snow, overstory
   f_snow = Layer3(0.0) # perc_snow
   m_snow = Layer3(0.0) # mass_snow
-  m_snow_pre = Layer3(var_o[16+1], var_o[19+1], var_o[20+1]) # mass_snow
-
+  A_snow = Layer2()
+  
   # the mass of intercepted liquid water and snow, overstory 
   f_water = Layer2() # perc_water
   m_water = Layer2() # mass_water
-  m_water_pre = Layer2(var_o[15+1], var_o[18+1])
-  A_snow = Layer2()
 
   ρ_snow = init_dbl()
   α_v_sw = init_dbl()
@@ -172,7 +173,7 @@ function inter_prg_jl(
       num = num + 1
       # /***** Aerodynamic_conductance module by G.Mo  *****/
       ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
-        aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, Ω, Ta, wind, GH_o,
+        aerodynamic_conductance_jl(canopyh_o, canopyh_u, z_wind, Ω, Ta, wind, GH_o,
           lai_o + stem_o, lai_u + stem_u)
 
       init_leaf_dbl2(Gh,
@@ -206,7 +207,7 @@ function inter_prg_jl(
 
       if (CosZs > 0)
         photosynthesis(Tc_old, Rns, Ci_old, leleaf,
-          Ta, ea, f_soilwater, b_h2o, m_h2o,
+          Ta, ea, f_soilwater, g0_w, g1_w,
           Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
           Gs_new, Ac, Ci_new; version="julia")
       else
@@ -333,20 +334,16 @@ function inter_prg_jl(
   var.Tsn1[k] = clamp(var.Tsn1[k], -40.0, 40.0)
   var.Tsn2[k] = clamp(var.Tsn2[k], -40.0, 40.0)
 
-  var_n[3+1] = var.Ts0[k]        # To: The temperature of ground surface
-  var_n[4+1] = var.Tsn0[k]       # To: The temperature of ground surface
-  var_n[5+1] = var.Tsm0[k]
-  var_n[6+1] = var.Tsn1[k]       # To: The temperature of ground surface
-  var_n[7+1] = var.Tsn2[k]       # To: The temperature of ground surface
-  var_n[11+1] = var.Qhc_o[k]
+  state.Ts[1] = var.Ts0[k]
+  state.Ts[2] = var.Tsn0[k]
+  state.Ts[3] = var.Tsm0[k]
+  state.Ts[4] = var.Tsn1[k]
+  state.Ts[5] = var.Tsn2[k]
 
-  var_n[15+1] = m_water.o
-  var_n[18+1] = m_water.u
-
-  var_n[16+1] = m_snow.o
-  var_n[19+1] = m_snow.u
-  var_n[20+1] = m_snow.g
-
+  state.Qhc_o = var.Qhc_o[k]
+  set!(state.m_water, m_water)
+  set!(state.m_snow, m_snow)
+  
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 
   OutputET!(mid_ET,
@@ -369,6 +366,3 @@ function inter_prg_jl(
   mid_res.GPP = (GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded) * 12 * step * 0.000001
   nothing
 end
-
-# TODO: 
-# - var_n: 可以重写为结构体

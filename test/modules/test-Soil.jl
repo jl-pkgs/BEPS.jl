@@ -66,11 +66,13 @@ function init_soil()
     Tsoil_c=Tuple(Tsoil_c),
     ice_ratio=Tuple(ice_ratio))
 
-  var_jl = zeros(41)
-  var_c = zeros(41)
+  # var_jl = zeros(41)
+  state_jl = State()
+  state_c = zeros(41)
+  Ta = meteo.temp
 
-  Init_Soil_var_o(p_jl, var_jl, meteo, param, par)
-  Init_Soil_var_o(p_c, var_c, meteo, param, par)
+  Init_Soil_var_o(p_jl, state_jl, Ta, param, par)
+  Init_Soil_var_o(p_c, state_c, Ta, param, par)
   
   p_jl, p_c
 end
