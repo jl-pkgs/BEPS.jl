@@ -33,3 +33,21 @@ function init_state!(state::State, soil::AbstractSoil, Ta)
   state.ice_ratio .= soil.ice_ratio[1:6]
   return nothing
 end
+
+# function update_state!(state::State, var_n::Vector{Float64})
+#   Tsoil = state.Tsoil
+#   var_n[3+1] = Tsoil[1]       # Ts0, 3
+#   var_n[4+1] = Tsoil[2]       # Tsn, 4 
+#   var_n[5+1] = Tsoil[3]       # Tsm0, 5
+#   var_n[6+1] = Tsoil[4]       # Tsn1, 6
+#   var_n[7+1] = Tsoil[5]       # Tsn1, 7
+
+#   var_n[11+1] = state.Qhc_o   # Qhc_o, 11, sensible heat flux
+
+#   var_n[15+1] = state.m_water.o
+#   var_n[18+1] = state.m_water.u
+
+#   var_n[16+1] = state.m_snow.o
+#   var_n[19+1] = state.m_snow.u
+#   var_n[20+1] = state.m_snow.g
+# end

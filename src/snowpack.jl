@@ -92,7 +92,6 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   m_snow.g = max(0.0, m_snow_pre.g + δ_zs * ρ_new) # [kg m-2]
 
   if δ_zs > 0
-    # 可能导致了ρ_snow的极低。
     ρ_snow[] = (ρ_snow[] * z_snow + ρ_new * δ_zs) / (z_snow + δ_zs) # 计算混合密度
   else
     ρ_snow[] = (ρ_snow[] - 250) * exp(-0.001 * kstep / 3600.0) + 250.0

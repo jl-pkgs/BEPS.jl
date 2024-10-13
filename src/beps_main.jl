@@ -1,6 +1,4 @@
-function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
-  version="julia", debug=false, kw...)
-
+function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", debug=false, kw...)
   meteo = Met()
   mid_res = Results()
   mid_ET = OutputET()
@@ -30,23 +28,17 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple;
     state = zeros(41)
     state_n = zeros(41)
   end
+  Ta = d.tem[1]
+  Init_Soil_var_o(soil, state, Ta, param, par)
 
-  init = true
   for i = 1:n
     jday = d.day[i]
     hour = d.hour[i]
-
     _day = ceil(Int, i / 24)
     mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
     _lai = lai[_day] * param[3] / par.clumping # re-calculate LAI & renew clump index
     fill_meteo!(meteo, d, i)
-
-    if init
-      Init_Soil_var_o(soil, state, meteo.temp, param, par)
-      init = false
-    end
-
     CosZs = s_coszs(jday, hour, par.lat, par.lon) # cos_solar zenith angle
 
     # /***** start simulation modules *****/

@@ -48,6 +48,3 @@ function snow_density(Ta::Float64, U10::Float64=NaN; tfrz=0.0, method="LoTmpDnsS
   end
   ρ_snow
 end
-
-
-export snow_density

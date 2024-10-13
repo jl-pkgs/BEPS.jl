@@ -49,7 +49,8 @@ function inter_prg_jl(
   Tcu = 0.0
 
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
-  Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, param)
+  VCmax25, N_leaf, slope = param[37], param[47], param[48]
+  Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope)
 
   # /*****  LAI calculation module, by B. Chen  *****/
   lai_o = lai < 0.1 ? 0.1 : lai

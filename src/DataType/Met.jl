@@ -27,7 +27,6 @@ end
 # Met(Srad, LR, temp, rh, rain, wind) = 
 #   Met(; Srad, LR, temp, rh, rain, wind)
 
-
 """
 # Arguments
 - `Srad`: W m-2
@@ -49,4 +48,34 @@ end
 
 function fill_meteo!(met::Met, d::DataFrame, k::Int=1)
   fill_meteo!(met, d.rad[k], d.tem[k], d.pre[k], d.wind[k], d.hum[k])
+end
+
+
+"""
+    AirLayer{FT}
+
+Struct to store environmental conditions in each air layer corresponds to one canopy layer.
+
+# Fields
+$(TYPEDFIELDS)
+
+> Copied from Land.jl
+"""
+@with_kw mutable struct AirLayer{FT<:AbstractFloat}
+  "Air temperature `[K]`"
+  Tair::FT
+  "Air density `[kg m⁻³]`"
+  ρₐ::FT
+  "Specific heat of air `[J kg⁻¹ K⁻¹]`"
+  Cp_ca::FT
+  "Vapor pressure deficit `[Pa]`"
+  VPD::FT
+  "Psychrometric constant `[Pa K⁻¹]`"
+  γ::FT
+  "Slope of Saturation vapor pressure es `[Pa K⁻¹]`"
+  Δ::FT
+  "Retive humility `[%]`"
+  RH::FT
+  "Wind speed `[m s⁻¹]`"
+  wind::FT = FT(2)
 end

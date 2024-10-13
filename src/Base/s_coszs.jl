@@ -8,12 +8,10 @@ s_coszs(jday, hour, lat, lon)
 ```
 """
 function s_coszs(jday::Int, hour::Int, lat::Float64, lon::Float64)
-  RTIMES = 24.0 # Assuming RTIMES is a constant with a value of 24.0
-
   Delta = 0.006918 - 0.399912 * cos(jday * 2.0 * π / 365.0) + 0.070257 * sin(jday * 2.0 * π / 365.0) - 0.006758 * cos(jday * 4.0 * π / 365.0) + 0.000907 * sin(jday * 4.0 * π / 365.0)
   # delta is the declination angle of sun.
 
-  hr = hour * 24.0 / RTIMES + lon / 15.0  # UTC time
+  hr = hour  + lon / 15.0  # UTC time
   # hr =j*24.0/RTIMES; # local time
   hr > 24 && (hr = hr - 24)
   hr < 0 && (hr = 24 + hr)

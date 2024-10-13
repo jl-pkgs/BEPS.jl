@@ -1,11 +1,12 @@
-function VCmax(lai::FT, clumping::FT, CosZs::FT, param::AbstractVector{FT})
+# VCmax-Nitrogen calculations
+# 
+# VCmax25 = 62.5          # maximum capacity of Rubisco at 25C-VCmax	
+# N_leaf = 3.10 + 1.35    # leaf Nitrogen content	mean value + 1 SD g/m2 
+# slope = 20.72 / 62.5       # slope of VCmax-N curve
+function VCmax(lai::FT, Ω::FT, CosZs::FT, VCmax25::FT, N_leaf::FT, slope::FT)
   CosZs <= 0 && return 0.0, 0.0 # 光合仅发生在白天
-  
-  # parameters for Vcmax-Nitrogen calculations
-  G_theta = 0.5 # assuming a spherical leaf angle distribution
-  K = G_theta * clumping / CosZs
-  Kn = 0.3      # 0.713/2.4
-  Vcmax0 = param[36+1]
+  K = 0.5 * Ω / CosZs # assuming a spherical leaf angle distribution
+  Kn = 0.3            # 0.713/2.4
 
   expr1 = 1 - exp(-K * lai)
   expr2 = 1 - exp(-lai * (Kn + K))
@@ -13,16 +14,16 @@ function VCmax(lai::FT, clumping::FT, CosZs::FT, param::AbstractVector{FT})
 
   # Formulas based on Chen et al., 2012, GBC
   if (expr1 > 0)
-    Vcmax_sunlit = Vcmax0 * param[47+1] * param[46+1] * K * expr2 / (Kn + K) / expr1
+    VCmax_sunlit = VCmax25 * slope * N_leaf * K * expr2 / (Kn + K) / expr1
   else
-    Vcmax_sunlit = Vcmax0
+    VCmax_sunlit = VCmax25
   end
 
   if (K > 0 && lai > expr1 / K)
-    Vcmax_shaded = Vcmax0 * param[47+1] * param[46+1] * (expr3 / Kn - expr2 / (Kn + K)) / (lai - expr1 / K)
+    VCmax_shaded = VCmax25 * slope * N_leaf *
+                   (expr3 / Kn - expr2 / (Kn + K)) / (lai - expr1 / K)
   else
-    Vcmax_shaded = Vcmax0
+    VCmax_shaded = VCmax25
   end
-
-  Vcmax_sunlit, Vcmax_shaded
+  VCmax_sunlit, VCmax_shaded
 end
