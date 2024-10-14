@@ -34,17 +34,12 @@ function inter_prg_jl(
   dz = zeros(layer + 1)
   lambda = zeros(layer + 2)
 
-  ra_o = 0.0
-  ra_u = 0.0
   ra_g = 0.0
   Ga_o = 0.0
   Gb_o = 0.0
   Ga_u = 0.0
   Gb_u = 0.0
-
-  radiation_o = 0.0
-  radiation_u = 0.0
-  radiation_g = 0.0
+  radiation_o, radiation_u, radiation_g = 0.0, 0.0, 0.0
 
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
   VCmax25, N_leaf, slope = param[37], param[47], param[48]

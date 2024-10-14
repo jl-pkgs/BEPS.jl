@@ -69,8 +69,9 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 
 ### 2024-10-13
 
-- [x] `LAMBDA` function in the photosynthesis module, the unit of `lambda_ice`
+- [x] `LAMBDA` function in the `photosynthesis` module, the unit of `lambda_ice`
   is error, `333 J/kg` should be `333000 J/kg`.
+
 - [x] snowpack_stage1:
   + `snowrate_o`未被初始化，导致`snowrate_o > 0`为`true`.
   + 雪深最大设置为`10m`，防止不合理的不断累积：`*depth_snow=min(*mass_snow_g/(*density_snow), 10.0);`
@@ -79,7 +80,7 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 
 ### 2024-10-14
 
-- [x] snowpack: z_snow一直增加，一直到无穷
+- [x] snowpack: 积雪夏季不融化，`z_snow`不断增加，一直到无穷
 
   + `snowpack_stage3_jl`融雪和结冻条件的改正：
   ```julia
