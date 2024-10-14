@@ -149,8 +149,10 @@ function snowpack_stage3_jl(Tair::Float64, Tsnow::Float64, Tsnow_last::Float64, 
   ms_sup = m_snow.g
 
   Δm = cal_melt(zs_sup, ρ_snow, Tsnow) # [kg m-2]
-  con_melt = Tsnow > 0 && Tsnow_last <= 0 && ms_sup > 0
-  con_frozen = Tsnow <= 0 && Tsnow_last > 0 && z_water > 0
+  # con_melt = Tsnow > 0 && Tsnow_last <= 0 && ms_sup > 0
+  # con_frozen = Tsnow <= 0 && Tsnow_last > 0 && z_water > 0
+  con_melt = Tsnow > 0 && ms_sup > 0
+  con_frozen = Tsnow <= 0 && z_water > 0
 
   ms_melt = 0.0
   mw_frozen = 0.0

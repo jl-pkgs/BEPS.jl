@@ -20,7 +20,8 @@ function inter_prg_jl(
   lai::T, Ω::T, param::Vector{T}, meteo::Met, CosZs::T,
   state::State{T}, soil::AbstractSoil,
   Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET, var::InterTempVars; kw...) where {T}
+  mid_res::Results, mid_ET::OutputET, var::InterTempVars; 
+  fix_snowpack::Bool=true, kw...) where {T}
 
   # var = InterTempVars()
   init_vars!(var)
@@ -104,7 +105,7 @@ function inter_prg_jl(
 
   # the evaporation rate of rain and snow--in kg/m^2/s, 
   # understory the mass of intercepted liquid water and snow, overstory
-  f_snow = Layer3(0.0)    # perc_snow
+  f_snow = Layer3(0.0) # perc_snow
   m_snow = Layer3(0.0) # mass_snow
   A_snow = Layer2()
 
@@ -120,14 +121,14 @@ function inter_prg_jl(
     α_n = Layer3(param[23+1])
   end
 
-  ρ_snow = init_dbl()
+  ρ_snow = init_dbl(state.ρ_snow)
   α_v_sw = init_dbl()
   α_n_sw = init_dbl()
   Tc = Layer3() # temperatures of o, u, g
 
   # ten time intervals in a hourly time step.6min or 360s per loop
   @inbounds for k = 2:kloop+1
-    ρ_snow[] = 0.0 # TODO: debug C, might error
+    !fix_snowpack && (ρ_snow[] = 0.0) # TODO: exact as C
     α_v_sw[], α_n_sw[] = 0.0, 0.0
 
     # set!(m_snow_pre, 0.0);
@@ -335,6 +336,7 @@ function inter_prg_jl(
   state.Qhc_o = var.Qhc_o[k]
   set!(state.m_water, m_water)
   set!(state.m_snow, m_snow)
+  state.ρ_snow = ρ_snow[]
 
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 

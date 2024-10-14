@@ -65,11 +65,9 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 - [ ] 土壤类型参数
 - [ ] clumping index数据处理
 
-## Bugs
+## Bugs Fixed
 
-- [ ] snowpack: depth_snow一直增加，一直到无穷
-
-> 2024-10-13
+### 2024-10-13
 
 - [x] `LAMBDA` function in the photosynthesis module, the unit of `lambda_ice`
   is error, `333 J/kg` should be `333000 J/kg`.
@@ -78,6 +76,28 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
   + 雪深最大设置为`10m`，防止不合理的不断累积：`*depth_snow=min(*mass_snow_g/(*density_snow), 10.0);`
 - [x] snowpack_stage3: 
   `max(mass_water_frozen,*depth_water*density_water)`, `max` should be `min`
+
+### 2024-10-14
+
+- [x] snowpack: z_snow一直增加，一直到无穷
+
+  + `snowpack_stage3_jl`融雪和结冻条件的改正：
+  ```julia
+  # con_melt = Tsnow > 0 && Tsnow_last <= 0 && ms_sup > 0
+  # con_frozen = Tsnow <= 0 && Tsnow_last > 0 && z_water > 0
+  con_melt = Tsnow > 0 && ms_sup > 0
+  con_frozen = Tsnow <= 0 && z_water > 0
+  ```
+  + `ρ_snow`: 初始值设置为`250 [kg m-3]`，避免在`0`处跳动。
+  + `z_snow`: 积雪深度，最大限制在`10m`
+  + `ρ_snow`: 传入状态变量state，前后沿用
+  > 修复前的结果
+  ![](./docs/images/Figure3_BEPS_snowpack_BEPS_v4.10.png)
+
+  > 修复后的结果
+  ![](./docs/images/Figure3_BEPS_snowpack_Julia_v0.1.7.png)
+
+  详细代码见：[Figure3_snowpack_diagnose.jl](examples/Figure3_snowpack_diagnose.jl)
 
 ## Researches
 

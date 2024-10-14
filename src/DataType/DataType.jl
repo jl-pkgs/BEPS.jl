@@ -6,6 +6,7 @@ Value! = setindex!
 
 # dbl() = Cdouble(0)
 init_dbl() = Ref(0.0)
+init_dbl(x::T) where {T<:Real} = Ref(x)
 nzero(n) = tuple(zeros(n)...) # n double zero
 
 
@@ -59,8 +60,11 @@ end
 
   Qhc_o::FT = 0.0
   m_water::Layer2 = Layer2{FT}()     # [15, 18] + 1
-  m_snow::Layer3 = Layer3{FT}() # [16, 19, 20] + 1
+  m_snow::Layer3 = Layer3{FT}()      # [16, 19, 20] + 1
+  ρ_snow::FT = 250.0                 # [kg m-3] snow density
 end
+# 拖着`ρ_snow`，`ρ_snow`也是一个状态连续的变量
+# https://www.eoas.ubc.ca/courses/atsc113/snow/met_concepts/07-met_concepts/07b-newly-fallen-snow-density/
 
 export State
 

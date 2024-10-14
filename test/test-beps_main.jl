@@ -17,7 +17,7 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
   d = deserialize(path_proj("data/p1_meteo"))
   d.tem = d.tem .- 5.0
 
-  @time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia")
+  @time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia", fix_snowpack=false)
   @time df_c, df_ET_c = besp_main(d, lai, par; version="c")
   r = sum(df_jl)
 

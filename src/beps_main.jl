@@ -1,4 +1,4 @@
-function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", debug=false, kw...)
+function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", debug=false, fix_snowpack=true, kw...)
   meteo = Met()
   mid_res = Results()
   mid_ET = OutputET()
@@ -45,7 +45,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", 
     if version == "julia"
       inter_prg_jl(jday, hour, _lai, par.clumping, param, meteo, CosZs,
         state, soil,
-        Ra, mid_res, mid_ET, var; debug)
+        Ra, mid_res, mid_ET, var; debug, fix_snowpack)
     elseif version == "c"
       inter_prg_c(jday, hour, _lai, par.clumping, param, meteo, CosZs,
         state, state_n, soil,
