@@ -2,7 +2,7 @@ import BEPS: SoilRootFraction,
   Init_Soil_Parameters,
   Init_Soil_Status,
   soil_water_factor_v2,
-  Soil_Water_Uptake,
+  Root_Water_Uptake,
   Update_Cs,
   Update_ice_ratio,
   UpdateSoilThermalConductivity,
@@ -31,7 +31,7 @@ function soil_water_factor_v2(p::Soil_c)
   ccall((:soil_water_factor_v2, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
 end
 
-function Soil_Water_Uptake(p::Soil_c, Trans_o, Trans_u, Evap_soil)
+function Root_Water_Uptake(p::Soil_c, Trans_o, Trans_u, Evap_soil)
   ccall((:Soil_Water_Uptake, libbeps), Cvoid,
     (Ptr{Soil_c}, Cdouble, Cdouble, Cdouble),
     Ref(p), Trans_o, Trans_u, Evap_soil)

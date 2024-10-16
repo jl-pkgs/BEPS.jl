@@ -1,6 +1,6 @@
 include("Init_Soil_Parameters.jl")
 include("Init_Soil_var_o.jl")
-include("Update_thermal.jl")
+include("UpdateHeatFlux.jl")
 include("UpdateSoilMoisture.jl")
 include("soil_water_factor_v2.jl")
 
@@ -18,5 +18,4 @@ export UpdateHeatFlux, Update_Cs,
   Update_ice_ratio,
   UpdateSoilThermalConductivity,
   soil_water_factor_v2,
-  UpdateSoilMoisture,
-  Soil_Water_Uptake
+  UpdateSoilMoisture, Root_Water_Uptake

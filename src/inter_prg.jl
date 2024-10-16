@@ -309,7 +309,7 @@ function inter_prg_jl(
     # Update_G(soilp, var.G[1, k])
 
     UpdateHeatFlux(soil, Ta, kstep) # f_snow.g, var.lambda_snow[k], var.Tsn0[k],
-    Soil_Water_Uptake(soil, var.Trans_o[k], var.Trans_u[k], var.Evap_soil[k])
+    Root_Water_Uptake(soil, var.Trans_o[k], var.Trans_u[k], var.Evap_soil[k])
 
     soil.r_rain_g = var.r_rain_g[k]
     soil.z_water = z_water
