@@ -3,7 +3,7 @@ using DataFrames: DataFrame
 
 include("list.jl")
 include("helpers.jl")
-include("s_coszs.jl")
+# include("s_coszs.jl")
 
 # include("fill_meteo.jl")
 include("lai2.jl")
