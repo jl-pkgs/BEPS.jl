@@ -34,46 +34,47 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
   p.density_soil[1:5] .= [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # from flux tower.
   p.f_org[1:5] .= [5, 2, 1, 1, 0.3]
 
+  n = 5
   if stxt == 1  # sand
     b = [1.7, 1.9, 2.1, 2.3, 2.5]
     Ksat = [0.000058, 0.000052, 0.000046, 0.000035, 0.000010]  # 
-    porosity = [0.437, 0.437, 0.437, 0.437, 0.437]# porosity
-    θ_vfc = [0.09, 0.09, 0.09, 0.09, 0.09]   # field capacity
-    θ_vwp = [0.03, 0.03, 0.03, 0.03, 0.03]   # wilt point
-    κ = [8.6, 8.6, 8.6, 8.6, 8.6] # thermal conductivity
+    porosity = fill(0.437, n) # porosity
+    θ_vfc = fill(0.09, n)     # field capacity
+    θ_vwp = fill(0.03, n)     # wilt point
+    κ = fill(8.6, n) # thermal conductivity
     ψ_sat = [0.07, 0.08, 0.09, 0.10, 0.12]   # water potential at sat
 
   elseif stxt == 2  # loamy sand
     b = [2.1, 2.3, 2.5, 2.7, 2.9]
     Ksat = [0.000017, 0.000015, 0.000014, 0.000010, 0.000003] 
-    porosity = [0.437, 0.437, 0.437, 0.437, 0.437]  # porosity
-    θ_vfc = [0.21, 0.21, 0.21, 0.21, 0.21]  # field capacity
-    θ_vwp = [0.06, 0.06, 0.06, 0.06, 0.06]  # wilt point
-    κ = [8.3, 8.3, 8.3, 8.3, 8.3]  # thermal conductivity
+    porosity = fill(0.437, n)  # porosity
+    θ_vfc = fill(0.21, n)  # field capacity
+    θ_vwp = fill(0.06, n)  # wilt point
+    κ = fill(8.3, n)  # thermal conductivity
     ψ_sat = [0.09, 0.10, 0.11, 0.12, 0.14]  # water potential at sat
 
   elseif stxt == 3  # sandy loam
     b = [3.1, 3.3, 3.5, 3.7, 3.9]
     Ksat = [0.0000072, 0.00000648, 0.00000576, 0.00000432, 0.00000144]
-    porosity = [0.453, 0.453, 0.453, 0.453, 0.453]  # porosity
-    θ_vfc = [0.21, 0.21, 0.21, 0.21, 0.21]  # field capacity
-    θ_vwp = [0.10, 0.10, 0.10, 0.10, 0.10]  # wilt point
-    κ = [8.0, 8.0, 8.0, 8.0, 8.0]  # thermal conductivity
+    porosity = fill(0.453, n)  # porosity
+    θ_vfc = fill(0.21, n)  # field capacity
+    θ_vwp = fill(0.10, n)  # wilt point
+    κ = fill(8.0, n)  # thermal conductivity
     ψ_sat = [0.15, 0.16, 0.17, 0.18, 0.20]  # water potential at sat
 
   elseif stxt == 4  # loam
     b = [4.5, 4.7, 4.9, 5.1, 5.3]
     Ksat = [0.0000037, 0.0000033, 0.00000296, 0.00000222, 0.00000074] 
     porosity = [0.463, 0.463, 0.463, 0.463, 0.463]  # porosity
-    θ_vfc = [0.27, 0.27, 0.27, 0.27, 0.27]  # field capacity
-    θ_vwp = [0.12, 0.12, 0.12, 0.12, 0.12]  # wilt point
-    κ = [7.0, 7.0, 7.0, 7.0, 7.0]  # thermal conductivity
+    θ_vfc = fill(0.27, n)  # field capacity
+    θ_vwp = fill(0.12, n)  # wilt point
+    κ = fill(7.0, n)  # thermal conductivity
     ψ_sat = [0.11, 0.12, 0.13, 0.14, 0.16]  # water potential at sat
 
   elseif stxt == 5  # silty loam
     b = [4.7, 4.9, 5.1, 5.3, 5.5]
     Ksat = [0.0000019, 0.0000017, 0.00000152, 0.00000114, 0.00000038] 
-    porosity = [0.501, 0.501, 0.501, 0.501, 0.501]  # porosity
+    porosity = fill(0.501, n)  # porosity
     θ_vfc = [0.33, 0.33, 0.33, 0.33, 0.33]  # field capacity
     θ_vwp = [0.13, 0.13, 0.13, 0.13, 0.13]  # wilt point
     κ = [6.3, 6.3, 6.3, 6.3, 6.3]  # thermal conductivity

@@ -94,16 +94,20 @@ end
 @fastmath cal_K(θ::T, θ_sat::T, K_sat::T, b::T) where {T<:Real} =
   K_sat * (θ / θ_sat)^(2 * b + 3)
 
-
+"""
+[m s-1] -> 1000*[mm s-1] -> 1000*[kg m-2 s-1]
+"""
+# 如果流速过快，则减小时间步长
 function guess_step(max_Fb)
-  if max_Fb > 1.0e-5
-    this_step = 1.0
-  elseif max_Fb > 1.0e-6
-    this_step = 30.0
+  # this constraint is too large
+  if max_Fb > 1.0e-5 # 864 mm/day
+    dt = 1.0
+  elseif max_Fb > 1.0e-6 # 86.4 mm/day
+    dt = 30.0 # seconds
   else
-    this_step = 360.0
+    dt = 360.0
   end
-  this_step
+  dt
 end
 
 # Function to calculate soil water uptake from a layer
