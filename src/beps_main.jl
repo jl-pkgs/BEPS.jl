@@ -5,7 +5,8 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", 
   Ra = Radiation()
   var = InterTempVars()
 
-  param = readparam(par.landcover)      # n = 48
+  theta = readparam(par.landcover)  # n = 48
+  vegpar = theta2par(theta)
   # coef = readcoef(par.landcover, par.soil_type) # n = 48, soil respiration module
 
   n = size(d, 1)
@@ -29,7 +30,8 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", 
     state_n = zeros(41)
   end
   Ta = d.tem[1]
-  Init_Soil_var_o(soil, state, Ta, param, par)
+  (; r_drainage, r_root_decay) = vegpar
+  Init_Soil_var_o(soil, state, Ta, r_drainage, r_root_decay, par)
 
   for i = 1:n
     jday = d.day[i]
@@ -37,17 +39,17 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", 
     _day = ceil(Int, i / 24)
     mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
-    _lai = lai[_day] * param[3] / par.clumping # re-calculate LAI & renew clump index
+    _lai = lai[_day] * theta[3] / par.clumping # re-calculate LAI & renew clump index
     fill_meteo!(meteo, d, i)
     CosZs = s_coszs(jday, hour, par.lat, par.lon) # cos_solar zenith angle
 
     # /***** start simulation modules *****/
     if version == "julia"
-      inter_prg_jl(jday, hour, _lai, par.clumping, param, meteo, CosZs,
+      inter_prg_jl(jday, hour, _lai, par.clumping, vegpar, meteo, CosZs,
         state, soil,
         Ra, mid_res, mid_ET, var; debug, fix_snowpack)
     elseif version == "c"
-      inter_prg_c(jday, hour, _lai, par.clumping, param, meteo, CosZs,
+      inter_prg_c(jday, hour, _lai, par.clumping, theta, meteo, CosZs,
         state, state_n, soil,
         Ra, mid_res, mid_ET, var; debug)
       state .= state_n # state variables

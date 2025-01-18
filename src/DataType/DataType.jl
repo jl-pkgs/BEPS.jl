@@ -58,7 +58,7 @@ end
   θ_prev::Vector{FT} = zeros(FT, 6)      # 22:27
   ice_ratio::Vector{FT} = zeros(FT, 6)   # 28:33
 
-  Qhc_o::FT = 0.0
+  Qhc_o::FT = 0.0                    # [11] sensible heat flux
   m_water::Layer2 = Layer2{FT}()     # [15, 18] + 1
   m_snow::Layer3 = Layer3{FT}()      # [16, 19, 20] + 1
   ρ_snow::FT = 250.0                 # [kg m-3] snow density

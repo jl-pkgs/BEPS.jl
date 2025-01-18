@@ -71,9 +71,11 @@ function init_soil()
   state_c = zeros(41)
   Ta = meteo.temp
 
-  Init_Soil_var_o(p_jl, state_jl, Ta, param, par)
-  Init_Soil_var_o(p_c, state_c, Ta, param, par)
-  
+  r_drainage = param[27]
+  r_root_decay = param[28]
+
+  Init_Soil_var_o(p_jl, state_jl, Ta, r_drainage, r_root_decay, par)
+  Init_Soil_var_o(p_c, state_c, Ta, r_drainage, r_root_decay, par)
   p_jl, p_c
 end
 

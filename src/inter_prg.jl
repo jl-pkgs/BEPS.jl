@@ -4,10 +4,10 @@ The inter-module function between main program and modules
 # Arguments
 
 - `jday`      : day of year
-- `hour`     : hour of day
+- `hour`      : hour of day
 - `lai`       : leaf area index
 - `clumping`  : clumping index
-- `parameter` : parameter array according to land cover types
+- `param`     : parameter array according to land cover types
 - `meteo`     : meteorological data
 - `CosZs`     : cosine of solar zenith angle
 - `var_o`     : temporary variables array of last time step
@@ -17,7 +17,7 @@ The inter-module function between main program and modules
 """
 function inter_prg_jl(
   jday::Int, hour::Int,
-  lai::T, Ω::T, param::Vector{T}, meteo::Met, CosZs::T,
+  lai::T, Ω::T, param::VegParam{T}, meteo::Met, CosZs::T,
   state::State{T}, soil::AbstractSoil,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; 
@@ -42,23 +42,25 @@ function inter_prg_jl(
   radiation_o, radiation_u, radiation_g = 0.0, 0.0, 0.0
 
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
-  lc = Int(param[5])
-  LAI_max_o = param[9]
-  LAI_max_u = param[10]
-
-  _α_v = param[22+1]
-  _α_n = param[23+1]
-
-  α_sat = param[24+1]       # albedo of saturated/dry soil for module rainfall 1
-  α_dry = param[25+1]       # the albedo of dry soil
-  z_canopy_o = param[29+1]       # to be used for module aerodynamic_conductance
-  z_canopy_u = param[30+1]
-  z_wind = param[31+1]  # the_height_to_measure_wind_speed, for module aerodynamic_conductance
-  g1_w = param[33+1]           # to be used for module photosynthesis
-  g0_w = param[34+1]
-
-  VCmax25, N_leaf, slope_Vc = param[37], param[47], param[48]
-
+  (; lc, LAI_max_o, LAI_max_u, 
+    α_canopy_vis, α_canopy_nir, 
+    α_soil_sat, α_soil_dry,
+    z_canopy_o, z_canopy_u, z_wind, 
+    g0_w, g1_w, 
+    VCmax25, N_leaf, slope_Vc) = param
+  # lc = Int(param[5])
+  # LAI_max_o = param[9]
+  # LAI_max_u = param[10]
+  # α_canopy_vis = param[22+1]
+  # α_canopy_nir = param[23+1]
+  # α_soil_sat = param[24+1]       # albedo of saturated/dry soil for module rainfall 1
+  # α_soil_dry = param[25+1]       # albedo of dry soil
+  # z_canopy_o = param[29+1]  # used in `aerodynamic_conductance`
+  # z_canopy_u = param[30+1]
+  # z_wind = param[31+1]      # used in `aerodynamic_conductance`
+  # g1_w = param[33+1]        # used in `photosynthesis`
+  # g0_w = param[34+1]
+  # VCmax25, N_leaf, slope_Vc = param[37], param[47], param[48]
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
 
   # /*****  LAI calculation module, by B. Chen  *****/
@@ -118,8 +120,8 @@ function inter_prg_jl(
     α_v = Layer3()
     α_n = Layer3()
   else
-    α_v = Layer3(_α_v)
-    α_n = Layer3(_α_n)
+    α_v = Layer3(α_canopy_vis)
+    α_n = Layer3(α_canopy_nir)
   end
 
   ρ_snow = init_dbl(state.ρ_snow)
@@ -143,9 +145,9 @@ function inter_prg_jl(
     var.r_rain_g[k] = rainfall_stage1_jl(Ta, prcp, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
 
     if (soil.θ_prev[2] < soil.θ_vwp[2] * 0.5)
-      α_g = α_dry
+      α_g = α_soil_dry
     else
-      α_g = (soil.θ_prev[2] - soil.θ_vwp[2] * 0.5) / (soil.θ_sat[2] - soil.θ_vwp[2] * 0.5) * (α_sat - α_dry) + α_dry
+      α_g = (soil.θ_prev[2] - soil.θ_vwp[2] * 0.5) / (soil.θ_sat[2] - soil.θ_vwp[2] * 0.5) * (α_soil_sat - α_soil_dry) + α_soil_dry
     end
 
     α_v.g = 2.0 / 3.0 * α_g

@@ -1,11 +1,13 @@
 # landcover::Int, soil_type::Int, Tsoil, soilwater, snowdepth
 # initialize soil conditions, read soil parameters and set depth
-"Init_Soil_var_o(soil, state, Ta, parameter, par)"
+"Init_Soil_var_o(soil, state, Ta, param, par)"
 function Init_Soil_var_o(soil::AbstractSoil, state::Union{State,Vector},
-  Ta::Real, parameter::Vector, par::NamedTuple)
-
-  Init_Soil_Parameters(par.landcover, par.soil_type, parameter[28], soil)
-  soil.r_drainage = parameter[27]
+  Ta::FT, r_drainage::FT, r_root_decay::FT, 
+  par::NamedTuple) where {FT<:Real}
+  # r_drainage = param[27]
+  # r_root_decay = param[28]
+  Init_Soil_Parameters(par.landcover, par.soil_type, r_root_decay, soil)
+  soil.r_drainage = r_drainage
   Init_Soil_Status(soil, par.Tsoil, Ta, par.soilwater, par.snowdepth) # LHE
 
   init_state!(state, soil, Ta)
