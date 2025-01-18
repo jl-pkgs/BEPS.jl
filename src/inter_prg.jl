@@ -42,22 +42,36 @@ function inter_prg_jl(
   radiation_o, radiation_u, radiation_g = 0.0, 0.0, 0.0
 
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
-  VCmax25, N_leaf, slope = param[37], param[47], param[48]
-  Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope)
+  lc = Int(param[5])
+  LAI_max_o = param[9]
+  LAI_max_u = param[10]
+
+  _α_v = param[22+1]
+  _α_n = param[23+1]
+
+  α_sat = param[24+1]       # albedo of saturated/dry soil for module rainfall 1
+  α_dry = param[25+1]       # the albedo of dry soil
+  z_canopy_o = param[29+1]       # to be used for module aerodynamic_conductance
+  z_canopy_u = param[30+1]
+  z_wind = param[31+1]  # the_height_to_measure_wind_speed, for module aerodynamic_conductance
+  g1_w = param[33+1]           # to be used for module photosynthesis
+  g0_w = param[34+1]
+
+  VCmax25, N_leaf, slope_Vc = param[37], param[47], param[48]
+
+  Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
 
   # /*****  LAI calculation module, by B. Chen  *****/
   lai_o = lai < 0.1 ? 0.1 : lai
-
-  landcover = Int(param[4+1])
-  if (landcover == 25 || landcover == 40)
+  if (lc == 25 || lc == 40)
     lai_u = 0.01
   else
     lai_u = 1.18 * exp(-0.99 * lai_o)
   end
   (lai_u > lai_o) && (lai_u = 0.01)
 
-  stem_o = param[8+1] * 0.2    # parameter[8].LAI max overstory
-  stem_u = param[9+1] * 0.2    # parameter[9].LAI max understory
+  stem_o = LAI_max_o * 0.2    # parameter[8].LAI max overstory
+  stem_u = LAI_max_u * 0.2    # parameter[9].LAI max understory
 
   # lai2: separate lai into sunlit and shaded portions
   lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
@@ -71,14 +85,6 @@ function inter_prg_jl(
 
   met = meteo_pack_jl(Ta, RH)
   (; Δ, γ, cp, VPD, ea) = met
-
-  α_sat = param[24+1]       # albedo of saturated/dry soil for module rainfall 1
-  α_dry = param[25+1]       # the albedo of dry soil
-  canopyh_o = param[29+1]       # to be used for module aerodynamic_conductance
-  canopyh_u = param[30+1]
-  z_wind = param[31+1]  # the_height_to_measure_wind_speed, for module aerodynamic_conductance
-  g1_w = param[33+1]           # to be used for module photosynthesis
-  g0_w = param[34+1]
 
   init_leaf_dbl(Tc_old, Ta - 0.5)
 
@@ -112,8 +118,8 @@ function inter_prg_jl(
     α_v = Layer3()
     α_n = Layer3()
   else
-    α_v = Layer3(param[22+1])
-    α_n = Layer3(param[23+1])
+    α_v = Layer3(_α_v)
+    α_n = Layer3(_α_n)
   end
 
   ρ_snow = init_dbl(state.ρ_snow)
@@ -164,7 +170,7 @@ function inter_prg_jl(
       num = num + 1
       # /***** Aerodynamic_conductance module by G.Mo  *****/
       ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
-        aerodynamic_conductance_jl(canopyh_o, canopyh_u, z_wind, Ω, Ta, wind, GH_o,
+        aerodynamic_conductance_jl(z_canopy_o, z_canopy_u, z_wind, Ω, Ta, wind, GH_o,
           lai_o + stem_o, lai_u + stem_u)
 
       init_leaf_dbl2(Gh,
