@@ -19,7 +19,7 @@ abstract type AbstractSoil end
   dz          ::Vector{Float64} = zeros(10)
   f_root      ::Vector{Float64} = zeros(10) # root fraction
   dt          ::Vector{Float64} = zeros(10) # soil water stress factor
-  thermal_cond::Vector{Float64} = zeros(10) # thermal conductivity
+  κ           ::Vector{Float64} = zeros(10) # thermal conductivity
   theta_vfc   ::Vector{Float64} = zeros(10) # volumetric field capacity
   θ_vwp       ::Vector{Float64} = zeros(10) # volumetric wilting point
   θ_sat       ::Vector{Float64} = zeros(10) # volumetric saturation

@@ -74,7 +74,7 @@ function UpdateSoilThermalConductivity(p::Soil)
   kw = 0.61  # the thermal conductivity of water
 
   @inbounds for i in 1:p.n_layer
-    κ_dry = p.thermal_cond[i]^(1 - θ_sat[i])  # dry
+    κ_dry = p.κ[i]^(1 - θ_sat[i])  # dry
     tmp2 = ki^(1.2 * θ[i] * ice_ratio[i])  # ice.  no source for "1.2"
     tmp3 = kw^(θ[i] * (1 - ice_ratio[i]))  # water
     tmp4 = θ[i] / θ_sat[i]  # Sr

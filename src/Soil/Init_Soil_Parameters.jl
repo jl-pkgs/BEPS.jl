@@ -8,7 +8,7 @@ Initialize soil parameters
 - `θ_vfc`        : field capacity
 - `θ_vwp`        : wilt point
 - `ψ_sat`        : water potential at saturate
-- `κ`            : thermal conductivity (or `thermal_cond`)
+- `κ`            : thermal conductivity
 """
 function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::Float64, p::Soil)
   p.n_layer = 5
@@ -149,10 +149,9 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
   p.θ_sat[1:5] .= porosity
   p.theta_vfc[1:5] .= θ_vfc
   p.θ_vwp[1:5] .= θ_vwp
-  p.thermal_cond[1:5] .= κ
+  p.κ[1:5] .= κ
   p.ψ_sat[1:5] .= ψ_sat
-  
-  p
+  return p
 end
 
 
