@@ -21,6 +21,7 @@ libbeps = path_proj("deps/libbeps.dll")
 # include("DataFrames.jl")
 # include("Ipaper.jl")
 # include("c2julia.jl")
+include("SPAC/SPAC.jl")
 include("DataType/DataType.jl")
 include("BEPS_modules.jl")
 
