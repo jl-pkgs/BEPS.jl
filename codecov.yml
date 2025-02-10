@@ -5,3 +5,4 @@ ignore:
   - "src/*/temp"
   - "src/*/backup/*"
   - "src/clang/*"
+  - "src/standalone/*"
