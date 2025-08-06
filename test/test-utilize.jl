@@ -44,8 +44,8 @@ end
   @test maximum(ρ_snow) == 256.4936370728328
 end
 
-@testset "list" begin
-  x = list(["Ts0", "Tsn", "Tsm0", "Tsn1", "Tsn2"])
-  x .= rand(5)
-  x[2] == x.Tsn
-end
+# @testset "list" begin
+#   x = list(["Ts0", "Tsn", "Tsm0", "Tsn1", "Tsn2"])
+#   x .= rand(5)
+#   x[2] == x.Tsn
+# end

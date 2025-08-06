@@ -1,22 +1,22 @@
-export LVector, list
-export LA
+# export LVector, list
+# export LA
 
-## second version
-import LabelledArrays
-import LabelledArrays: LVector, LArray, symnames
-using DataFrames
+# ## second version
+# import LabelledArrays
+# import LabelledArrays: LVector, LArray, symnames
+# using DataFrames
 
-const LA = LabelledArrays
-LA.LVector(keys::Vector{Symbol}, values) = LVector(; zip(keys, values)...)
-LA.LVector(keys::Vector{<:AbstractString}, values) = LVector(; zip(Symbol.(keys), values)...)
-LA.LVector(keys::Tuple, values) = LVector(; zip(keys, values)...)
+# const LA = LabelledArrays
+# LA.LVector(keys::Vector{Symbol}, values) = LVector(; zip(keys, values)...)
+# LA.LVector(keys::Vector{<:AbstractString}, values) = LVector(; zip(Symbol.(keys), values)...)
+# LA.LVector(keys::Tuple, values) = LVector(; zip(keys, values)...)
 
-LA.LVector(keys::Vector{Symbol}) = LVector(keys, zeros(length(keys)))
-LA.LVector(keys::Vector{<:AbstractString}) = LVector(Symbol.(keys), zeros(length(keys)))
-LA.LVector(keys::Tuple) = LVector(keys, zeros(length(keys)))
+# LA.LVector(keys::Vector{Symbol}) = LVector(keys, zeros(length(keys)))
+# LA.LVector(keys::Vector{<:AbstractString}) = LVector(Symbol.(keys), zeros(length(keys)))
+# LA.LVector(keys::Tuple) = LVector(keys, zeros(length(keys)))
 
-list = LVector;
-Base.names(x::LArray) = symnames(typeof(x))
+# list = LVector;
+# Base.names(x::LArray) = symnames(typeof(x))
 
 
 function Base.sum(df::DataFrame)
