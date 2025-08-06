@@ -22,7 +22,7 @@
 function Base.sum(df::DataFrame)
   vals = [sum(df[!, c]) for c in names(df)]
   keys = names(df)
-  list(keys, vals)
+  NamedTuple{Tuple(Symbol.(keys))}(vals)
 end
 
 # for test
@@ -34,7 +34,7 @@ end
 function Base.max(df::DataFrame)
   vals = [nanmaximum(df[!, c]) for c in names(df)]
   keys = names(df)
-  list(keys, vals)
+  NamedTuple{Tuple(Symbol.(keys))}(vals)
 end
 
 # Base.:+(x::AbstractVector, y::AbstractVector) = x .+ y

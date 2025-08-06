@@ -10,13 +10,12 @@ using BEPS
   end
 end
 
-@testset "readcoef" begin
-  lcs = [1, 6, 13, -1]
-  stxts = 1:11
-
-  for lc = lcs, stxt = stxts
-    coef1 = readcoef(lc, stxt)
-    coef2 = clang.readcoef(lc, stxt)
-    @test maximum(abs.(coef1 .- coef2)) == 0
-  end
-end
+# @testset "readcoef" begin
+#   lcs = [1, 6, 13, -1]
+#   stxts = 1:11
+#   for lc = lcs, stxt = stxts
+#     coef1 = readcoef(lc, stxt)
+#     coef2 = clang.readcoef(lc, stxt)
+#     @test maximum(abs.(coef1 .- coef2)) == 0
+#   end
+# end

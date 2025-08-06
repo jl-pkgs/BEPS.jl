@@ -55,6 +55,7 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
       # the unsaturated hydraulic conductivity of soil layer
       KK[i] = (km[i] * ψ[i] + km[i+1] * ψ[i+1]) / (ψ[i] + ψ[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6) # 计算平均的一种方案？
       Q = KK[i] * (2 * (ψ[i+1] - ψ[i]) / (dz[i] + dz[i+1]) + 1) # z direction
+      # `Q_max`出现了单位不匹配的问题，导致Q_max未发挥作用
       Q_max = (θ_sat[i+1] - θ[i+1]) * dz[i+1] / kstep + soil.Ett[i+1]
       Q = min(Q, Q_max)
 
