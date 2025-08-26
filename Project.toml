@@ -1,7 +1,7 @@
 name = "BEPS"
 uuid = "28258c4d-138d-4793-867a-264e32c782b1"
 authors = ["Dongdong Kong <kongdd@users.noreply.github.com>"]
-version = "0.1.6"
+version = "0.1.7"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -17,7 +17,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
-DataFrames = "1.5, 1.6"
+DataFrames = "1.5, 1.6, 1.7"
 DelimitedFiles = "1.9"
 DocStringExtensions = "0.9"
 FieldMetadata = "0.3.1"
