@@ -2,28 +2,27 @@ export VegParam, theta2par, theta2par!, par2theta, par2theta!
 
 
 @with_kw mutable struct VegParam{FT<:AbstractFloat}
-  lc::Int = 1
-  Ω0::FT = 0.7             # // clumping_index
+  # lc::Int = 1
+  # Ω0::FT = 0.7             # // clumping_index
+  LAI_max_o::FT = 4.5     # ? 应该不重要
+  LAI_max_u::FT = 2.4     
 
-  LAI_max_o::FT = 4.5
-  LAI_max_u::FT = 2.4
-
-  α_canopy_vis::FT = 0.04
-  α_canopy_nir::FT = 0.25
+  α_canopy_vis::FT = 0.055 # 0.04
+  α_canopy_nir::FT = 0.300 # 0.25
   α_soil_sat::FT = 0.10    # albedo of saturated/dry soil, `rainfall1`
   α_soil_dry::FT = 0.35    # the albedo of dry soil
 
-  r_drainage::FT = 0.5     # ? 产流比例
-  r_root_decay::FT = 0.97  # ? decay_rate_of_root_distribution
+  # r_drainage::FT = 0.5     # ? 产流比例
+  # r_root_decay::FT = 0.97  # ? decay_rate_of_root_distribution
 
-  z_canopy_o::FT = 23      # [m]
-  z_canopy_u::FT = 3       # [m]
-  z_wind::FT = 30          # [m]
+  z_canopy_o::FT = 1.0      # [m]
+  z_canopy_u::FT = 0.2      # [m]
+  z_wind::FT = 2            # [m]
 
   g1_w::FT = 8             # Ball-Berry, slope coefficient
   g0_w::FT = 0.0175        # Ball-Berry, intercept_for_H2O
 
-  VCmax25::FT = 57.7       # maximum capacity of Rubisco at 25℃
+  VCmax25::FT = 89.45       # maximum capacity of Rubisco at 25℃
   # Jmax25::FT = 2.39 * 57.7 - 14.2 # 
 
   # # coefficient reflecting the sensitivity of stomata to VPD/moderately N-stressed plants
@@ -38,16 +37,16 @@ function theta2par(theta::Vector{FT}) where {FT<:Real}
 end
 
 function theta2par!(par::VegParam{FT}, theta::Vector{FT}) where {FT<:Real}
-  par.Ω0 = theta[3]
-  par.lc = theta[5]
+  # par.Ω0 = theta[3]
+  # par.lc = theta[5]
   par.LAI_max_o = theta[9]
   par.LAI_max_u = theta[10]
   par.α_canopy_vis = theta[23]
   par.α_canopy_nir = theta[24]
   par.α_soil_sat = theta[25]
   par.α_soil_dry = theta[26]
-  par.r_drainage = theta[27]
-  par.r_root_decay = theta[28]
+  # par.r_drainage = theta[27]
+  # par.r_root_decay = theta[28]
   par.z_canopy_o = theta[30]
   par.z_canopy_u = theta[31]
   par.z_wind = theta[32]
@@ -59,22 +58,22 @@ function theta2par!(par::VegParam{FT}, theta::Vector{FT}) where {FT<:Real}
   return par
 end
 
-function par2theta(par::VegParam{FT}) where {FT<:Real}
+function par2theta(par::VegParam{FT}; kw...) where {FT<:Real}
   theta = zeros(FT, 48)
-  par2theta!(theta, par)
+  par2theta!(theta, par; kw...)
 end
 
-function par2theta!(theta::Vector{FT}, par::VegParam{FT})
-  theta[3] = par.Ω0
-  theta[5] = par.lc
+function par2theta!(theta::Vector{FT}, par::VegParam{FT}; clumping=0.7, VegType::Int=1)
+  theta[3] = clumping
+  theta[5] = VegType
   theta[9] = par.LAI_max_o
   theta[10] = par.LAI_max_u
   theta[23] = par.α_canopy_vis
   theta[24] = par.α_canopy_nir
   theta[25] = par.α_soil_sat
   theta[26] = par.α_soil_dry
-  theta[27] = par.r_drainage
-  theta[28] = par.r_root_decay
+  # theta[27] = par.r_drainage
+  # theta[28] = par.r_root_decay
   theta[30] = par.z_canopy_o
   theta[31] = par.z_canopy_u
   theta[32] = par.z_wind

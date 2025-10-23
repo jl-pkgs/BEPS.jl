@@ -14,7 +14,7 @@ function besp_main(d::DataFrame, lai::Vector;
 
   theta = readVegParam(VegType)  # n = 48
   vegpar = theta2par(theta)
-  theta = par2theta(vegpar) # 为移除readVegParam铺垫
+  theta = par2theta(vegpar; clumping, VegType) # 为移除readVegParam铺垫
 
   # coef = readcoef(VegType, SoilType) # n = 48, soil respiration module
 
@@ -61,7 +61,7 @@ function besp_main(d::DataFrame, lai::Vector;
     if version == "julia"
       inter_prg_jl(jday, hour, _lai, clumping, vegpar, meteo, CosZs,
         state, soil,
-        Ra, mid_res, mid_ET, var; debug, fix_snowpack)
+        Ra, mid_res, mid_ET, var; VegType, debug, fix_snowpack)
     elseif version == "c"
       inter_prg_c(jday, hour, _lai, clumping, theta, meteo, CosZs,
         state, state_n, soil,

@@ -187,7 +187,7 @@ function readVegParam(lc::Int=1)
   else
     param[3] = 0.8                      # clumping_index                        0.8 
     param[9] = 4.5                      # LAI_max_overstory                     3.3
-    param[10] = 0.01                    # LAI_max_understory                    2.4
+    param[10] = 2.4                     # LAI_max_understory                    2.4
     param[17] = 0.04                    # z00 roughness length for heat
     param[19] = 2.5                     # mass_overstory(kg/m^2)                25
     param[21] = 0.1                     # mass_understory(kg/m^2)               10

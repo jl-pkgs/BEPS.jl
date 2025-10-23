@@ -21,6 +21,7 @@ function inter_prg_jl(
   state::State{T}, soil::AbstractSoil,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, var::InterTempVars; 
+  VegType::Int=1, 
   fix_snowpack::Bool=true, kw...) where {T}
 
   # var = InterTempVars()
@@ -42,7 +43,7 @@ function inter_prg_jl(
   radiation_o, radiation_u, radiation_g = 0.0, 0.0, 0.0
 
   # /*****  Vcmax-Nitrogen calculations，by G.Mo，Apr. 2011  *****/
-  (; lc, LAI_max_o, LAI_max_u, 
+  (; LAI_max_o, LAI_max_u, 
     α_canopy_vis, α_canopy_nir, 
     α_soil_sat, α_soil_dry,
     z_canopy_o, z_canopy_u, z_wind, 
@@ -64,8 +65,9 @@ function inter_prg_jl(
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
 
   # /*****  LAI calculation module, by B. Chen  *****/
+  # ? 这一块应该影响不大
   lai_o = lai < 0.1 ? 0.1 : lai
-  if (lc == 25 || lc == 40)
+  if (VegType == 25 || VegType == 40) # C4 plants parameters
     lai_u = 0.01
   else
     lai_u = 1.18 * exp(-0.99 * lai_o)
