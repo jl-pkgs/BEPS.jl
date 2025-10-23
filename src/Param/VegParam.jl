@@ -1,9 +1,9 @@
 export VegParam, theta2par, theta2par!, par2theta, par2theta!
 
 
-@with_kw mutable struct VegParam{FT}
+@with_kw mutable struct VegParam{FT<:AbstractFloat}
   lc::Int = 1
-  Ω0::FT = 0.7               # clumping_index
+  Ω0::FT = 0.7             # // clumping_index
 
   LAI_max_o::FT = 4.5
   LAI_max_u::FT = 2.4
@@ -13,8 +13,8 @@ export VegParam, theta2par, theta2par!, par2theta, par2theta!
   α_soil_sat::FT = 0.10    # albedo of saturated/dry soil, `rainfall1`
   α_soil_dry::FT = 0.35    # the albedo of dry soil
 
-  r_drainage::FT = 0.5     # 产流比例
-  r_root_decay::FT = 0.97  # decay_rate_of_root_distribution
+  r_drainage::FT = 0.5     # ? 产流比例
+  r_root_decay::FT = 0.97  # ? decay_rate_of_root_distribution
 
   z_canopy_o::FT = 23      # [m]
   z_canopy_u::FT = 3       # [m]
@@ -23,7 +23,7 @@ export VegParam, theta2par, theta2par!, par2theta, par2theta!
   g1_w::FT = 8             # Ball-Berry, slope coefficient
   g0_w::FT = 0.0175        # Ball-Berry, intercept_for_H2O
 
-  VCmax25::FT = 57.7              # maximum capacity of Rubisco at 25℃
+  VCmax25::FT = 57.7       # maximum capacity of Rubisco at 25℃
   # Jmax25::FT = 2.39 * 57.7 - 14.2 # 
 
   # # coefficient reflecting the sensitivity of stomata to VPD/moderately N-stressed plants

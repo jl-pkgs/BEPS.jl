@@ -202,6 +202,7 @@ function readVegParam(lc::Int=1)
     # the following parameters were added by MEM for the Ball and Berry calculations
     param[34] = 8                       # k Ball			
     param[37] = 78.2 * 0.5 + 100.7 * 0.5# maximum capacity of Rubisco at 25C-Vcmax	
+
     param[40] = 0.001 / RTIMES          # leaf resp co. kg C-1 d-1 kg-1    
     param[41] = 0.002 / RTIMES          # stem resp co. kg C-1 d-1 kg-1      
     param[42] = 0.0015 / RTIMES         # root resp co. kg C-1 d-1 kg-1   
@@ -216,9 +217,9 @@ function readVegParam(lc::Int=1)
   param[8] = 1000                     # light_saturation_point                  1000
   param[11] = 0.01                    # LAI_min_overstory                       0.0
   param[12] = 0.01                    # LAI_min_understory                      0.0
-  param[13] = 0.87                    # albedo_new_snow                           0.87
-  param[14] = 0.94                    # albedo_new_snow_vis                       0.94
-  param[15] = 0.8                     # albedo_new_snow_nir                       0.80
+  param[13] = 0.87                    # albedo_new_snow                         0.87
+  param[14] = 0.94                    # albedo_new_snow_vis                     0.94
+  param[15] = 0.8                     # albedo_new_snow_nir                     0.80
   param[16] = 100.0                   # density_now_snow                        100.0
   param[18] = 2700                    # specific_heat_overstory                 2700.0
   param[20] = 2700                    # specific_heat_understory                2700.0

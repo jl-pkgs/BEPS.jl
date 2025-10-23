@@ -7,6 +7,8 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", 
 
   theta = readVegParam(par.landcover)  # n = 48
   vegpar = theta2par(theta)
+  theta = par2theta(vegpar) # 为移除readVegParam铺垫
+  
   # coef = readcoef(par.landcover, par.soil_type) # n = 48, soil respiration module
 
   n = size(d, 1)
@@ -30,6 +32,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", 
     state_n = zeros(41)
   end
   Ta = d.tem[1]
+  
   (; r_drainage, r_root_decay) = vegpar
   Init_Soil_var_o(soil, state, Ta, r_drainage, r_root_decay, par)
 

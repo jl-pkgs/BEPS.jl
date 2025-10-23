@@ -1,0 +1,22 @@
+{
+  "light_compensate_point": 100,
+  "light_saturation_point": 1000,
+  "LAI_min_overstory": 0.01,
+  "LAI_min_understory": 0.01,
+  "albedo_new_snow": 0.87,
+  "albedo_new_snow_vis": 0.94,
+  "albedo_new_snow_nir": 0.8,
+  "density_now_snow": 100.0,
+  "specific_heat_overstory": 2700,
+  "specific_heat_understory": 2700,
+  "albedo_saturated_soil": 0.10,
+  "albedo_dry_soil": 0.35,
+  "r_drainage": 0.5,
+  "the_height_to_measure_wind_speed": 30,
+  "the_depth_litter": 0.05,
+  "intercept_for_H2O_ball_berry": 0.0175,
+  "intercept_for_C2O_ball_berry": 0.0109375,
+  "Jmax_at_25C_formula": "2.39 * Vcmax - 14.2",
+  "mb_coefficient": 28.0,
+  "Q10": 2.3
+}

@@ -3,10 +3,36 @@ abstract type AbstractSoil end
 # TODO: 这里应该把状态变量与模型参数分隔开
 # state, params = setup(model)
 
+@with_kw mutable struct SoilParam{FT<:AbstractFloat}
+  n_layer::Cint = 5 # 土壤层数
+  # dz::Vector{Float64} = zeros(10) # 土壤厚度
+
+  r_drainage  ::FT = Cdouble(0.50)  # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
+  r_root_decay::FT = Cdouble(0.95)  # ? 根系分布衰减率, decay_rate_of_root_distribution
+
+  ψ_min       ::FT = Cdouble(33.0)  # ? 气孔关闭对应水势，33kPa
+  alpha       ::FT = Cdouble(0.4)   # ? 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
+
+  f_root::Vector{FT} = zeros(FT, 10) # * 根系比例，可根据r_root_decay设定
+
+  θ_vfc       ::Vector{FT} = zeros(FT, 10) # ? volumetric field capacity
+  θ_vwp       ::Vector{FT} = zeros(FT, 10) # ? volumetric wilting point
+  θ_sat       ::Vector{FT} = zeros(FT, 10) # ? volumetric saturation
+  Ksat        ::Vector{FT} = zeros(FT, 10) # ? saturated hydraulic conductivity
+  ψ_sat       ::Vector{FT} = zeros(FT, 10) # ? soil matric potential at saturation
+  b           ::Vector{FT} = zeros(FT, 10) # ? Cambell parameter b
+
+  κ_dry       ::Vector{FT} = zeros(FT, 10) # ? thermal conductivity
+  density_soil::Vector{FT} = zeros(FT, 10) # ? 土壤容重，soil density, for volume heat capacity
+  f_org       ::Vector{FT} = zeros(FT, 10) # ? 有机质含量，organic matter, for volume heat capacity
+end
+
+
+
+
 # ?     : 需要优化的参数
 # state : 状态变量
 # //    : 未使用的参数
-
 @with_kw mutable struct Soil <: AbstractSoil
   flag        ::Cint    = Cint(0) # // not used
   n_layer     ::Cint    = Cint(5) # 土壤层数
@@ -35,7 +61,7 @@ abstract type AbstractSoil end
   Ksat        ::Vector{Float64} = zeros(10) # ? saturated hydraulic conductivity
   ψ_sat       ::Vector{Float64} = zeros(10) # ? soil matric potential at saturation
   b           ::Vector{Float64} = zeros(10) # ? Cambell parameter b
-  density_soil::Vector{Float64} = zeros(10) # ? 土壤容重，soil density
+  density_soil::Vector{Float64} = zeros(10) # ? 土壤容重，soil density, for volume heat capacity
   f_org       ::Vector{Float64} = zeros(10) # ? 有机质含量，organic matter, for volume heat capacity
 
   ice_ratio   ::Vector{Float64} = zeros(10) # [state]，ice ratio，
