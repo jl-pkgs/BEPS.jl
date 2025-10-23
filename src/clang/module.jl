@@ -149,7 +149,7 @@ end
 function surface_temperature_c(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
   capacity_heat_soil1::FT, capacity_heat_soil0::FT, Gheat_g::FT,
   depth_soil1::FT, density_snow::FT, tempL_u::FT, netRad_g::FT,
-  evapo_soil::FT, evapo_water_g::FT, evapo_snow_g::FT, lambda_soil1::FT,
+  evapo_soil::FT, evapo_water_g::FT, evapo_snow_g::FT, κ_soil1::FT,
   perc_snow_g::FT, heat_flux_soil1::FT, T_ground_last::FT,
   T_soil1_last::FT, T_any0_last::FT, T_soil0_last::FT,
   T_snow_last::FT, T_snow1_last::FT, T_snow2_last::FT)
@@ -165,7 +165,7 @@ function surface_temperature_c(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
   ccall((:surface_temperature, libbeps), Cvoid,
     (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    T_air, rh_air, z_snow, z_water, capacity_heat_soil1, capacity_heat_soil0, Gheat_g, depth_soil1, density_snow, tempL_u, netRad_g, evapo_soil, evapo_water_g, evapo_snow_g, lambda_soil1, perc_snow_g, heat_flux_soil1, T_ground_last, T_soil1_last, T_any0_last, T_snow_last, T_soil0_last, T_snow1_last, T_snow2_last, T_ground, T_any0, T_snow, T_soil0, T_snow1, T_snow2, heat_flux)
+    T_air, rh_air, z_snow, z_water, capacity_heat_soil1, capacity_heat_soil0, Gheat_g, depth_soil1, density_snow, tempL_u, netRad_g, evapo_soil, evapo_water_g, evapo_snow_g, κ_soil1, perc_snow_g, heat_flux_soil1, T_ground_last, T_soil1_last, T_any0_last, T_snow_last, T_soil0_last, T_snow1_last, T_snow2_last, T_ground, T_any0, T_snow, T_soil0, T_snow1, T_snow2, heat_flux)
 
   heat_flux[], T_ground[], T_any0[], T_soil0[], T_snow[], T_snow1[], T_snow2[]
 end

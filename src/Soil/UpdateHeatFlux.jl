@@ -1,16 +1,16 @@
 # Function to update soil heat flux
 function UpdateHeatFlux(p::Soil,
-  # Xcs_g::Float64, lambda_snow::Float64, Tsn0::Float64,
+  # Xcs_g::Float64, κ_snow::Float64, Tsn0::Float64,
   Tair_annual_mean::Float64, period_in_seconds::Float64)
-  (; G, Tsoil_c, Tsoil_p, dz, lambda) = p
+  (; G, Tsoil_c, Tsoil_p, dz, κ) = p
 
   n = p.n_layer
   # TODO: i may have bug
   @inbounds for i in 2:n+1
     if i <= n
-      G[i] = 2(Tsoil_p[i-1] - Tsoil_p[i]) / (dz[i-1] / lambda[i-1] + dz[i] / lambda[i])
+      G[i] = 2(Tsoil_p[i-1] - Tsoil_p[i]) / (dz[i-1] / κ[i-1] + dz[i] / κ[i])
     else
-      G[i] = lambda[i-1] * (Tsoil_p[i-1] - Tair_annual_mean) / (DEPTH_F + dz[i-1] * 0.5)
+      G[i] = κ[i-1] * (Tsoil_p[i-1] - Tair_annual_mean) / (DEPTH_F + dz[i-1] * 0.5)
     end
     G[i] = clamp(G[i], -200, 200)
   end
@@ -69,17 +69,18 @@ end
 
 # Function to update soil thermal conductivity
 function UpdateSoilThermalConductivity(p::Soil)
-  (; θ, ice_ratio, lambda, θ_sat) = p
+  (; θ, ice_ratio, κ, θ_sat) = p
   ki = 2.1  # the thermal conductivity of ice
   kw = 0.61  # the thermal conductivity of water
 
   @inbounds for i in 1:p.n_layer
-    κ_dry = p.κ[i]^(1 - θ_sat[i])  # dry
+    κ_dry = p.κ_dry[i]^(1 - θ_sat[i])  # dry
     tmp2 = ki^(1.2 * θ[i] * ice_ratio[i])  # ice.  no source for "1.2"
     tmp3 = kw^(θ[i] * (1 - ice_ratio[i]))  # water
     tmp4 = θ[i] / θ_sat[i]  # Sr
 
-    lambda[i] = (κ_dry * tmp2 * tmp3 - 0.15) * tmp4 + 0.15  # Note: eq. 8. LHE
-    lambda[i] = max(lambda[i], 0.15)  # juweimin05
+    κ[i] = (κ_dry * tmp2 * tmp3 - 0.15) * tmp4 + 0.15  # Note: eq. 8. LHE
+    κ[i] = max(κ[i], 0.15)  # juweimin05
   end
 end
+

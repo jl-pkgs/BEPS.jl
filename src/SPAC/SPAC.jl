@@ -54,7 +54,7 @@ function meteo_pack_jl(Ta::FT, RH::FT) where {FT<:Real}
   λ::FT = cal_lambda(Ta)
   Δ::FT = cal_slope(Ta) # slope of es
   γ::FT = 0.066         # kPa/K, 
-  # lambda = cal_lambda(Ta) # J kg-1
-  # psy = cp * 101.13 / (0.622 * lambda)  
+  # λ = cal_lambda(Ta) # J kg-1
+  # psy = cp * 101.13 / (0.622 * λ)  
   (; ρₐ, cp, VPD, λ, Δ, γ, es, ea, q)
 end

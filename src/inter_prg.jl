@@ -32,7 +32,7 @@ function inter_prg_jl(
   leleaf, GPP, LAI, PAI = var.TempLeafs
 
   dz = zeros(layer + 1)
-  lambda = zeros(layer + 2)
+  κ = zeros(layer + 2)
 
   ra_g = 0.0
   Ga_o = 0.0
@@ -281,7 +281,7 @@ function inter_prg_jl(
     var.Cs[1, k] = soil.Cs[1]
     var.Cs[2, k] = soil.Cs[1]
     var.Tc_u[k] = Tc.u
-    lambda[2] = soil.lambda[1]
+    κ[2] = soil.κ[1]
     dz[2] = soil.dz[1]
 
     var.Tm[1, k-1] = soil.Tsoil_p[1]
@@ -293,7 +293,7 @@ function inter_prg_jl(
       surface_temperature_jl(Ta, RH, z_snow, z_water,
         var.Cs[2, k], var.Cs[1, k], Gheat_g, dz[2], ρ_snow[], var.Tc_u[k],
         radiation_g, var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k],
-        lambda[2],
+        κ[2],
         f_snow.g, var.G[2, k],
         var.Ts0[k-1],
         # T_soil1_last::FT, T_any0_last::FT, T_soil0_last::FT,
@@ -316,7 +316,7 @@ function inter_prg_jl(
     soil.G[1] = var.G[1, k]
     # Update_G(soilp, var.G[1, k])
 
-    UpdateHeatFlux(soil, Ta, kstep) # f_snow.g, var.lambda_snow[k], var.Tsn0[k],
+    UpdateHeatFlux(soil, Ta, kstep) # f_snow.g, var.κ_snow[k], var.Tsn0[k],
     Root_Water_Uptake(soil, var.Trans_o[k], var.Trans_u[k], var.Evap_soil[k])
 
     soil.r_rain_g = var.r_rain_g[k]

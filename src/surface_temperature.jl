@@ -19,7 +19,7 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
   ra_g::FT = 1.0 / Gheat_g  # aerodynamic resistance of heat
 
   # thermal conductivity of snow
-  κ_snow::FT = 0.021 + 4.2 * ρ_snow / 10000 + 2.2 * ρ_snow^3 * 1e-9
+  κ_dry_snow::FT = 0.021 + 4.2 * ρ_snow / 10000 + 2.2 * ρ_snow^3 * 1e-9
 
   # available energy on ground for
   Gg::FT = Rn_g - E_snow_g * λ_snow - (E_water_g + E_soil) * λ_water
@@ -56,16 +56,16 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
     T_soil0 = clamp(T_soil0, T_air - 25.0, T_air + 25.0)
 
     ttt = cp_ice * ρ_snow * z_snow / length_step  # for snow part
-    T_snow = (T_snow_last * ttt * ra_g * z_snow + Gg * ra_g * z_snow + ρₐ * cp * tempL_u * z_snow + ra_g * κ_snow * T_any0_last) /
-             (ρₐ * cp * z_snow + ra_g * κ_snow + ttt * ra_g * z_snow)
+    T_snow = (T_snow_last * ttt * ra_g * z_snow + Gg * ra_g * z_snow + ρₐ * cp * tempL_u * z_snow + ra_g * κ_dry_snow * T_any0_last) /
+             (ρₐ * cp * z_snow + ra_g * κ_dry_snow + ttt * ra_g * z_snow)
 
     T_snow = clamp(T_snow, T_air - 25.0, T_air + 25.0)
 
-    ttt = (λ_soil1 * T_soil1_last / z_soil1 + T_snow * κ_snow + 0.02 * cp_soil1 / length_step * T_any0_last) /
-          (λ_soil1 / z_soil1 + κ_snow / z_snow + 0.02 * cp_soil1 / length_step)
+    ttt = (λ_soil1 * T_soil1_last / z_soil1 + T_snow * κ_dry_snow + 0.02 * cp_soil1 / length_step * T_any0_last) /
+          (λ_soil1 / z_soil1 + κ_dry_snow / z_snow + 0.02 * cp_soil1 / length_step)
     T_any0 = T_soil0 * (1 - perc_snow_g) + ttt * perc_snow_g
 
-    G_snow = κ_snow / (z_snow + 0.5 * z_soil1) * (T_snow - T_soil1_last)
+    G_snow = κ_dry_snow / (z_snow + 0.5 * z_soil1) * (T_snow - T_soil1_last)
     G_soil = G_snow * (T_any0 - T_soil1_last) / z_soil1
 
     G = G_snow * perc_snow_g + G_soil * (1 - perc_snow_g)
@@ -89,16 +89,16 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
   elseif z_snow > 0.05
     ttt = cp_ice * ρ_snow * 0.02 / length_step
 
-    T_snow = (T_snow_last * ttt * ra_g * 0.04 + Gg * ra_g * 0.02 + ρₐ * cp * T_air * 0.04 + ra_g * κ_snow * T_snow1_last) /
-             (ρₐ * cp * 0.04 + ra_g * κ_snow + ttt * ra_g * 0.04)
+    T_snow = (T_snow_last * ttt * ra_g * 0.04 + Gg * ra_g * 0.02 + ρₐ * cp * T_air * 0.04 + ra_g * κ_dry_snow * T_snow1_last) /
+             (ρₐ * cp * 0.04 + ra_g * κ_dry_snow + ttt * ra_g * 0.04)
     T_snow = clamp(T_snow, T_air - 25.0, T_air + 25.0)
 
-    G_snow = κ_snow * (T_snow - T_snow1_last) / 0.04
+    G_snow = κ_dry_snow * (T_snow - T_snow1_last) / 0.04
     G = clamp(G_snow, -100.0, 100.0)
 
-    G_snow1 = κ_snow * (T_snow1_last - T_snow2_last) / (z_snow - 0.02)
+    G_snow1 = κ_dry_snow * (T_snow1_last - T_snow2_last) / (z_snow - 0.02)
     T_snow1 = T_snow1_last + ((G - G_snow1) / (cp_ice * ρ_snow * 0.02)) * length_step
-    G_snow2 = (T_snow2_last - T_any0_last) / ((0.5 * (z_snow - 0.04) / κ_snow) + (0.02 / λ_soil1))
+    G_snow2 = (T_snow2_last - T_any0_last) / ((0.5 * (z_snow - 0.04) / κ_dry_snow) + (0.02 / λ_soil1))
     T_snow2 = T_snow2_last + ((G_snow1 - G_snow2) / (cp_ice * ρ_snow * (z_snow - 0.04))) * length_step
 
     T_any0 = T_any0_last + ((G_snow2 - G_soil1) / (cp_soil0 * 0.02)) * length_step

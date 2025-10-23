@@ -88,7 +88,7 @@ InterTempLeafs(x0) = InterTempLeafs(; x0)
   Evap_soil::Vector{FT} = zeros(MAX_Loop)
   Evap_SW::Vector{FT} = zeros(MAX_Loop)
   Evap_SS::Vector{FT} = zeros(MAX_Loop)
-  lambda_snow::Vector{FT} = zeros(MAX_Loop)
+  κ_snow::Vector{FT} = zeros(MAX_Loop)
 
   # 记录土壤温度
   Cs::Matrix{FT} = zeros(layer + 2, MAX_Loop)
@@ -139,7 +139,7 @@ function init_vars!(x::InterTempVars)
   # x.Evap_soil .= 0.
   # x.Evap_SW .= 0.
   # x.Evap_SS .= 0.
-  # x.lambda_snow .= 0.
+  # x.κ_snow .= 0.
   # x.Cs .= 0.
   # x.Tm .= 0.
   # x.G .= 0.

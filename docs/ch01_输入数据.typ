@@ -114,7 +114,7 @@ par = (lon=114.3197, lat=30.35, clumping=0.75,
 - `b`            : Cambell parameter b
 - `Ksat`         : 饱和水力传导系数，saturated hydraulic conductivity
 - `fei`          : 孔隙度，porosity
-- `theta_vfc`    : 田间持水量，field capacity (ignored)
+- `θ_vfc`    : 田间持水量，field capacity (ignored)
 - `θ_vwp`        : 凋萎含水量，wilt point
 - `thermal_cond` : 热传导系数$kappa$，thermal conductivity
 - `psi_sat`      : 饱和土水势$psi_"sat"$，water potential at saturated

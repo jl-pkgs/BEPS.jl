@@ -8,7 +8,7 @@ Initialize soil parameters
 - `θ_vfc`        : field capacity
 - `θ_vwp`        : wilt point
 - `ψ_sat`        : water potential at saturate
-- `κ`            : thermal conductivity
+- `κ_dry`            : thermal conductivity
 """
 function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::Float64, p::Soil)
   p.n_layer = 5
@@ -41,7 +41,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.437, n) # porosity
     θ_vfc = fill(0.09, n)     # field capacity
     θ_vwp = fill(0.03, n)     # wilt point
-    κ = fill(8.6, n) # thermal conductivity
+    κ_dry = fill(8.6, n) # thermal conductivity
     ψ_sat = [0.07, 0.08, 0.09, 0.10, 0.12]   # water potential at sat
 
   elseif stxt == 2  # loamy sand
@@ -50,7 +50,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.437, n)  # porosity
     θ_vfc = fill(0.21, n)  # field capacity
     θ_vwp = fill(0.06, n)  # wilt point
-    κ = fill(8.3, n)  # thermal conductivity
+    κ_dry = fill(8.3, n)  # thermal conductivity
     ψ_sat = [0.09, 0.10, 0.11, 0.12, 0.14]  # water potential at sat
 
   elseif stxt == 3  # sandy loam
@@ -59,7 +59,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.453, n)  # porosity
     θ_vfc = fill(0.21, n)  # field capacity
     θ_vwp = fill(0.10, n)  # wilt point
-    κ = fill(8.0, n)  # thermal conductivity
+    κ_dry = fill(8.0, n)  # thermal conductivity
     ψ_sat = [0.15, 0.16, 0.17, 0.18, 0.20]  # water potential at sat
 
   elseif stxt == 4  # loam
@@ -68,7 +68,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = [0.463, 0.463, 0.463, 0.463, 0.463]  # porosity
     θ_vfc = fill(0.27, n)  # field capacity
     θ_vwp = fill(0.12, n)  # wilt point
-    κ = fill(7.0, n)  # thermal conductivity
+    κ_dry = fill(7.0, n)  # thermal conductivity
     ψ_sat = [0.11, 0.12, 0.13, 0.14, 0.16]  # water potential at sat
 
   elseif stxt == 5  # silty loam
@@ -77,7 +77,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.501, n)  # porosity
     θ_vfc = [0.33, 0.33, 0.33, 0.33, 0.33]  # field capacity
     θ_vwp = [0.13, 0.13, 0.13, 0.13, 0.13]  # wilt point
-    κ = [6.3, 6.3, 6.3, 6.3, 6.3]  # thermal conductivity
+    κ_dry = [6.3, 6.3, 6.3, 6.3, 6.3]  # thermal conductivity
     ψ_sat = [0.21, 0.22, 0.23, 0.24, 0.26]  # water potential at sat
 
   elseif stxt == 6 # sandy clay loam
@@ -86,7 +86,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.398, 5)
     θ_vfc = fill(0.26, 5)
     θ_vwp = fill(0.15, 5)
-    κ = fill(7.0, 5)
+    κ_dry = fill(7.0, 5)
     ψ_sat = [0.28, 0.29, 0.30, 0.31, 0.33]
 
   elseif stxt == 7 # clay loam
@@ -95,7 +95,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.464, 5)
     θ_vfc = fill(0.32, 5)
     θ_vwp = fill(0.20, 5)
-    κ = [5.8, 5.8, 5.7, 5.8, 5.8]
+    κ_dry = [5.8, 5.8, 5.7, 5.8, 5.8]
     ψ_sat = [0.26, 0.27, 0.28, 0.29, 0.31]
 
   elseif stxt == 8 # silty clay loam
@@ -104,7 +104,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.471, 5)
     θ_vfc = fill(0.37, 5)
     θ_vwp = fill(0.32, 5)
-    κ = fill(4.2, 5)
+    κ_dry = fill(4.2, 5)
     ψ_sat = [0.33, 0.34, 0.35, 0.36, 0.38]
 
   elseif stxt == 9 # sandy clay
@@ -113,7 +113,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.430, 5)
     θ_vfc = fill(0.34, 5)
     θ_vwp = fill(0.24, 5)
-    κ = fill(6.3, 5)
+    κ_dry = fill(6.3, 5)
     ψ_sat = [0.29, 0.30, 0.31, 0.32, 0.34]
 
   elseif stxt == 10 # silty clay
@@ -122,7 +122,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.479, 5)
     θ_vfc = fill(0.39, 5)
     θ_vwp = fill(0.25, 5)
-    κ = fill(4.0, 5)
+    κ_dry = fill(4.0, 5)
     ψ_sat = [0.34, 0.35, 0.36, 0.37, 0.39]
 
   elseif stxt == 11 # clay
@@ -131,7 +131,7 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.475, 5)
     θ_vfc = fill(0.40, 5)
     θ_vwp = fill(0.27, 5)
-    κ = fill(4.4, 5)
+    κ_dry = fill(4.4, 5)
     ψ_sat = [0.37, 0.38, 0.39, 0.40, 0.42]
 
   else # default
@@ -140,16 +140,16 @@ function Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::F
     porosity = fill(0.475, 5)
     θ_vfc = fill(0.40, 5)
     θ_vwp = fill(0.27, 5)
-    κ = fill(4.4, 5)
+    κ_dry = fill(4.4, 5)
     ψ_sat = [0.37, 0.38, 0.39, 0.40, 0.42]
   end
 
   p.b[1:5] .= b
   p.Ksat[1:5] .= Ksat
   p.θ_sat[1:5] .= porosity
-  p.theta_vfc[1:5] .= θ_vfc
+  p.θ_vfc[1:5] .= θ_vfc
   p.θ_vwp[1:5] .= θ_vwp
-  p.κ[1:5] .= κ
+  p.κ_dry[1:5] .= κ_dry
   p.ψ_sat[1:5] .= ψ_sat
   return p
 end
