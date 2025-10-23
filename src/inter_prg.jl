@@ -79,7 +79,7 @@ function inter_prg_jl(
   lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
 
   # /*****  Initialization of this time step  *****/
-  Rs = meteo.Srad
+  Rs = meteo.Srad # 入射短波辐射
   RH = meteo.rh
   wind = meteo.wind
   prcp = meteo.rain / step  # precipitation in meters

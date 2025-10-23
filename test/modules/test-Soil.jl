@@ -47,7 +47,7 @@ function init_soil()
   par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
     soil_type=8, Tsoil=2.2,
     soilwater=0.4115, snowdepth=0.0)
-  param = readparam(par.landcover)      # n = 48
+  param = readVegParam(par.landcover)      # n = 48
 
   rad = 100.0
   temp = -4.0

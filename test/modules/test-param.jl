@@ -1,11 +1,11 @@
 using Test
 using BEPS
 
-@testset "readparam" begin
+@testset "readVegParam" begin
   lcs = [1, 2, 6, 9, 13, 40, -1]
   for lc = lcs
-    par1 = readparam(lc)
-    par2 = clang.readparam(lc)
+    par1 = readVegParam(lc)
+    par2 = clang.readVegParam(lc)
     @test maximum(abs.(par1 .- par2)) == 0
   end
 end

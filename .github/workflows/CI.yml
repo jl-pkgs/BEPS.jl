@@ -1,8 +1,11 @@
 # https://github.com/Alexander-Barth/NCDatasets.jl/blob/master/.github/workflows/ci.yml
 name: CI
 on:
-  - push
-  - pull_request
+  push:
+      paths:
+        - 'src/**'
+        - 'test/**'
+  pull_request: 
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.ref }}

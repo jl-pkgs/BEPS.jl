@@ -5,7 +5,7 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", 
   Ra = Radiation()
   var = InterTempVars()
 
-  theta = readparam(par.landcover)  # n = 48
+  theta = readVegParam(par.landcover)  # n = 48
   vegpar = theta2par(theta)
   # coef = readcoef(par.landcover, par.soil_type) # n = 48, soil respiration module
 
@@ -40,7 +40,8 @@ function besp_main(d::DataFrame, lai::Vector, par::NamedTuple; version="julia", 
     mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
     _lai = lai[_day] * theta[3] / par.clumping # re-calculate LAI & renew clump index
-    fill_meteo!(meteo, d, i)
+    fill_meteo!(meteo, d, i) # 驱动数据
+
     CosZs = s_coszs(jday, hour, par.lat, par.lon) # cos_solar zenith angle
 
     # /***** start simulation modules *****/

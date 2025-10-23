@@ -42,7 +42,7 @@ function fill_meteo!(met::Met,
   met.temp = tem
   met.rain = pre / 1000 # mm to m
   met.wind = wind
-  met.LR = -200.0 #  -200.0 means no measured long-wave radiation, the value will be 
+  met.LR = -200.0 # 入射长波辐射Rl_air，模型可自行计算，输入更佳
   met.rh = q2RH(hum, tem)
 end
 

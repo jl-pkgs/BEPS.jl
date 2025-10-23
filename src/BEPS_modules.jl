@@ -1,5 +1,5 @@
 # include("Base/Base.jl")
-include("Param/readparam.jl")
+include("Param/readVegParam.jl")
 include("Param/VegParam.jl")
 
 include("Soil/Soil.jl")
@@ -24,7 +24,7 @@ include("photosynthesis.jl")
 
 include("inter_prg.jl")
 
-export s_coszs, lai2, readparam, 
+export s_coszs, lai2, readVegParam, 
   rainfall_stage1_jl, rainfall_stage2_jl, 
   snowpack_stage1_jl, snowpack_stage2_jl, snowpack_stage3_jl
 

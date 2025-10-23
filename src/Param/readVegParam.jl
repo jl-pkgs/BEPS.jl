@@ -2,11 +2,11 @@ _types = ["ENF", "DNF", "DBF", "EBF", "Shrub-SH", "C4", "default"]
 _codes = [1, 2, 6, 9, 13, 40, -1]
 
 """
-    readparam(lc::Int=1)
+    readVegParam(lc::Int=1)
 # Arguments
 - `lc`: [1, 2, 6, 9, 13, 40, -1]
 """
-function readparam(lc::Int=1)
+function readVegParam(lc::Int=1)
   param = zeros(Float64, 48)
   param[5] = lc
 
