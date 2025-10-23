@@ -10,10 +10,10 @@ Initialize soil parameters
 - `ψ_sat`        : water potential at saturate
 - `κ_dry`            : thermal conductivity
 """
-function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay::Float64, p::Soil)
+function Init_Soil_Parameters(VegType::Integer, SoilType::Integer, r_root_decay::Float64, p::Soil)
   p.n_layer = 5
 
-  if vegtype == 6 || vegtype == 9 # DBF or EBF, low constaint threshold
+  if VegType == 6 || VegType == 9 # DBF or EBF, low constaint threshold
     p.ψ_min = 10.0 # ψ_min
     p.alpha = 1.5
   else
@@ -35,7 +35,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
   p.f_org[1:5] .= [5, 2, 1, 1, 0.3]
 
   n = 5
-  if soiltype == 1  # sand
+  if SoilType == 1  # sand
     b = [1.7, 1.9, 2.1, 2.3, 2.5]
     Ksat = [0.000058, 0.000052, 0.000046, 0.000035, 0.000010]  # 
     porosity = fill(0.437, n) # porosity
@@ -44,7 +44,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = fill(8.6, n) # thermal conductivity
     ψ_sat = [0.07, 0.08, 0.09, 0.10, 0.12]   # water potential at sat
 
-  elseif soiltype == 2  # loamy sand
+  elseif SoilType == 2  # loamy sand
     b = [2.1, 2.3, 2.5, 2.7, 2.9]
     Ksat = [0.000017, 0.000015, 0.000014, 0.000010, 0.000003] 
     porosity = fill(0.437, n)  # porosity
@@ -53,7 +53,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = fill(8.3, n)  # thermal conductivity
     ψ_sat = [0.09, 0.10, 0.11, 0.12, 0.14]  # water potential at sat
 
-  elseif soiltype == 3  # sandy loam
+  elseif SoilType == 3  # sandy loam
     b = [3.1, 3.3, 3.5, 3.7, 3.9]
     Ksat = [0.0000072, 0.00000648, 0.00000576, 0.00000432, 0.00000144]
     porosity = fill(0.453, n)  # porosity
@@ -62,7 +62,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = fill(8.0, n)  # thermal conductivity
     ψ_sat = [0.15, 0.16, 0.17, 0.18, 0.20]  # water potential at sat
 
-  elseif soiltype == 4  # loam
+  elseif SoilType == 4  # loam
     b = [4.5, 4.7, 4.9, 5.1, 5.3]
     Ksat = [0.0000037, 0.0000033, 0.00000296, 0.00000222, 0.00000074] 
     porosity = [0.463, 0.463, 0.463, 0.463, 0.463]  # porosity
@@ -71,7 +71,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = fill(7.0, n)  # thermal conductivity
     ψ_sat = [0.11, 0.12, 0.13, 0.14, 0.16]  # water potential at sat
 
-  elseif soiltype == 5  # silty loam
+  elseif SoilType == 5  # silty loam
     b = [4.7, 4.9, 5.1, 5.3, 5.5]
     Ksat = [0.0000019, 0.0000017, 0.00000152, 0.00000114, 0.00000038] 
     porosity = fill(0.501, n)  # porosity
@@ -80,7 +80,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = [6.3, 6.3, 6.3, 6.3, 6.3]  # thermal conductivity
     ψ_sat = [0.21, 0.22, 0.23, 0.24, 0.26]  # water potential at sat
 
-  elseif soiltype == 6 # sandy clay loam
+  elseif SoilType == 6 # sandy clay loam
     b = [4.0, 4.2, 4.4, 4.6, 4.8]
     Ksat = [0.0000012, 0.00000108, 0.0000096, 0.0000072, 0.0000024]
     porosity = fill(0.398, 5)
@@ -89,7 +89,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = fill(7.0, 5)
     ψ_sat = [0.28, 0.29, 0.30, 0.31, 0.33]
 
-  elseif soiltype == 7 # clay loam
+  elseif SoilType == 7 # clay loam
     b = [5.2, 5.4, 5.6, 5.8, 6.0]
     Ksat = [0.00000064, 0.00000058, 0.00000051, 0.00000038, 0.00000013]
     porosity = fill(0.464, 5)
@@ -98,7 +98,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = [5.8, 5.8, 5.7, 5.8, 5.8]
     ψ_sat = [0.26, 0.27, 0.28, 0.29, 0.31]
 
-  elseif soiltype == 8 # silty clay loam
+  elseif SoilType == 8 # silty clay loam
     b = [6.6, 6.8, 7.0, 7.2, 7.4]
     Ksat = [0.00000042, 0.00000038, 0.00000034, 0.000000252, 0.000000084]
     porosity = fill(0.471, 5)
@@ -107,7 +107,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = fill(4.2, 5)
     ψ_sat = [0.33, 0.34, 0.35, 0.36, 0.38]
 
-  elseif soiltype == 9 # sandy clay
+  elseif SoilType == 9 # sandy clay
     b = [6.0, 6.2, 6.4, 6.6, 6.8]
     Ksat = [0.00000033, 0.0000003, 0.000000264, 0.000000198, 0.000000066]
     porosity = fill(0.430, 5)
@@ -116,7 +116,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = fill(6.3, 5)
     ψ_sat = [0.29, 0.30, 0.31, 0.32, 0.34]
 
-  elseif soiltype == 10 # silty clay
+  elseif SoilType == 10 # silty clay
     b = [7.9, 8.1, 8.3, 8.5, 8.7]
     Ksat = [0.00000025, 0.000000225, 0.0000002, 0.00000015, 0.00000005]
     porosity = fill(0.479, 5)
@@ -125,7 +125,7 @@ function Init_Soil_Parameters(vegtype::Integer, soiltype::Integer, r_root_decay:
     κ_dry = fill(4.0, 5)
     ψ_sat = [0.34, 0.35, 0.36, 0.37, 0.39]
 
-  elseif soiltype == 11 # clay
+  elseif SoilType == 11 # clay
     b = [7.6, 7.8, 8.0, 8.2, 8.4]
     Ksat = [0.00000017, 0.000000153, 0.000000136, 0.000000102, 0.000000034]
     porosity = fill(0.475, 5)

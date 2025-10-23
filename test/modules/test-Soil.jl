@@ -44,10 +44,12 @@ end
 end
 
 function init_soil()
-  par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
-    soil_type=8, Tsoil=2.2,
-    soilwater=0.4115, snowdepth=0.0)
-  param = readVegParam(par.landcover)      # n = 48
+  kw = (lon=120.5, lat=30.5,
+    VegType=25, SoilType=8,
+    clumping=0.85,
+    Tsoil0=2.2, θ0=0.4115, z_snow0=0.0
+  )
+  param = readVegParam(kw.VegType)      # n = 48
 
   rad = 100.0
   temp = -4.0
@@ -74,8 +76,8 @@ function init_soil()
   r_drainage = param[27]
   r_root_decay = param[28]
 
-  Init_Soil_var_o(p_jl, state_jl, Ta, r_drainage, r_root_decay, par)
-  Init_Soil_var_o(p_c, state_c, Ta, r_drainage, r_root_decay, par)
+  Init_Soil_var_o(p_jl, state_jl, Ta; r_drainage, r_root_decay, kw...)
+  Init_Soil_var_o(p_c, state_c, Ta; r_drainage, r_root_decay, kw...)
   p_jl, p_c
 end
 
