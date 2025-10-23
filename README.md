@@ -110,3 +110,5 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 1. Hourly BEPS model. <https://github.com/JChen-UToronto/BEPS_hourly_site>
 
 2. Daily BEPS model developed by Jane Liu. <https://github.com/JChen-UToronto/BEPS_D>
+
+3. 统一C与Julia接口，<https://github.com/CUG-hydro/BEPS.c>
