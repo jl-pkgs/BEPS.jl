@@ -1,6 +1,6 @@
 # include("Base/Base.jl")
 include("Param/readVegParam.jl")
-include("Param/VegParam.jl")
+include("Param/Parameters.jl")
 
 include("Soil/Soil.jl")
 # include("soil_thermal_regime.jl")
