@@ -63,22 +63,56 @@ end
 @make_layers_struct ParamSoilThermal
 
 @with_kw mutable struct ParamSoil{FT<:AbstractFloat}
-  hydro::ParamSoilHydraulic{FT} = ParamSoilHydraulic{FT}()
+  hydraulic::ParamSoilHydraulic{FT} = ParamSoilHydraulic{FT}()
   thermal::ParamSoilThermal{FT} = ParamSoilThermal{FT}()
 end
 
 @bounds @with_kw mutable struct BEPSModel{FT<:AbstractFloat}
   N::Int = 5
-  r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)    # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
+  r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)      # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
   r_root_decay::FT = Cdouble(0.95) | (0.85, 0.999) # ? 根系分布衰减率, decay_rate_of_root_distribution
 
   ψ_min::FT = Cdouble(33.0)  # * 气孔关闭对应水势，33kPa，可根据植被类型指定
   alpha::FT = Cdouble(0.4)   # * 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
 
-  hydro::ParamSoilHydraulicLayers{FT} = ParamSoilHydraulicLayers{FT,N}()
+  hydraulic::ParamSoilHydraulicLayers{FT} = ParamSoilHydraulicLayers{FT,N}()
   thermal::ParamSoilThermalLayers{FT} = ParamSoilThermalLayers{FT,N}()
 
   veg::VegParam{FT} = VegParam{FT}()
+end
+
+
+# 这里应该加一个show function，打印模型参数信息
+function Base.show(io::IO, model::M) where {M<:BEPSModel}
+  printstyled(io, "$M, N = $(model.N)\n", color=:blue, bold=true)
+
+  fields_all = fieldnames(M)
+  fields = setdiff(fields_all, [:N, :hydraulic, :thermal, :veg])
+
+  n = length(fields)
+  for i = 1:n
+    field = fields[i]
+    value = getfield(model, field)
+    type = typeof(value)
+    isa(value, Function) && (type = Function)
+    println(io, "  $field\t: {$type} $value")
+    # (i != n) && print(io, "\n")
+  end
+
+  ss = 60
+  println("-"^ss)
+  printstyled(io, "Hydraulic: ", color=:blue, bold=true)
+  print(io, model.hydraulic)
+
+  println("-"^ss)
+  printstyled(io, "Thermal: ", color=:blue, bold=true)
+  print(io, model.thermal)
+
+  println("-"^ss)
+  printstyled(io, "Veg: ", color=:blue, bold=true)
+  print(io, model.veg)
+  print("-"^ss)
+  return nothing
 end
 
 
@@ -89,12 +123,12 @@ function init_soil!(soil::Soil, model::BEPSModel{FT}) where {FT}
   soil.ψ_min = Cdouble(model.ψ_min)
   soil.alpha = Cdouble(model.alpha)
 
-  soil.θ_vfc .= Cdouble(model.hydro.θ_vfc)
-  soil.θ_vwp .= Cdouble(model.hydro.θ_vwp)
-  soil.θ_sat .= Cdouble(model.hydro.θ_sat)
-  soil.Ksat .= Cdouble(model.hydro.K_sat)
-  soil.ψ_sat .= Cdouble(model.hydro.ψ_sat)
-  soil.b .= Cdouble(model.hydro.b)
+  soil.θ_vfc .= Cdouble(model.hydraulic.θ_vfc)
+  soil.θ_vwp .= Cdouble(model.hydraulic.θ_vwp)
+  soil.θ_sat .= Cdouble(model.hydraulic.θ_sat)
+  soil.Ksat .= Cdouble(model.hydraulic.K_sat)
+  soil.ψ_sat .= Cdouble(model.hydraulic.ψ_sat)
+  soil.b .= Cdouble(model.hydraulic.b)
 
   soil.κ_dry .= Cdouble(model.thermal.κ_dry)
   soil.density_soil .= Cdouble(model.thermal.ρ_soil)

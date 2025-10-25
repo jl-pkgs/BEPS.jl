@@ -87,7 +87,11 @@ function update!(model::S, paths::Vector, values::Vector{FT},
 
   for (path, value) in zip(paths, values)
     rows = filter(row -> row.path == path, params)
-    @assert size(rows, 1) == 1 "Duplicated parameters are not allowed!"
+    if isempty(rows)
+      error("Parameter path $(path) not found in model!")
+    elseif size(rows, 1) > 1
+      error("Duplicated parameters found for path $(path)!")
+    end
     update!(model, rows.path[1], value; type=rows.type[1])
   end
 end

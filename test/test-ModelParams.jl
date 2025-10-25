@@ -5,16 +5,17 @@ using BEPS, Test
   # xs = ParamSoilHydraulicLayers{Float64,4}()
   model = BEPSModel{Float64}(; N=5)
   params = parameters(model)
+  display(model)
 
   paths = [
     [:r_drainage],
-    [:hydro, :b, 4]
+    [:hydraulic, :b, 4]
   ]
   values = [0.4, 4.0]
 
   update!(model, paths, values; params)
   @test model.r_drainage == 0.4
-  @test model.hydro.b[4] == 4.0
+  @test model.:hydraulic.b[4] == 4.0
 end
 
 # @testset "ParamSoilHydraulicLayers" begin
