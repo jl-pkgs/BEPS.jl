@@ -1,3 +1,5 @@
+export parameters, update!
+
 using DataFrames
 
 abstract type AbstractLayers{FT} end

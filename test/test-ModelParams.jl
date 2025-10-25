@@ -1,0 +1,25 @@
+using BEPS, Test
+
+
+@testset "Model Parameters" begin
+  # xs = ParamSoilHydraulicLayers{Float64,4}()
+  model = BEPSModel{Float64}(; N=5)
+  params = parameters(model)
+
+  paths = [
+    [:r_drainage],
+    [:hydro, :b, 4]
+  ]
+  values = [0.4, 4.0]
+
+  update!(model, paths, values; params)
+  @test model.r_drainage == 0.4
+  @test model.hydro.b[4] == 4.0
+end
+
+# @testset "ParamSoilHydraulicLayers" begin
+#   x = ParamSoilHydraulic{Float64}()
+#   xs = ParamSoilHydraulicLayers{Float64,4}()
+#   length(get_bounds(x)) == 6
+#   length(get_bounds(xs)) == 24
+# end

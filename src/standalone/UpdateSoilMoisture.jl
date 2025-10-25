@@ -15,7 +15,7 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
   inf = clamp(inf, 0, inf_max)
 
   # Ponded water after runoff. This one is related to runoff. LHe.
-  soil.z_water = (soil.z_water / kstep + soil.r_rain_g - inf) * kstep * soil.r_drainage
+  # soil.z_water = (soil.z_water / kstep + soil.r_rain_g - inf) * kstep * soil.r_drainage
 
   @inbounds while total_t < kstep
     # 为了解决相互依赖的关系，循环寻找稳态
@@ -23,7 +23,7 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
     # Hydraulic conductivity: Bonan, Table 8.2, Campbell 1974, K = K_sat*(θ/θ_sat)^(2b+3)
     for i in 1:n
       ψ[i] = cal_ψ(θ[i], θ_sat[i], ψ_sat[i], b[i])
-      km[i] = f_water[i] * cal_K(θ[i], θ_sat[i], Ksat[i], b[i]) # Hydraulic conductivity, [m/s]
+      km[i] = cal_K(θ[i], θ_sat[i], Ksat[i], b[i]) # Hydraulic conductivity, [m/s]
     end
 
     # Fb, flow speed. Dancy's law. LHE.

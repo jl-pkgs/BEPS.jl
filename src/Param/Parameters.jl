@@ -1,80 +1,11 @@
 export VegParam
-
-include("readVegParam.jl")
-include("utilize.jl")
-include("macro.jl")
+export ParamSoilHydraulic, ParamSoilThermal, ParamSoil, 
+  ParamSoilHydraulicLayers, ParamSoilThermalLayers
+export BEPSModel
 
 using Parameters, DataFrames
 import FieldMetadata: @metadata, @units, units
 @metadata bounds nothing
-
-
-# 水力参数
-@bounds @with_kw mutable struct ParamSoilHydraulic{FT<:AbstractFloat}
-  θ_vfc::FT = FT(0.3) | (0.1, 0.4)  # volumetric field capacity
-  θ_vwp::FT = FT(0.1) | (0.1, 0.5)  # volumetric wilting point
-  θ_sat::FT = FT(0.45) | (0.1, 0.6) # volumetric saturation
-  K_sat::FT = FT(1e-5) | (0.1, 0.7) # saturated hydraulic conductivity
-  ψ_sat::FT = FT(-0.5) | (0.1, 0.9) # soil matric potential at saturation
-  b::FT = FT(5.0) | (0.1, 0.4) # Cambell parameter b
-end
-
-# 热力参数
-@with_kw mutable struct ParamSoilThermal{FT<:AbstractFloat}
-  κ_dry::FT = FT(0.2)     # thermal conductivity
-  ρ_soil::FT = FT(1300.0) # soil density, 
-  f_org::FT = FT(0.02)    # organic matter fraction
-end
-
-@make_layers_struct ParamSoilHydraulic
-@make_layers_struct ParamSoilThermal
-
-@with_kw mutable struct ParamSoil{FT<:AbstractFloat}
-  hydro::ParamSoilHydraulic{FT} = ParamSoilHydraulic{FT}()
-  thermal::ParamSoilThermal{FT} = ParamSoilThermal{FT}() 
-  # 然后是
-end
-
-
-@bounds @with_kw mutable struct ParamSoilLayers{FT<:AbstractFloat}
-  N::Int = 5
-  r_drainage  ::FT = Cdouble(0.50)  # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
-  r_root_decay::FT = Cdouble(0.95)  # ? 根系分布衰减率, decay_rate_of_root_distribution
-
-  ψ_min       ::FT = Cdouble(33.0)  # ? 气孔关闭对应水势，33kPa
-  alpha       ::FT = Cdouble(0.4)   # ? 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
-
-  hydro::ParamSoilHydraulicLayers{FT} = ParamSoilHydraulicLayers{FT,N}()
-  thermal::ParamSoilThermalLayers{FT} = ParamSoilThermalLayers{FT,N}()
-end
-
-
-
-@with_kw mutable struct SoilParam{FT<:AbstractFloat}
-  n_layer::Cint = 5 # 土壤层数
-  # dz::Vector{Float64} = zeros(10) # 土壤厚度
-
-  r_drainage  ::FT = Cdouble(0.50)  # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
-  r_root_decay::FT = Cdouble(0.95)  # ? 根系分布衰减率, decay_rate_of_root_distribution
-
-  ψ_min       ::FT = Cdouble(33.0)  # ? 气孔关闭对应水势，33kPa
-  alpha       ::FT = Cdouble(0.4)   # ? 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
-
-  f_root::Vector{FT} = zeros(FT, 10) # * 根系比例，可根据r_root_decay设定
-
-  θ_vfc       ::Vector{FT} = zeros(FT, 10) # ? volumetric field capacity
-  θ_vwp       ::Vector{FT} = zeros(FT, 10) # ? volumetric wilting point
-  θ_sat       ::Vector{FT} = zeros(FT, 10) # ? volumetric saturation
-  Ksat        ::Vector{FT} = zeros(FT, 10) # ? saturated hydraulic conductivity
-  ψ_sat       ::Vector{FT} = zeros(FT, 10) # ? soil matric potential at saturation
-  b           ::Vector{FT} = zeros(FT, 10) # ? Cambell parameter b
-
-  κ_dry       ::Vector{FT} = zeros(FT, 10) # ? thermal conductivity
-  density_soil::Vector{FT} = zeros(FT, 10) # ? 土壤容重，soil density, for volume heat capacity
-  f_org       ::Vector{FT} = zeros(FT, 10) # ? 有机质含量，organic matter, for volume heat capacity
-end
-
-
 
 
 @with_kw mutable struct VegParam{FT<:AbstractFloat}
@@ -105,3 +36,73 @@ end
   N_leaf::FT = 1.74 + 0.71   # leaf Nitrogen content, mean value + 1 SD [g/m2]
   slope_Vc::FT = 33.79 / 57.7
 end
+
+include("utilize.jl")
+include("readVegParam.jl")
+include("macro.jl")
+
+
+# 水力参数
+@bounds @with_kw mutable struct ParamSoilHydraulic{FT<:AbstractFloat}
+  θ_vfc::FT = FT(0.3) | (0.1, 0.4)  # volumetric field capacity
+  θ_vwp::FT = FT(0.1) | (0.1, 0.5)  # volumetric wilting point
+  θ_sat::FT = FT(0.45) | (0.1, 0.6) # volumetric saturation
+  K_sat::FT = FT(1e-5) | (0.1, 0.7) # saturated hydraulic conductivity
+  ψ_sat::FT = FT(-0.5) | (0.1, 0.9) # soil matric potential at saturation
+  b::FT = FT(5.0) | (0.1, 0.4) # Cambell parameter b
+end
+
+# 热力参数
+@with_kw mutable struct ParamSoilThermal{FT<:AbstractFloat}
+  κ_dry::FT = FT(0.2)     # thermal conductivity
+  ρ_soil::FT = FT(1300.0) # soil density, 
+  f_org::FT = FT(0.02)    # organic matter fraction
+end
+
+@make_layers_struct ParamSoilHydraulic
+@make_layers_struct ParamSoilThermal
+
+@with_kw mutable struct ParamSoil{FT<:AbstractFloat}
+  hydro::ParamSoilHydraulic{FT} = ParamSoilHydraulic{FT}()
+  thermal::ParamSoilThermal{FT} = ParamSoilThermal{FT}() 
+end
+
+
+@bounds @with_kw mutable struct BEPSModel{FT<:AbstractFloat}
+  N::Int = 5
+  r_drainage  ::FT = Cdouble(0.50) | (0.2, 0.7) # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
+  r_root_decay::FT = Cdouble(0.95)  # ? 根系分布衰减率, decay_rate_of_root_distribution
+
+  ψ_min       ::FT = Cdouble(33.0)  # ? 气孔关闭对应水势，33kPa
+  alpha       ::FT = Cdouble(0.4)   # ? 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
+
+  hydro::ParamSoilHydraulicLayers{FT} = ParamSoilHydraulicLayers{FT,N}()
+  thermal::ParamSoilThermalLayers{FT} = ParamSoilThermalLayers{FT,N}()
+
+  veg::VegParam{FT} = VegParam{FT}()
+end
+
+
+# @with_kw mutable struct SoilParam{FT<:AbstractFloat}
+#   n_layer::Cint = 5 # 土壤层数
+#   # dz::Vector{Float64} = zeros(10) # 土壤厚度
+
+#   r_drainage  ::FT = Cdouble(0.50)  # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
+#   r_root_decay::FT = Cdouble(0.95)  # ? 根系分布衰减率, decay_rate_of_root_distribution
+
+#   ψ_min       ::FT = Cdouble(33.0)  # ? 气孔关闭对应水势，33kPa
+#   alpha       ::FT = Cdouble(0.4)   # ? 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
+
+#   f_root::Vector{FT} = zeros(FT, 10) # * 根系比例，可根据r_root_decay设定
+
+#   θ_vfc       ::Vector{FT} = zeros(FT, 10) # ? volumetric field capacity
+#   θ_vwp       ::Vector{FT} = zeros(FT, 10) # ? volumetric wilting point
+#   θ_sat       ::Vector{FT} = zeros(FT, 10) # ? volumetric saturation
+#   Ksat        ::Vector{FT} = zeros(FT, 10) # ? saturated hydraulic conductivity
+#   ψ_sat       ::Vector{FT} = zeros(FT, 10) # ? soil matric potential at saturation
+#   b           ::Vector{FT} = zeros(FT, 10) # ? Cambell parameter b
+
+#   κ_dry       ::Vector{FT} = zeros(FT, 10) # ? thermal conductivity
+#   density_soil::Vector{FT} = zeros(FT, 10) # ? 土壤容重，soil density, for volume heat capacity
+#   f_org       ::Vector{FT} = zeros(FT, 10) # ? 有机质含量，organic matter, for volume heat capacity
+# end

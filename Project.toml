@@ -29,3 +29,6 @@ Parameters = "0.12"
 Reexport = "1"
 UnPack = "1.0"
 julia = "1.8, 1.9, 1.10"
+
+[sources]
+FieldMetadata = {url = "https://github.com/kongdd/FieldMetadata.jl"}
