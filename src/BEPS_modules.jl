@@ -1,5 +1,4 @@
 # include("Base/Base.jl")
-include("Param/readVegParam.jl")
 include("Param/Parameters.jl")
 
 include("Soil/Soil.jl")
