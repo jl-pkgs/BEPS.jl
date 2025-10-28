@@ -44,7 +44,7 @@ include("macro.jl")
 
 # 水力参数
 @bounds @with_kw mutable struct ParamSoilHydraulic{FT<:AbstractFloat}
-  θ_vfc::FT = FT(0.3) | (0.1, 0.4)  # volumetric field capacity
+  # θ_vfc::FT = FT(0.3) | (0.1, 0.4)  # not used, volumetric field capacity
   θ_vwp::FT = FT(0.1) | (0.1, 0.5)  # volumetric wilting point
   θ_sat::FT = FT(0.45) | (0.1, 0.6) # volumetric saturation
   K_sat::FT = FT(1e-5) | (0.1, 0.7) # saturated hydraulic conductivity
@@ -56,7 +56,7 @@ end
 @with_kw mutable struct ParamSoilThermal{FT<:AbstractFloat}
   κ_dry::FT = FT(0.2)     # thermal conductivity
   ρ_soil::FT = FT(1300.0) # soil density, 
-  f_org::FT = FT(0.02)    # organic matter fraction
+  V_SOM::FT = FT(0.02)    # organic matter fraction, Soil Organic Matter
 end
 
 @make_layers_struct ParamSoilHydraulic
@@ -132,7 +132,7 @@ function init_soil!(soil::Soil, model::BEPSModel{FT}) where {FT}
 
   soil.κ_dry .= Cdouble(model.thermal.κ_dry)
   soil.density_soil .= Cdouble(model.thermal.ρ_soil)
-  soil.f_org .= Cdouble(model.thermal.f_org)
+  soil.V_SOM .= Cdouble(model.thermal.V_SOM)
   return soil
 end
 
@@ -158,5 +158,5 @@ end
 
 #   κ_dry       ::Vector{FT} = zeros(FT, 10) # ? thermal conductivity
 #   density_soil::Vector{FT} = zeros(FT, 10) # ? 土壤容重，soil density, for volume heat capacity
-#   f_org       ::Vector{FT} = zeros(FT, 10) # ? 有机质含量，organic matter, for volume heat capacity
+#   V_SOM       ::Vector{FT} = zeros(FT, 10) # ? 有机质含量，organic matter, for volume heat capacity
 # end

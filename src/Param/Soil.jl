@@ -35,7 +35,7 @@ abstract type AbstractSoil end
   ψ_sat       ::Vector{Float64} = zeros(10) # ? soil matric potential at saturation
   b           ::Vector{Float64} = zeros(10) # ? Cambell parameter b
   density_soil::Vector{Float64} = zeros(10) # ? 土壤容重，soil density, for volume heat capacity
-  f_org       ::Vector{Float64} = zeros(10) # ? 有机质含量，organic matter, for volume heat capacity
+  V_SOM       ::Vector{Float64} = zeros(10) # ? 有机质含量，organic matter, for volume heat capacity
 
   ice_ratio   ::Vector{Float64} = zeros(10) # [state]，ice ratio，
   θ           ::Vector{Float64} = zeros(10) # [state], soil moisture

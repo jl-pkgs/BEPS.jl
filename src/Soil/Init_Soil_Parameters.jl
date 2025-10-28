@@ -32,7 +32,7 @@ function Init_Soil_Parameters(VegType::Integer, SoilType::Integer, r_root_decay:
   SoilRootFraction(p)
 
   p.density_soil[1:5] .= [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # from flux tower.
-  p.f_org[1:5] .= [5, 2, 1, 1, 0.3]
+  p.V_SOM[1:5] .= [5, 2, 1, 1, 0.3]
 
   n = 5
   if SoilType == 1  # sand
