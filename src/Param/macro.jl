@@ -4,7 +4,7 @@ using DataFrames
 
 abstract type AbstractLayers{FT} end
 abstract type AbstractModel{FT} end
-abstract type AbstractBEPSModel{FT} <: AbstractModel{FT} end
+abstract type AbstractBEPSmodel{FT} <: AbstractModel{FT} end
 
 macro make_layers_struct(sname, sname_new=nothing)
   isnothing(sname_new) && (sname_new = Symbol(sname, :Layers))

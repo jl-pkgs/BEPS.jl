@@ -1,7 +1,7 @@
 export VegParam
 export ParamSoilHydraulic, ParamSoilThermal, ParamSoil,
   ParamSoilHydraulicLayers, ParamSoilThermalLayers
-export BEPSModel
+export BEPSmodel
 
 using Parameters, DataFrames
 import FieldMetadata: @metadata, @units, units
@@ -67,7 +67,7 @@ end
   thermal::ParamSoilThermal{FT} = ParamSoilThermal{FT}()
 end
 
-@bounds @with_kw mutable struct BEPSModel{FT<:AbstractFloat}
+@bounds @with_kw mutable struct BEPSmodel{FT<:AbstractFloat}
   N::Int = 5
   r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)      # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
   r_root_decay::FT = Cdouble(0.95) | (0.85, 0.999) # ? 根系分布衰减率, decay_rate_of_root_distribution
@@ -83,7 +83,7 @@ end
 
 
 # 这里应该加一个show function，打印模型参数信息
-function Base.show(io::IO, model::M) where {M<:BEPSModel}
+function Base.show(io::IO, model::M) where {M<:BEPSmodel}
   printstyled(io, "$M, N = $(model.N)\n", color=:blue, bold=true)
 
   fields_all = fieldnames(M)
@@ -116,7 +116,7 @@ function Base.show(io::IO, model::M) where {M<:BEPSModel}
 end
 
 
-function init_soil!(soil::Soil, model::BEPSModel{FT}) where {FT}
+function init_soil!(soil::Soil, model::BEPSmodel{FT}) where {FT}
   # N = model.N
   soil.r_drainage = Cdouble(model.r_drainage)
   soil.r_root_decay = Cdouble(model.r_root_decay)
