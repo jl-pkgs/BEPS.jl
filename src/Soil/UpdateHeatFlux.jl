@@ -31,7 +31,7 @@ function Update_Cs(p::Soil)
   (; θ, ice_ratio) = p
   for i in 1:p.n_layer
     # Chen B. (2007) Ecological Modelling 209, 277-300  (equation 18)
-    term1 = 2.0 * 1.0e+3 * p.density_soil[i] / 2.65
+    term1 = 2.0 * 1.0e+3 * p.ρ_soil[i] / 2.65
     term2 = 1.0e+6 * θ[i] * (4.2 * (1 - ice_ratio[i]) + 2.09 * ice_ratio[i])
     term3 = 2.5 * 1.0e+6 * p.V_SOM[i]
 

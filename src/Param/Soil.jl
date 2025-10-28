@@ -25,7 +25,7 @@ abstract type AbstractSoil end
   f_soilwater ::Cdouble = Cdouble(0)        # [state], 总体的土壤水限制因子
 
   dz          ::Vector{Float64} = zeros(10) # 土壤厚度
-  f_root      ::Vector{Float64} = zeros(10) # ? 根系比例，root fraction
+  f_root      ::Vector{Float64} = zeros(10) # [state], 根系比例，root fraction
   dt          ::Vector{Float64} = zeros(10) # [state], 每层的土壤水限制因子，已归一化
   κ_dry       ::Vector{Float64} = zeros(10) # ? thermal conductivity
   θ_vfc       ::Vector{Float64} = zeros(10) # ? volumetric field capacity
@@ -34,7 +34,7 @@ abstract type AbstractSoil end
   Ksat        ::Vector{Float64} = zeros(10) # ? saturated hydraulic conductivity
   ψ_sat       ::Vector{Float64} = zeros(10) # ? soil matric potential at saturation
   b           ::Vector{Float64} = zeros(10) # ? Cambell parameter b
-  density_soil::Vector{Float64} = zeros(10) # ? 土壤容重，soil density, for volume heat capacity
+  ρ_soil      ::Vector{Float64} = zeros(10) # ? 土壤容重，soil density, for volume heat capacity
   V_SOM       ::Vector{Float64} = zeros(10) # ? 有机质含量，organic matter, for volume heat capacity
 
   ice_ratio   ::Vector{Float64} = zeros(10) # [state]，ice ratio，

@@ -131,7 +131,7 @@ function init_soil!(soil::Soil, model::BEPSmodel{FT}) where {FT}
   soil.b .= Cdouble(model.hydraulic.b)
 
   soil.κ_dry .= Cdouble(model.thermal.κ_dry)
-  soil.density_soil .= Cdouble(model.thermal.ρ_soil)
+  soil.ρ_soil .= Cdouble(model.thermal.ρ_soil)
   soil.V_SOM .= Cdouble(model.thermal.V_SOM)
   return soil
 end
@@ -157,6 +157,6 @@ end
 #   b           ::Vector{FT} = zeros(FT, 10) # ? Cambell parameter b
 
 #   κ_dry       ::Vector{FT} = zeros(FT, 10) # ? thermal conductivity
-#   density_soil::Vector{FT} = zeros(FT, 10) # ? 土壤容重，soil density, for volume heat capacity
+#   ρ_soil::Vector{FT} = zeros(FT, 10) # ? 土壤容重，soil density, for volume heat capacity
 #   V_SOM       ::Vector{FT} = zeros(FT, 10) # ? 有机质含量，organic matter, for volume heat capacity
 # end

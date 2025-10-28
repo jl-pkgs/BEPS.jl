@@ -31,7 +31,7 @@ function Init_Soil_Parameters(VegType::Integer, SoilType::Integer, r_root_decay:
   p.r_root_decay = r_root_decay
   SoilRootFraction(p)
 
-  p.density_soil[1:5] .= [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # from flux tower.
+  p.ρ_soil[1:5] .= [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # from flux tower.
   p.V_SOM[1:5] .= [5, 2, 1, 1, 0.3]
 
   n = 5
