@@ -27,15 +27,16 @@ end
 
 
 # Function to update volume heat capacity
+# Bonan 2019, Table 5.2
 function Update_Cs(p::Soil)
   (; θ, ice_ratio) = p
   for i in 1:p.n_layer
     # Chen B. (2007) Ecological Modelling 209, 277-300  (equation 18)
-    term1 = 2.0 * 1.0e+3 * p.ρ_soil[i] / 2.65
+    term1 = 2.0 * 1.0e+3 * p.ρ_soil[i] / 2.65 # soil solid
     term2 = 1.0e+6 * θ[i] * (4.2 * (1 - ice_ratio[i]) + 2.09 * ice_ratio[i])
-    term3 = 2.5 * 1.0e+6 * p.V_SOM[i]
+    term3 = 2.5 * 1.0e+6 * p.V_SOM[i] # soil organic matter, 2.5 [MJ m-3 K-1]
 
-    p.Cs[i] = term1 + term2 + term3
+    p.Cs[i] = term1 + term2 + term3 # [MJ m-3 K-1]
   end
 end
 

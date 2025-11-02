@@ -23,10 +23,17 @@ docs/reference
 *.html
 
 # Figures
-# *.pdf
+*.pdf
 .ipynb_checkpoints
 
 __pycache__
 data
-# examples
+
+examples
 deps
+
+docs
+*.rda
+*.rds
+*.xlsx
+Project_FI-Hyy
