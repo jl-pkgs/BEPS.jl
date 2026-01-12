@@ -30,100 +30,59 @@ function inter_prg_jl(
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, GPP, LAI, PAI = var.TempLeafs
 
-  # 土壤分层临时变量
-  dz = zeros(layer + 1)
-  κ = zeros(layer + 2)
-
-  # 空气动力学阻抗和导度 [s/m] 或 [mol/m²/s]
-  ra_g = 0.0
-  Ga_o = 0.0
-  Gb_o = 0.0
-  Ga_u = 0.0
-  Gb_u = 0.0
-
-  # 净辐射 [W/m²]
-  radiation_o, radiation_u, radiation_g = 0.0, 0.0, 0.0
-
-  # /*****  Vcmax-Nitrogen calculations by G.Mo  *****/
-  (; LAI_max_o, LAI_max_u,
-    α_canopy_vis, α_canopy_nir,
-    α_soil_sat, α_soil_dry,
-    z_canopy_o, z_canopy_u, z_wind,
-    g0_w, g1_w,
-    VCmax25, N_leaf, slope_Vc) = param
+  # ===== 1. 参数提取和计算 =====
+  (; LAI_max_o, LAI_max_u, α_canopy_vis, α_canopy_nir,
+     α_soil_sat, α_soil_dry, z_canopy_o, z_canopy_u, z_wind,
+     g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = param
 
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
 
-  # /*****  LAI calculation module by B. Chen  *****/
+  # LAI分层计算
   lai_o = lai < 0.1 ? 0.1 : lai
-  if (VegType == 25 || VegType == 40) # C4植物参数
-    lai_u = 0.01
-  else
-    lai_u = 1.18 * exp(-0.99 * lai_o)
-  end
+  lai_u = (VegType == 25 || VegType == 40) ? 0.01 : 1.18 * exp(-0.99 * lai_o)
   (lai_u > lai_o) && (lai_u = 0.01)
 
-  stem_o = LAI_max_o * 0.2    # 上层茎面积指数
-  stem_u = LAI_max_u * 0.2    # 下层茎面积指数
-
-  # 分离阳叶和阴叶LAI
+  stem_o = LAI_max_o * 0.2
+  stem_u = LAI_max_u * 0.2
   lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
 
-  # /*****  Initialization of this time step  *****/
-  Srad = meteo.Srad      # 入射短波辐射 [W/m²]
-  RH = meteo.rh          # 相对湿度 [0-1]
-  wind = meteo.wind      # 风速 [m/s]
-  precip = meteo.rain / step  # 降水速率 [m/s]
-  T_air = meteo.temp     # 气温 [°C]
-
+  # ===== 2. 气象变量初始化 =====
+  Srad = meteo.Srad
+  RH = meteo.rh
+  wind = meteo.wind
+  precip = meteo.rain / step
+  T_air = meteo.temp
   met = meteo_pack_jl(T_air, RH)
   (; Δ, γ, cp, VPD, ea) = met
 
+  # ===== 3. 表面状态初始化 =====
   init_leaf_dbl(Tc_old, T_air - 0.5)
 
-  # 表面温度初始化 [°C]
-  # [T_ground, T_surf_snow, T_surf_mix, T_snow_L1, T_snow_L2]
-  var.T_ground[1] = clamp(state.Ts[1], T_air - 2.0, T_air + 2.0)    # 地表温度
-  var.T_surf_snow[1] = clamp(state.Ts[2], T_air - 2.0, T_air + 2.0) # 雪表面温度
-  var.T_surf_mix[1] = clamp(state.Ts[3], T_air - 2.0, T_air + 2.0)  # 混合表面温度
-  var.T_snow_L1[1] = clamp(state.Ts[4], T_air - 2.0, T_air + 2.0)   # 雪层1温度
-  var.T_snow_L2[1] = clamp(state.Ts[5], T_air - 2.0, T_air + 2.0)   # 雪层2温度
+  # 表面温度 [°C]
+  for i in 1:5
+    var_field = [:T_ground, :T_surf_snow, :T_surf_mix, :T_snow_L1, :T_snow_L2][i]
+    getfield(var, var_field)[1] = clamp(state.Ts[i], T_air - 2.0, T_air + 2.0)
+  end
   var.Qhc_o[1] = state.Qhc_o
 
-  # 雪和水的质量状态 [kg/m²]
-  m_snow_pre = state.m_snow
-  m_water_pre = state.m_water
-  m_snow = Layer3(0.0)
-  m_water = Layer2()
-
-  # 雪和水的深度 [m]
-  z_snow = soil.z_snow
-  z_water = soil.z_water
+  # 雪水状态 [kg/m² or m]
+  m_snow_pre, m_water_pre = state.m_snow, state.m_water
+  m_snow, m_water = Layer3(0.0), Layer2()
+  z_snow, z_water = soil.z_snow, soil.z_water
   (z_water < 0.001) && (z_water = 0.0)
 
-  # 雪覆盖分数 [-]
-  f_snow = Layer3(0.0)
-  A_snow = Layer2()
-  f_water = Layer2()
-
-  # 反照率 [-]
-  if (Srad <= 0)
-    α_v = Layer3()
-    α_n = Layer3()
-  else
-    α_v = Layer3(α_canopy_vis)
-    α_n = Layer3(α_canopy_nir)
-  end
-
-  # 雪密度和反照率
-  ρ_snow = init_dbl(state.ρ_snow)
-  α_v_sw = init_dbl()
-  α_n_sw = init_dbl()
-
-  # 冠层温度 [°C]
+  # 雪覆盖和反照率 [-]
+  f_snow, A_snow, f_water = Layer3(0.0), Layer2(), Layer2()
+  α_v = Srad <= 0 ? Layer3() : Layer3(α_canopy_vis)
+  α_n = Srad <= 0 ? Layer3() : Layer3(α_canopy_nir)
+  ρ_snow, α_v_sw, α_n_sw = init_dbl(state.ρ_snow), init_dbl(), init_dbl()
   Tc = Layer3()
 
-  # 十次亚小时循环: 每小时分10步, 每步360秒
+  # 土壤临时变量和中间变量
+  dz, κ = zeros(layer + 1), zeros(layer + 2)
+  radiation_o = radiation_u = radiation_g = ra_g = 0.0
+
+  # ===== 4. 亚小时循环 (10步/小时, 360秒/步) =====
   @inbounds for k_step = 2:kloop+1
     !fix_snowpack && (ρ_snow[] = 0.0) # TODO: exact as C
     α_v_sw[], α_n_sw[] = 0.0, 0.0
