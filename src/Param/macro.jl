@@ -83,7 +83,7 @@ end
 
 function update!(model::S, paths::Vector, values::Vector{FT},
   ; params::Union{Nothing,DataFrame}=nothing) where {S,FT}
-  isnothing(params) && (params = Params(model))
+  isnothing(params) && (params = parameters(model))
 
   for (path, value) in zip(paths, values)
     rows = filter(row -> row.path == path, params)

@@ -67,7 +67,7 @@ end
   thermal::ParamSoilThermal{FT} = ParamSoilThermal{FT}()
 end
 
-@bounds @with_kw mutable struct BEPSmodel{FT<:AbstractFloat}
+@bounds @with_kw_noshow mutable struct BEPSmodel{FT<:AbstractFloat}
   N::Int = 5
   r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)      # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
   r_root_decay::FT = Cdouble(0.95) | (0.85, 0.999) # ? 根系分布衰减率, decay_rate_of_root_distribution
@@ -117,23 +117,36 @@ end
 
 
 function init_soil!(soil::Soil, model::BEPSmodel{FT}) where {FT}
-  # N = model.N
+  N = model.N
+  soil.n_layer = Cint(N)
+  
   soil.r_drainage = Cdouble(model.r_drainage)
   soil.r_root_decay = Cdouble(model.r_root_decay)
   soil.ψ_min = Cdouble(model.ψ_min)
   soil.alpha = Cdouble(model.alpha)
 
-  soil.θ_vfc .= Cdouble(model.hydraulic.θ_vfc)
-  soil.θ_vwp .= Cdouble(model.hydraulic.θ_vwp)
-  soil.θ_sat .= Cdouble(model.hydraulic.θ_sat)
-  soil.Ksat .= Cdouble(model.hydraulic.K_sat)
-  soil.ψ_sat .= Cdouble(model.hydraulic.ψ_sat)
-  soil.b .= Cdouble(model.hydraulic.b)
+  soil.θ_vwp[1:N] .= Cdouble.(model.hydraulic.θ_vwp)
+  soil.θ_sat[1:N] .= Cdouble.(model.hydraulic.θ_sat)
+  soil.Ksat[1:N] .= Cdouble.(model.hydraulic.K_sat)
+  soil.ψ_sat[1:N] .= Cdouble.(model.hydraulic.ψ_sat)
+  soil.b[1:N] .= Cdouble.(model.hydraulic.b)
 
-  soil.κ_dry .= Cdouble(model.thermal.κ_dry)
-  soil.ρ_soil .= Cdouble(model.thermal.ρ_soil)
-  soil.V_SOM .= Cdouble(model.thermal.V_SOM)
+  soil.κ_dry[1:N] .= Cdouble.(model.thermal.κ_dry)
+  soil.ρ_soil[1:N] .= Cdouble.(model.thermal.ρ_soil)
+  soil.V_SOM[1:N] .= Cdouble.(model.thermal.V_SOM)
   return soil
+end
+
+
+function get_opt_info(model::BEPSmodel)
+  df = parameters(model)
+  
+  x0 = Float64.(df.value)
+  lb = Float64[b[1] for b in df.bound]
+  ub = Float64[b[2] for b in df.bound]
+  paths = df.path
+  
+  return x0, lb, ub, paths
 end
 
 

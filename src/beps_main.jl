@@ -1,4 +1,8 @@
+using HydroTools
+using Statistics
+
 function besp_main(d::DataFrame, lai::Vector;
+  model::Union{Nothing, BEPSmodel} = nothing,
   lon::FT=120.0, lat::FT=20.0,
   VegType::Int=25, SoilType::Int=8,
   clumping::FT=0.85,
@@ -13,9 +17,20 @@ function besp_main(d::DataFrame, lai::Vector;
   Ra = Radiation()
   var = InterTempVars()
 
-  theta = readVegParam(VegType)  # n = 48
-  vegpar = theta2par(theta)
-  theta = par2theta(vegpar; clumping, VegType) # 为移除readVegParam铺垫
+  if isnothing(model)
+    theta = readVegParam(VegType)  # n = 48
+    vegpar = theta2par(theta)
+    theta = par2theta(vegpar; clumping, VegType) # 为移除readVegParam铺垫
+    
+    r_drainage_val = r_drainage
+    r_root_decay_val = r_root_decay
+  else
+    vegpar = model.veg
+    theta = par2theta(vegpar; clumping, VegType)
+    
+    r_drainage_val = model.r_drainage
+    r_root_decay_val = model.r_root_decay
+  end
 
   # coef = readcoef(VegType, SoilType) # n = 48, soil respiration module
 
@@ -43,9 +58,13 @@ function besp_main(d::DataFrame, lai::Vector;
 
   # (; r_drainage, r_root_decay) = vegpar
   Init_Soil_var_o(soil, state, Ta; VegType, SoilType,
-    r_drainage, r_root_decay,
+    r_drainage=r_drainage_val, r_root_decay=r_root_decay_val,
     Tsoil0, θ0, z_snow0
   )
+  
+  if !isnothing(model)
+    init_soil!(soil, model)
+  end
 
   for i = 1:n
     jday = d.day[i]
@@ -79,3 +98,42 @@ function besp_main(d::DataFrame, lai::Vector;
 
   df_out, df_ET, Tsoil, θ
 end
+
+function beps_optimize(d::DataFrame, lai::Vector, model::BEPSmodel, obs::AbstractVector;
+  col_sim::Symbol=:ET, 
+  maxn=2000, 
+  kstop=5, pcento=0.01, peps=0.001, iseed=1, iniflg=0,
+  kwargs...)
+
+  x0, lb, ub, paths = get_opt_info(model)
+  
+  function cal_func(x)
+    update!(model, paths, x)
+    df_out, df_ET, _, _ = besp_main(d, lai; model=model, kwargs...)
+    
+    sim = if col_sim in propertynames(df_out)
+      df_out[!, col_sim]
+    elseif col_sim in propertynames(df_ET)
+      df_ET[!, col_sim]
+    else
+      error("Column $col_sim not found in output")
+    end
+    
+    valid_idx = .!isnan.(obs) .& .!isnan.(sim)
+    if sum(valid_idx) == 0
+      return 1e9
+    end
+    
+    diff = sim[valid_idx] .- obs[valid_idx]
+        rmse = sqrt(mean(diff.^2))
+        return rmse
+      end
+      
+      bestx, bestf, exitflag = sceua(cal_func, x0, lb, ub; 
+        maxn=maxn, kstop=kstop, pcento=pcento, peps=peps, iseed=iseed, iniflg=iniflg)
+        
+      update!(model, paths, bestx)
+      
+      return model, bestf
+    end
+    

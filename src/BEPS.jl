@@ -11,6 +11,7 @@ using DataFrames: DataFrame
 @reexport using Serialization: deserialize, serialize
 @reexport using DelimitedFiles: readdlm
 export besp_main
+export beps_optimize
 export Init_Soil_var_o
 export Soil_c
 
