@@ -255,8 +255,7 @@ function inter_prg_jl(
       surface_temperature_jl(T_air, RH, z_snow, z_water,
         var.Cs[2, k_step], var.Cs[1, k_step], Gheat_g, dz[2], ρ_snow[], var.Tc_u[k_step],
         radiation_g, var.Evap_soil[k_step], var.Evap_SW[k_step], var.Evap_SS[k_step],
-        κ[2],
-        f_snow.g, var.G[2, k_step],
+        κ[2], f_snow.g, var.G[2, k_step],
         var.T_ground[k_step-1],
         var.T_soil[2, k_step-1], var.T_soil[1, k_step-1], var.T_surf_mix[k_step-1],
         var.T_surf_snow[k_step-1], var.T_snow_L1[k_step-1], var.T_snow_L2[k_step-1])
