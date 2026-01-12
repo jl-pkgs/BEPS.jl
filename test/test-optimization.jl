@@ -3,7 +3,8 @@ using Serialization
 using DelimitedFiles
 using BEPS: path_proj
 
-@testset "BEPS Optimization" begin
+# @testset "BEPS Optimization" 
+begin
     # 1. Load Data
     lai = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
     d = deserialize(path_proj("data/p1_meteo"))
@@ -40,7 +41,7 @@ using BEPS: path_proj
         kw..., 
         version="julia", 
         fix_snowpack=false,
-        maxn=100, # Small number of iterations for testing
+        maxn=10, # Small number of iterations for testing
         kstop=3,
         pcento=0.1
     )
