@@ -287,23 +287,22 @@ function inter_prg_jl(
     z_water = soil.z_water
   end  # end of sub-hourly loop
 
-  k_step = kloop + 1  # 最后一步索引
+  # ===== 5. 时间步结束：状态更新 =====
+  k_step = kloop + 1
   var.T_snow_L1[k_step] = clamp(var.T_snow_L1[k_step], -40.0, 40.0)
   var.T_snow_L2[k_step] = clamp(var.T_snow_L2[k_step], -40.0, 40.0)
 
-  # 更新状态变量
-  state.Ts[1] = var.T_ground[k_step]
-  state.Ts[2] = var.T_surf_snow[k_step]
-  state.Ts[3] = var.T_surf_mix[k_step]
-  state.Ts[4] = var.T_snow_L1[k_step]
-  state.Ts[5] = var.T_snow_L2[k_step]
+  # 更新表面温度状态
+  state.Ts .= [var.T_ground[k_step], var.T_surf_snow[k_step], var.T_surf_mix[k_step],
+               var.T_snow_L1[k_step], var.T_snow_L2[k_step]]
 
+  # 更新其他状态变量
   state.Qhc_o = var.Qhc_o[k_step]
   set!(state.m_water, m_water)
   set!(state.m_snow, m_snow)
   state.ρ_snow = ρ_snow[]
 
-  # 输出结果汇总
+  # ===== 6. 输出结果汇总 =====
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 
   OutputET!(mid_ET,
@@ -313,7 +312,7 @@ function inter_prg_jl(
     var.Evap_soil, var.Evap_SW, var.Evap_SS, var.Qhc_o, var.Qhc_u, var.Qhg, k_step)
   update_ET!(mid_ET, mid_res, T_air)
 
-  mid_res.gpp_o_sunlit = GPP.o_sunlit   # [umol C/m2/s], !note
+  mid_res.gpp_o_sunlit = GPP.o_sunlit
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded
   mid_res.gpp_u_shaded = GPP.u_shaded
@@ -323,6 +322,6 @@ function inter_prg_jl(
   mid_res.ρ_snow = ρ_snow[]
 
   GPP = GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded
-  mid_res.GPP = GPP * 12 * step * 1e-6 # [umol m-2 s-1] -> [gC m-2]
+  mid_res.GPP = GPP * 12 * step * 1e-6  # [umol m-2 s-1] -> [gC m-2]
   nothing
 end
