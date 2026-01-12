@@ -16,7 +16,7 @@
   - `wind::Float64` - 风速 [m/s]
 
 # Keyword Arguments
-- `SoilType::Int = 8`: 土壤质地类型 (1-11, 见 Init_Soil_Parameters)
+- `SoilType::Int = 8`: 土壤质地类型 (1-11, 见 init_soil_parameters!)
 - `VegType::Int = 25`: 植被类型（影响 ψ_min, alpha）
 - `Tsoil0::Float64 = 10.0`: 初始土壤温度 [°C]
 - `θ0::Float64 = 0.35`: 初始土壤湿度 [m³/m³]
@@ -77,8 +77,8 @@ function soil_sm(
     soil = Soil()
 
     # 设置土壤参数和初始状态
-    Init_Soil_Parameters(VegType, SoilType, r_root_decay, soil)
-    Init_Soil_Status(soil, Tsoil0, meteo.temp[1], θ0, z_snow0)
+    init_soil_parameters!(VegType, SoilType, r_root_decay, soil)
+    init_soil_status!(soil, Tsoil0, meteo.temp[1], θ0, z_snow0)
     soil.r_drainage = r_drainage
 
     # 状态变量
