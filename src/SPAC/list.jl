@@ -31,7 +31,7 @@ function nanmaximum(x::AbstractVector)
   !isempty(inds) ? maximum(x[inds]) : NaN
 end
 
-function Base.max(df::DataFrame)
+function Base.maximum(df::DataFrame)
   vals = [nanmaximum(df[!, c]) for c in names(df)]
   keys = names(df)
   NamedTuple{Tuple(Symbol.(keys))}(vals)

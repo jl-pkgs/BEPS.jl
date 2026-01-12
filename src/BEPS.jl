@@ -11,6 +11,7 @@ using DataFrames: DataFrame
 @reexport using Serialization: deserialize, serialize
 @reexport using DelimitedFiles: readdlm
 export besp_main
+export beps_modern
 export beps_optimize
 export Init_Soil_var_o
 export Soil_c
@@ -34,5 +35,6 @@ using BEPS.clang
 
 # include("beps_inter_prg.jl")
 include("beps_main.jl")
+include("beps_modern.jl")
 
 end # module BEPS

@@ -1,11 +1,6 @@
 using BEPS, DataFrames, Test
 using BEPS: path_proj
 
-function nanmax(x)
-  x = collect(x)
-  x = x[.!isnan.(x)]
-  maximum(x)
-end
 
 lai = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
 
@@ -33,7 +28,7 @@ kw = (lon=120.5, lat=30.5,
   # gpp_u_sunlit has a large bias in i=193, unknown reason
   # df_diff_perc = df_diff_perc[:, Cols(1:1, 3:end)]
   df_diff_perc = df_diff_perc[:, Cols(:GPP, :Evap, :Trans)]
-  l = max(df_diff_perc)
+  l = maximum(df_diff_perc)
   @show l
   @show nanmax(l)
   @test true
