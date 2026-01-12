@@ -36,5 +36,6 @@ using BEPS.clang
 # include("beps_inter_prg.jl")
 include("beps_main.jl")
 include("beps_modern.jl")
+include("soil_sm.jl")
 
 end # module BEPS
