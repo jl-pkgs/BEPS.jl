@@ -211,8 +211,8 @@ src/
 **Initialize soil:**
 ```julia
 soil = Soil()
-Init_Soil_Parameters(VegType, SoilType, r_root_decay, soil)
-Init_Soil_Status(soil, Tsoil0, Tair, θ0, z_snow0)
+init_soil_parameters!(VegType, SoilType, r_root_decay, soil)
+init_soil_status!(soil, Tsoil0, Tair, θ0, z_snow0)
 ```
 
 **Update soil (one timestep):**

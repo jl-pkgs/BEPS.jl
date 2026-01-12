@@ -13,7 +13,7 @@ using DataFrames: DataFrame
 export besp_main
 export beps_modern
 export beps_optimize
-export Init_Soil_var_o
+export init_soil_var!
 export Soil_c
 
 path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))

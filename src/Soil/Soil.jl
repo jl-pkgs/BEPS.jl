@@ -13,7 +13,7 @@ function Update_G(p::Soil, value::Cdouble)
   p.G[1] = value
 end
 
-export Init_Soil_Parameters, Init_Soil_Status, SoilRootFraction, Update_Tsoil_c, Update_G
+export init_soil_parameters!, init_soil_status!, soil_root_fraction!, Update_Tsoil_c, Update_G
 export UpdateHeatFlux, Update_Cs,
   Update_ice_ratio,
   UpdateSoilThermalConductivity,
