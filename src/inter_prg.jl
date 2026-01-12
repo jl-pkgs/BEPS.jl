@@ -81,13 +81,13 @@ function inter_prg_jl(
 
   init_leaf_dbl(Tc_old, T_air - 0.5)
 
-  # Ground surface temperature
-  # [Ts0, Tsn, Tsm0, Tsn1, Tsn2]
-  var.Ts0[1] = clamp(state.Ts[1], T_air - 2.0, T_air + 2.0)  # ground0
-  var.Tsn0[1] = clamp(state.Ts[2], T_air - 2.0, T_air + 2.0) # snow0
-  var.Tsm0[1] = clamp(state.Ts[3], T_air - 2.0, T_air + 2.0) # any
-  var.Tsn1[1] = clamp(state.Ts[4], T_air - 2.0, T_air + 2.0) # snow1
-  var.Tsn2[1] = clamp(state.Ts[5], T_air - 2.0, T_air + 2.0) # snow2
+  # 表面温度初始化 [°C]
+  # [T_ground, T_surf_snow, T_surf_mix, T_snow_L1, T_snow_L2]
+  var.T_ground[1] = clamp(state.Ts[1], T_air - 2.0, T_air + 2.0)    # 地表温度
+  var.T_surf_snow[1] = clamp(state.Ts[2], T_air - 2.0, T_air + 2.0) # 雪表面温度
+  var.T_surf_mix[1] = clamp(state.Ts[3], T_air - 2.0, T_air + 2.0)  # 混合表面温度
+  var.T_snow_L1[1] = clamp(state.Ts[4], T_air - 2.0, T_air + 2.0)   # 雪层1温度
+  var.T_snow_L2[1] = clamp(state.Ts[5], T_air - 2.0, T_air + 2.0)   # 雪层2温度
   var.Qhc_o[1] = state.Qhc_o
 
   # 雪和水的质量状态 [kg/m²]
@@ -267,7 +267,7 @@ function inter_prg_jl(
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
     var.Evap_soil[k_step], var.Evap_SW[k_step], var.Evap_SS[k_step], z_water, z_snow =
-      evaporation_soil_jl(Tc.g, var.Ts0[k_step-1], RH, radiation_g, Gheat_g,
+      evaporation_soil_jl(Tc.g, var.T_ground[k_step-1], RH, radiation_g, Gheat_g,
         f_snow,
         z_water, z_snow, mass_water_g, m_snow,
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
@@ -278,7 +278,7 @@ function inter_prg_jl(
 
     # /*****  Surface temperature by X. Luo  *****/
     var.Cs .= 0.0
-    var.Tm .= 0.0
+    var.T_soil .= 0.0
     var.G .= 0.0
 
     var.Cs[1, k_step] = soil.Cs[1]
@@ -287,31 +287,31 @@ function inter_prg_jl(
     κ[2] = soil.κ[1]
     dz[2] = soil.dz[1]
 
-    var.Tm[1, k_step-1] = soil.Tsoil_p[1]
-    var.Tm[2, k_step-1] = soil.Tsoil_p[2]
+    var.T_soil[1, k_step-1] = soil.Tsoil_p[1]
+    var.T_soil[2, k_step-1] = soil.Tsoil_p[2]
     var.G[2, k_step] = soil.G[1]
 
-    var.G[1, k_step], var.Ts0[k_step], var.Tm[1, k_step], var.Tsm0[k_step],
-    var.Tsn0[k_step], var.Tsn1[k_step], var.Tsn2[k_step] =
+    var.G[1, k_step], var.T_ground[k_step], var.T_soil[1, k_step], var.T_surf_mix[k_step],
+    var.T_surf_snow[k_step], var.T_snow_L1[k_step], var.T_snow_L2[k_step] =
       surface_temperature_jl(T_air, RH, z_snow, z_water,
         var.Cs[2, k_step], var.Cs[1, k_step], Gheat_g, dz[2], ρ_snow[], var.Tc_u[k_step],
         radiation_g, var.Evap_soil[k_step], var.Evap_SW[k_step], var.Evap_SS[k_step],
         κ[2],
         f_snow.g, var.G[2, k_step],
-        var.Ts0[k_step-1],
-        var.Tm[2, k_step-1], var.Tm[1, k_step-1], var.Tsm0[k_step-1],
-        var.Tsn0[k_step-1], var.Tsn1[k_step-1], var.Tsn2[k_step-1])
+        var.T_ground[k_step-1],
+        var.T_soil[2, k_step-1], var.T_soil[1, k_step-1], var.T_surf_mix[k_step-1],
+        var.T_surf_snow[k_step-1], var.T_snow_L1[k_step-1], var.T_snow_L2[k_step-1])
 
-    soil.Tsoil_c[1] = var.Tm[1, k_step]
+    soil.Tsoil_c[1] = var.T_soil[1, k_step]
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
-    z_snow, z_water = snowpack_stage3_jl(T_air, var.Tsn0[k_step], var.Tsn0[k_step-1],
+    z_snow, z_water = snowpack_stage3_jl(T_air, var.T_surf_snow[k_step], var.T_surf_snow[k_step-1],
       ρ_snow[], z_snow, z_water, m_snow)
     set!(m_snow_pre, m_snow)
 
     # /*****  Sensible heat flux by X. Luo  *****/
     var.Qhc_o[k_step], var.Qhc_u[k_step], var.Qhg[k_step] =
-      sensible_heat_jl(Tc_new, var.Ts0[k_step], T_air, RH,
+      sensible_heat_jl(Tc_new, var.T_ground[k_step], T_air, RH,
         Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
@@ -329,15 +329,15 @@ function inter_prg_jl(
   end  # end of sub-hourly loop
 
   k_step = kloop + 1  # 最后一步索引
-  var.Tsn1[k_step] = clamp(var.Tsn1[k_step], -40.0, 40.0)
-  var.Tsn2[k_step] = clamp(var.Tsn2[k_step], -40.0, 40.0)
+  var.T_snow_L1[k_step] = clamp(var.T_snow_L1[k_step], -40.0, 40.0)
+  var.T_snow_L2[k_step] = clamp(var.T_snow_L2[k_step], -40.0, 40.0)
 
   # 更新状态变量
-  state.Ts[1] = var.Ts0[k_step]
-  state.Ts[2] = var.Tsn0[k_step]
-  state.Ts[3] = var.Tsm0[k_step]
-  state.Ts[4] = var.Tsn1[k_step]
-  state.Ts[5] = var.Tsn2[k_step]
+  state.Ts[1] = var.T_ground[k_step]
+  state.Ts[2] = var.T_surf_snow[k_step]
+  state.Ts[3] = var.T_surf_mix[k_step]
+  state.Ts[4] = var.T_snow_L1[k_step]
+  state.Ts[5] = var.T_snow_L2[k_step]
 
   state.Qhc_o = var.Qhc_o[k_step]
   set!(state.m_water, m_water)
