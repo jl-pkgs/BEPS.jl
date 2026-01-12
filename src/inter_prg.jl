@@ -267,7 +267,7 @@ function inter_prg_jl(
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
     var.Evap_soil[k_step], var.Evap_SW[k_step], var.Evap_SS[k_step], z_water, z_snow =
-      evaporation_soil_jl(Tc.g, var.T_ground[k_step-1], RH, radiation_g, Gheat_g,
+      evaporation_soil_jl(T_air, var.T_ground[k_step-1], RH, radiation_g, Gheat_g,
         f_snow,
         z_water, z_snow, mass_water_g, m_snow,
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
