@@ -44,7 +44,7 @@ include("macro.jl")
 
 # 水力参数
 @bounds @with_kw mutable struct ParamSoilHydraulic{FT<:AbstractFloat}
-  # θ_vfc::FT = FT(0.3) | (0.1, 0.4)  # not used, volumetric field capacity
+  θ_vfc::FT = FT(0.3) | (0.1, 0.4)  # volumetric field capacity
   θ_vwp::FT = FT(0.1) | (0.1, 0.5)  # volumetric wilting point
   θ_sat::FT = FT(0.45) | (0.1, 0.6) # volumetric saturation
   K_sat::FT = FT(1e-5) | (0.1, 0.7) # saturated hydraulic conductivity
@@ -121,15 +121,15 @@ function Base.show(io::IO, model::M) where {M<:BEPSmodel}
   end
 
   ss = 60
-  println("-"^ss)
+  println(io, "-"^ss)
   printstyled(io, "Hydraulic: ", color=:blue, bold=true)
   print(io, model.hydraulic)
 
-  println("-"^ss)
+  println(io, "-"^ss)
   printstyled(io, "Thermal: ", color=:blue, bold=true)
   print(io, model.thermal)
 
-  println("-"^ss)
+  println(io, "-"^ss)
   printstyled(io, "Veg: ", color=:blue, bold=true)
   print(io, model.veg)
   print("-"^ss)
