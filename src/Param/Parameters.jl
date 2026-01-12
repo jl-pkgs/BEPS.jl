@@ -81,6 +81,27 @@ end
   veg::VegParam{FT} = VegParam{FT}()
 end
 
+include("Init_Soil.jl")
+
+function BEPSmodel(VegType::Int, SoilType::Int; N::Int=5, FT=Float64)
+  theta = FT.(readVegParam(VegType))
+  vegpar = theta2par(theta)
+
+  ψ_min, alpha = (VegType == 6 || VegType == 9) ? (FT(10.0), FT(1.5)) : (FT(33.0), FT(0.4))
+  hydraulic, thermal = init_soil_layers(SoilType, N, FT)
+
+  BEPSmodel{FT}(;
+    N,
+    r_drainage=theta[27],
+    r_root_decay=theta[28],
+    ψ_min,
+    alpha,
+    hydraulic,
+    thermal,
+    veg=vegpar
+  )
+end
+
 
 # 这里应该加一个show function，打印模型参数信息
 function Base.show(io::IO, model::M) where {M<:BEPSmodel}
@@ -115,37 +136,14 @@ function Base.show(io::IO, model::M) where {M<:BEPSmodel}
   return nothing
 end
 
-
-function init_soil!(soil::Soil, model::BEPSmodel{FT}) where {FT}
-  N = model.N
-  soil.n_layer = Cint(N)
-  
-  soil.r_drainage = Cdouble(model.r_drainage)
-  soil.r_root_decay = Cdouble(model.r_root_decay)
-  soil.ψ_min = Cdouble(model.ψ_min)
-  soil.alpha = Cdouble(model.alpha)
-
-  soil.θ_vwp[1:N] .= Cdouble.(model.hydraulic.θ_vwp)
-  soil.θ_sat[1:N] .= Cdouble.(model.hydraulic.θ_sat)
-  soil.Ksat[1:N] .= Cdouble.(model.hydraulic.K_sat)
-  soil.ψ_sat[1:N] .= Cdouble.(model.hydraulic.ψ_sat)
-  soil.b[1:N] .= Cdouble.(model.hydraulic.b)
-
-  soil.κ_dry[1:N] .= Cdouble.(model.thermal.κ_dry)
-  soil.ρ_soil[1:N] .= Cdouble.(model.thermal.ρ_soil)
-  soil.V_SOM[1:N] .= Cdouble.(model.thermal.V_SOM)
-  return soil
-end
-
-
 function get_opt_info(model::BEPSmodel)
   df = parameters(model)
-  
+
   x0 = Float64.(df.value)
   lb = Float64[b[1] for b in df.bound]
   ub = Float64[b[2] for b in df.bound]
   paths = df.path
-  
+
   return x0, lb, ub, paths
 end
 

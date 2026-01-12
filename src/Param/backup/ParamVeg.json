@@ -111,8 +111,8 @@
     "stem_resp_co": 0.002,
     "root_resp_co": 0.0015,
     "fine_root_resp_co": 0.003,
-    "N_leaf": 2.195,
-    "slope_Vc": 0.528
+    "N_leaf": 2.695,
+    "slope_Vc": 0.5669
   },
   "C4": {
     "clumping_index": 0.73,
@@ -139,8 +139,8 @@
   },
   "default": {
     "clumping_index": 0.8,
-    "LAI_max_o": 4.5,
-    "LAI_max_u": 0.01,
+    "LAI_max_o": 4.5, 
+    "LAI_max_u": 2.4,
     "z00": 0.04,
     "mass_overstory": 2.5,
     "mass_understory": 0.1,
@@ -158,6 +158,6 @@
     "root_resp_co": 0.0015,
     "fine_root_resp_co": 0.003,
     "N_leaf": 2.37,
-    "slope_Vc": 0.528
+    "slope_Vc": 0.6011
   }
 }

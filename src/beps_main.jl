@@ -19,19 +19,13 @@ function besp_main(d::DataFrame, lai::Vector;
     theta = readVegParam(VegType)  # n = 48
     vegpar = theta2par(theta)
     theta = par2theta(vegpar; clumping, VegType) # 为移除readVegParam铺垫
-
-    r_drainage_val = r_drainage
-    r_root_decay_val = r_root_decay
   else
     vegpar = model.veg
     theta = par2theta(vegpar; clumping, VegType)
-
-    r_drainage_val = model.r_drainage
-    r_root_decay_val = model.r_root_decay
+    (; r_drainage, r_root_decay) = model
   end
 
   # coef = readcoef(VegType, SoilType) # n = 48, soil respiration module
-
   n = size(d, 1)
   vars = fieldnames(Results) |> collect
   vars_ET = fieldnames(OutputET) |> collect
@@ -55,8 +49,8 @@ function besp_main(d::DataFrame, lai::Vector;
   Ta = d.tem[1]
 
   # (; r_drainage, r_root_decay) = vegpar
-  Init_Soil_var_o(soil, state, Ta; VegType, SoilType,
-    r_drainage=r_drainage_val, r_root_decay=r_root_decay_val,
+  Init_Soil_var_o(soil, state, Ta; 
+    VegType, SoilType, r_drainage, r_root_decay,
     Tsoil0, θ0, z_snow0
   )
 
@@ -96,6 +90,7 @@ function besp_main(d::DataFrame, lai::Vector;
 
   df_out, df_ET, Tsoil, θ
 end
+
 
 function beps_optimize(d::DataFrame, lai::Vector, model::BEPSmodel, obs::AbstractVector;
   col_sim::Symbol=:ET,
