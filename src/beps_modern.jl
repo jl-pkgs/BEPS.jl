@@ -50,7 +50,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
     VegType, SoilType, r_drainage, r_root_decay,
     Tsoil0, θ0, z_snow0
   )
-  !isnothing(model) && init_soil!(soil, model) # 这是何意?
+  !isnothing(model) && Sync_Param_to_Soil!(soil, model) # 这是何意?
 
   for i = 1:n
     jday = d.day[i]

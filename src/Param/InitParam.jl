@@ -1,22 +1,4 @@
-using JSON
-
-const path_veg = joinpath(@__DIR__, "params", "ParamVeg.json")
-const path_gen = joinpath(@__DIR__, "params", "ParamGeneral.json")
-
-_types = ["ENF", "DNF", "DBF", "EBF", "Shrub-SH", "C4", "default"]
-_codes = [1, 2, 6, 9, 13, 40, -1]
-
 # const RTIMES = 24.0 # 呼吸作用系数转换常数 (day -> hour)
-
-readGeneralParam() = JSON.parsefile(path_gen)
-
-function readVegRaw(lc::Int=1)
-  veg_data = JSON.parsefile(path_veg)
-  type_idx = findfirst(x -> x == lc, _codes)
-  type_str = type_idx !== nothing ? _types[type_idx] : "default"
-  return veg_data[type_str]
-end
-
 
 """
     InitParam_Veg(lc::Int=1; FT=Float64)
@@ -24,8 +6,8 @@ end
 读取 JSON 配置文件并返回 ParamVeg 结构体。
 """
 function InitParam_Veg(lc::Int=1; FT=Float64)
-  veg_data = JSON.parsefile(path_veg)
-  gen_data = JSON.parsefile(path_gen)
+  veg_data = JSON.parsefile(PATH_VEG)
+  gen_data = JSON.parsefile(PATH_GEN)
 
   type_idx = findfirst(x -> x == lc, _codes)
   type_str = type_idx !== nothing ? _types[type_idx] : "default"
@@ -82,7 +64,6 @@ function InitParam_Soil(SoilType::Int, N::Int, FT::Type)
   thermal = ParamSoilThermalLayers{FT,N}(; κ_dry, ρ_soil, V_SOM)
   return hydraulic, thermal
 end
-
 
 # if VegType == 6 || VegType == 9 # DBF or EBF, low constaint threshold
 #   p.ψ_min = 10.0 # ψ_min

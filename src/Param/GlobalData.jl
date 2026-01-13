@@ -1,3 +1,21 @@
+using JSON
+
+const PATH_VEG = joinpath(@__DIR__, "params", "ParamVeg.json")
+const PATH_GEN = joinpath(@__DIR__, "params", "ParamGeneral.json")
+
+_types = ["ENF", "DNF", "DBF", "EBF", "Shrub-SH", "C4", "default"]
+_codes = [1, 2, 6, 9, 13, 40, -1]
+
+readGeneralParam() = JSON.parsefile(PATH_GEN)
+
+function readVegRaw(lc::Int=1)
+  veg_data = JSON.parsefile(PATH_VEG)
+  type_idx = findfirst(x -> x == lc, _codes)
+  type_str = type_idx !== nothing ? _types[type_idx] : "default"
+  return veg_data[type_str]
+end
+
+
 const SOIL_PARAMS = [
   (name="sand",
     b=[1.7, 1.9, 2.1, 2.3, 2.5],
@@ -67,30 +85,4 @@ const SOIL_PARAMS = [
     κ_dry=4.4)
 ]
 
-
-
-function init_soil!(soil::Soil, model::BEPSmodel{FT}) where {FT}
-  (; hydraulic, thermal, N) = model
-  soil.n_layer = Cint(N)
-
-  soil.r_drainage = Cdouble(model.r_drainage)
-  soil.r_root_decay = Cdouble(model.r_root_decay)
-  soil.ψ_min = Cdouble(model.ψ_min)
-  soil.alpha = Cdouble(model.alpha)
-
-  soil.θ_vfc[1:N] .= Cdouble.(hydraulic.θ_vfc)
-  soil.θ_vwp[1:N] .= Cdouble.(hydraulic.θ_vwp)
-  soil.θ_sat[1:N] .= Cdouble.(hydraulic.θ_sat)
-  soil.Ksat[1:N] .= Cdouble.(hydraulic.K_sat)
-  soil.ψ_sat[1:N] .= Cdouble.(hydraulic.ψ_sat)
-  soil.b[1:N] .= Cdouble.(hydraulic.b)
-
-  soil.κ_dry[1:N] .= Cdouble.(thermal.κ_dry)
-  soil.ρ_soil[1:N] .= Cdouble.(thermal.ρ_soil)
-  soil.V_SOM[1:N] .= Cdouble.(thermal.V_SOM)
-  return soil
-end
-
-
-export InitParam_Soil, init_soil!
 export SOIL_PARAMS

@@ -3,10 +3,14 @@ export ParamSoilHydraulic, ParamSoilThermal, ParamSoil,
   ParamSoilHydraulicLayers, ParamSoilThermalLayers
 export BEPSmodel
 
+
 using Parameters, DataFrames
 import FieldMetadata: @metadata, @units, units
 @metadata bounds nothing
 
+
+include("GlobalData.jl")
+include("macro.jl")
 
 @with_kw mutable struct ParamVeg{FT<:AbstractFloat}
   # lc::Int = 1
@@ -37,9 +41,6 @@ import FieldMetadata: @metadata, @units, units
   slope_Vc::FT = 33.79 / 57.7
 end
 
-include("utilize.jl")
-include("macro.jl")
-
 
 # 水力参数
 @bounds @with_kw mutable struct ParamSoilHydraulic{FT<:AbstractFloat}
@@ -66,6 +67,7 @@ end
   thermal::ParamSoilThermal{FT} = ParamSoilThermal{FT}()
 end
 
+
 @bounds @with_kw_noshow mutable struct BEPSmodel{FT<:AbstractFloat}
   N::Int = 5
   r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)      # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
@@ -80,15 +82,11 @@ end
   veg::ParamVeg{FT} = ParamVeg{FT}()
 end
 
-include("Init_Soil.jl")
-include("InitParam.jl")
-include("deprecated/ReadParamVeg.jl")
-
 
 function BEPSmodel(VegType::Int, SoilType::Int; N::Int=5, FT=Float64)
-  vegpar = InitParam_Veg(VegType; FT=FT)
+  veg = InitParam_Veg(VegType; FT=FT)  
   
-  # 从 JSON 中提取 BEPSmodel 特有参数
+  # TODO: fix this
   r_drainage = FT(gen_data["r_drainage"])
   r_root_decay = FT(veg_raw["r_root_decay"]) # 根系
 
@@ -96,15 +94,34 @@ function BEPSmodel(VegType::Int, SoilType::Int; N::Int=5, FT=Float64)
   hydraulic, thermal = InitParam_Soil(SoilType, N, FT)
 
   BEPSmodel{FT}(;
-    N,
-    r_drainage,
-    r_root_decay,
-    ψ_min,
-    alpha,
-    hydraulic,
-    thermal,
-    veg=vegpar
+    N, r_drainage, r_root_decay,
+    ψ_min, alpha,
+    hydraulic, thermal, veg
   )
+end
+
+
+function Sync_Param_to_Soil!(soil::Soil, model::BEPSmodel{FT}) where {FT}
+  (; hydraulic, thermal, N) = model
+  soil.n_layer = Cint(N)
+
+  soil.r_drainage = Cdouble(model.r_drainage)
+  soil.r_root_decay = Cdouble(model.r_root_decay)
+
+  soil.ψ_min = Cdouble(model.ψ_min)
+  soil.alpha = Cdouble(model.alpha)
+
+  soil.θ_vfc[1:N] .= Cdouble.(hydraulic.θ_vfc)
+  soil.θ_vwp[1:N] .= Cdouble.(hydraulic.θ_vwp)
+  soil.θ_sat[1:N] .= Cdouble.(hydraulic.θ_sat)
+  soil.Ksat[1:N] .= Cdouble.(hydraulic.K_sat)
+  soil.ψ_sat[1:N] .= Cdouble.(hydraulic.ψ_sat)
+  soil.b[1:N] .= Cdouble.(hydraulic.b)
+
+  soil.κ_dry[1:N] .= Cdouble.(thermal.κ_dry)
+  soil.ρ_soil[1:N] .= Cdouble.(thermal.ρ_soil)
+  soil.V_SOM[1:N] .= Cdouble.(thermal.V_SOM)
+  return soil
 end
 
 
@@ -141,14 +158,13 @@ function Base.show(io::IO, model::M) where {M<:BEPSmodel}
   return nothing
 end
 
+
 function get_opt_info(model::BEPSmodel)
   df = parameters(model)
-
   x0 = Float64.(df.value)
   lb = Float64[b[1] for b in df.bound]
   ub = Float64[b[2] for b in df.bound]
   paths = df.path
-
   return x0, lb, ub, paths
 end
 
@@ -176,3 +192,7 @@ end
 #   ρ_soil::Vector{FT} = zeros(FT, 10) # ? 土壤容重，soil density, for volume heat capacity
 #   V_SOM       ::Vector{FT} = zeros(FT, 10) # ? 有机质含量，organic matter, for volume heat capacity
 # end
+
+include("utilize.jl")
+include("InitParam.jl")
+include("deprecated/ReadParamVeg.jl")
