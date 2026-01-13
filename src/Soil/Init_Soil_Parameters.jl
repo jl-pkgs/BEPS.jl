@@ -1,5 +1,5 @@
 """
-    init_soil_parameters!(landcover::Integer, stxt::Integer, r_root_decay::Float64, p::Soil)
+    Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::Float64, p::Soil)
 
 Initialize soil parameters
 
@@ -10,7 +10,7 @@ Initialize soil parameters
 - `ψ_sat`        : water potential at saturate
 - `κ_dry`        : thermal conductivity
 """
-function init_soil_parameters!(VegType::Integer, SoilType::Integer, r_root_decay::Float64, p::Soil)
+function Init_Soil_Parameters(VegType::Integer, SoilType::Integer, r_root_decay::Float64, p::Soil)
   p.n_layer = 5
 
   if VegType == 6 || VegType == 9 # DBF or EBF, low constaint threshold
@@ -28,7 +28,7 @@ function init_soil_parameters!(VegType::Integer, SoilType::Integer, r_root_decay
   # n = length(z)
   # p.dz[1:n-1] = dz
   p.r_root_decay = r_root_decay
-  soil_root_fraction!(p)
+  SoilRootFraction(p)
 
   idx = (1 <= SoilType <= 11) ? SoilType : 11
   par = SOIL_PARAMS[idx]
@@ -50,7 +50,7 @@ end
 """
 update `f_root`
 """
-function soil_root_fraction!(soil::Soil)
+function SoilRootFraction(soil::Soil)
   cum_depth = zeros(soil.n_layer)
 
   # For the first layer
@@ -68,7 +68,7 @@ function soil_root_fraction!(soil::Soil)
 end
 
 
-function init_soil_status!(p::Soil, Tsoil::Float64, Tair::Float64, θ0::Float64, snowdepth::Float64)
+function Init_Soil_Status(p::Soil, Tsoil::Float64, Tair::Float64, θ0::Float64, snowdepth::Float64)
   d_t = clamp(Tsoil - Tair, -5.0, 5.0)
 
   # p.z_water = 0.0

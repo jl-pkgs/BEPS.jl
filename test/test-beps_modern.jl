@@ -45,8 +45,8 @@ begin
   # Update model with parameters from keyword args/defaults if necessary to match the previous run
   # However, kw args pass VegType=25, SoilType=8.
   # BEPSmodel default constructor might have different defaults.
-  # besp_main uses init_soil_var! which uses VegType/SoilType.
-  # beps_modern also passes VegType/SoilType to init_soil_var!.
+  # besp_main uses Init_Soil_var_o which uses VegType/SoilType.
+  # beps_modern also passes VegType/SoilType to Init_Soil_var_o.
   # So passing model shouldn't break things unless parameters in model conflict with VegType logic?
   # Actually, if model is passed, beps_modern uses model.veg etc.
 

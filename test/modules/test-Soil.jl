@@ -31,15 +31,15 @@ function is_soil_equal(p_jl, p_c; tol=1e-7, verbose=false)
 end
 
 
-# init_soil_parameters!(par.landcover, par.soil_type, parameter[28], p_soil)
-@testset "init_soil_parameters!" begin
+# Init_Soil_Parameters(par.landcover, par.soil_type, parameter[28], p_soil)
+@testset "Init_Soil_Parameters" begin
   p_jl = Soil()
   p_c = Soil_c()
   # stxt = 7: fix const κ_dry
   # stxt = 6: fix Ksat
   for stxt = [1, 2, 3, 4, 5, 8, 9, 10, 11] # skip 6, 7
-    init_soil_parameters!(1, stxt, 0.1, p_jl)
-    clang.init_soil_parameters!(1, stxt, 0.1, p_c)
+    Init_Soil_Parameters(1, stxt, 0.1, p_jl)
+    clang.Init_Soil_Parameters(1, stxt, 0.1, p_c)
     is_soil_equal(p_jl, p_c; tol=1e-8, verbose=false)
   end
 end
@@ -77,8 +77,8 @@ function init_soil()
   r_drainage = param[27]
   r_root_decay = param[28]
 
-  init_soil_var!(p_jl, state_jl, Ta; r_drainage, r_root_decay, kw...)
-  init_soil_var!(p_c, state_c, Ta; r_drainage, r_root_decay, kw...)
+  Init_Soil_var_o(p_jl, state_jl, Ta; r_drainage, r_root_decay, kw...)
+  Init_Soil_var_o(p_c, state_c, Ta; r_drainage, r_root_decay, kw...)
   p_jl, p_c
 end
 
@@ -103,7 +103,7 @@ end
 end
 
 
-@testset "init_soil_var!" begin
+@testset "Init_Soil_var_o" begin
   p_jl, p_c = init_soil()
   funs = [
     Update_Cs,

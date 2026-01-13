@@ -49,7 +49,7 @@ function besp_main(d::DataFrame, lai::Vector;
   Ta = d.tem[1]
 
   # (; r_drainage, r_root_decay) = vegpar
-  init_soil_var!(soil, state, Ta; 
+  Init_Soil_var_o(soil, state, Ta; 
     VegType, SoilType, r_drainage, r_root_decay,
     Tsoil0, θ0, z_snow0
   )
