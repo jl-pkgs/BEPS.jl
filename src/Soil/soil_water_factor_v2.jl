@@ -1,6 +1,7 @@
 # Function to compute soil water stress factor
 function soil_water_factor_v2(p::Soil)
   # @unpack ψ, ψ_sat, 
+  (; ψ_min) = p
   θ = p.θ
   n = p.n_layer
 
@@ -14,8 +15,8 @@ function soil_water_factor_v2(p::Soil)
   end
 
   for i in 1:n
-    # psi_sr in m H2O! This is the old version. LHE.
-    p.fpsisr[i] = p.ψ[i] > p.ψ_min ? 1.0 / (1 + ((p.ψ[i] - p.ψ_min) / p.ψ_min)^p.alpha) : 1.0
+    # psi_sr in m H2O! This is the old version. LHE; He 2017 JGR-B, Eq. 4
+    p.fpsisr[i] = p.ψ[i] > ψ_min ? 1.0 / (1 + ((p.ψ[i] - ψ_min) / ψ_min)^p.alpha) : 1.0
 
     p.ft[i] = p.Tsoil_p[i] > 0.0 ? 1.0 - exp(t1 * p.Tsoil_p[i]^t2) : 0
     p.fpsisr[i] *= p.ft[i]

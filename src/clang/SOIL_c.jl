@@ -1,4 +1,4 @@
-import BEPS: SoilRootFraction,
+import BEPS: UpdateRootFraction!,
   Init_Soil_Parameters,
   Init_Soil_T_θ!,
   soil_water_factor_v2,
@@ -11,7 +11,7 @@ import BEPS: SoilRootFraction,
   Update_G,
   UpdateSoilMoisture
 
-function SoilRootFraction(p::Soil_c)
+function UpdateRootFraction!(p::Soil_c)
   ccall((:SoilRootFraction, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
 end
 

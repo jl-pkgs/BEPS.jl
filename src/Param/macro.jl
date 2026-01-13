@@ -120,3 +120,12 @@ function update!(model::S, path::Vector, value::FT; type::Type) where {S,FT}
 end
 
 parameters(model) = get_params(model) |> DataFrame
+
+function get_opt_info(model)
+  df = parameters(model)
+  x0 = Float64.(df.value)
+  lb = Float64[b[1] for b in df.bound]
+  ub = Float64[b[2] for b in df.bound]
+  paths = df.path
+  return x0, lb, ub, paths
+end

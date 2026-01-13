@@ -1,7 +1,3 @@
-using ModelParams
-using Statistics
-using ModelParams: of_RMSE
-
 function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=nothing,
   lon::FT=120.0, lat::FT=20.0,
   VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,

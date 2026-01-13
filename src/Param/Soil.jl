@@ -20,7 +20,7 @@ abstract type AbstractSoil end
   soil_r      ::Cdouble = Cdouble(0)        # // not used, soil surface resistance for water
   r_drainage  ::Cdouble = Cdouble(0)        # ? 地表排水速率（地表汇流）
   r_root_decay::Cdouble = Cdouble(0)        # ? 根系分布衰减率, decay_rate_of_root_distribution
-  ψ_min       ::Cdouble = Cdouble(0)        # ? 气孔关闭对应水势，33kPa
+  ψ_min       ::Cdouble = Cdouble(0)        # ? 开始胁迫，33[m] = 0.33[MPa]
   alpha       ::Cdouble = Cdouble(0)        # ? 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
   f_soilwater ::Cdouble = Cdouble(0)        # [state], 总体的土壤水限制因子
 
@@ -61,3 +61,21 @@ abstract type AbstractSoil end
   dtt         ::Vector{Float64} = zeros(10) # [state], 叠加根系分布比例，f_root[i] * fpsisr[i]
   fpsisr      ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3
 end
+
+
+@with_kw mutable struct State{FT}
+  "Surface Temperature: [T_ground, T_surf_snow, T_surf_mix, T_snow_L1, T_snow_L2]"
+  Ts::Vector{FT} = zeros(FT, 5)         # 4:8
+  Tsoil_prev::Vector{FT} = zeros(FT, 6) # 10:15
+  θ_prev::Vector{FT} = zeros(FT, 6)      # 22:27
+  ice_ratio::Vector{FT} = zeros(FT, 6)   # 28:33
+
+  Qhc_o::FT = 0.0                    # [11] sensible heat flux
+  m_water::Layer2 = Layer2{FT}()     # [15, 18] + 1
+  m_snow::Layer3 = Layer3{FT}()      # [16, 19, 20] + 1
+  ρ_snow::FT = 250.0                 # [kg m-3] snow density
+end
+# 拖着`ρ_snow`，`ρ_snow`也是一个状态连续的变量
+# https://www.eoas.ubc.ca/courses/atsc113/snow/met_concepts/07-met_concepts/07b-newly-fallen-snow-density/
+
+export State, Soil

@@ -8,12 +8,15 @@ using Printf
 using Reexport
 using DataFrames: DataFrame
 
+using Statistics
+using ModelParams
+using ModelParams: of_RMSE
+
 @reexport using Serialization: deserialize, serialize
 @reexport using DelimitedFiles: readdlm
 export besp_main
 export beps_modern
 export beps_optimize
-export Init_Soil_var
 export Soil_c
 
 path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))

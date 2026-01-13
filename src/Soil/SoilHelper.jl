@@ -1,22 +1,25 @@
-# landcover::Int, soil_type::Int, Tsoil, soilwater, snowdepth
-# initialize soil conditions, read soil parameters and set depth
-function Init_Soil_var(soil::AbstractSoil, state::Union{State,Vector}, Ta::FT;
-  VegType::Int=25, SoilType::Int=8,
-  r_drainage::FT, r_root_decay::FT,
-  Tsoil0::FT=Ta, θ0::FT=0.2, z_snow0::FT=0.0,
-  ignored...
-) where {FT<:Real}
-  # r_drainage = param[27]
-  # r_root_decay = param[28]
-  soil.r_drainage = r_drainage
-  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
-  Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0) 
-  Sync_Soil_to_State!(soil, state, Ta)
-end
-
-
 # T < -1℃, all frozen; T > 0℃, no frozen; else partially frozen
 get_ice_ratio(Tsoil::FT) where {FT} = clamp(-Tsoil, FT(0), FT(1))
+
+
+# update `f_root`
+function UpdateRootFraction!(soil::Soil)
+  f_root = soil.f_root
+  β = soil.r_root_decay
+
+  cum_depth = zeros(soil.n_layer) # cumulative depth of soil layers
+  cum_depth[1] = soil.dz[1] 
+  f_root[1] = 1 - β^(cum_depth[1] * 100)
+
+  # For 2 to n_layer - 1
+  for i in 2:(soil.n_layer-1)
+    cum_depth[i] = cum_depth[i-1] + soil.dz[i]
+    f_root[i] = β^(cum_depth[i-1] * 100) - β^(cum_depth[i] * 100)
+  end
+  # For the last layer
+  f_root[soil.n_layer] = β^(cum_depth[soil.n_layer-1] * 100)
+end
+
 
 """
     Init_Soil_T_θ!(p::Soil, Tsoil, Tair, θ0, snowdepth)
@@ -41,28 +44,6 @@ function Init_Soil_T_θ!(p::Soil, Tsoil::Float64, Tair::Float64, θ0::Float64, s
   end
 end
 
-# for (i=3;i<=8;i++)   var_o[i] = tem;
-# for(i=9;i<=14;i++) var_o[i] = soil->Tsoil_p[i-9];
-# for(i=21;i<=26;i++) var_o[i] = soil->θ_prev[i-21];
-# for(i=27;i<=32;i++) var_o[i] = soil->ice_ratio[i-27];
-function Sync_Soil_to_State!(soil::AbstractSoil, state::Vector, Ta)
-  state .= 0
-  for i = 1:6
-    state[i+3] = Ta
-    state[i+9] = soil.Tsoil_p[i]
-    state[i+21] = soil.θ_prev[i]
-    state[i+27] = soil.ice_ratio[i]
-  end
-  return nothing
-end
-
-function Sync_Soil_to_State!(soil::AbstractSoil, state::State, Ta)
-  state.Ts .= Ta
-  state.Tsoil_prev .= soil.Tsoil_p[1:6]
-  state.θ_prev .= soil.θ_prev[1:6]
-  state.ice_ratio .= soil.ice_ratio[1:6]
-  return nothing
-end
 
 # function update_state!(state::State, var_n::Vector{Float64})
 #   Tsoil = state.Tsoil

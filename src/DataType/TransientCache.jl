@@ -99,7 +99,7 @@ InterTempLeafs(x0) = InterTempLeafs(; x0)
   TempLeafs::InterTempLeafs = InterTempLeafs(0.0)
 end
 
-function init_vars!(x::TransientCache)
+function init_cache!(x::TransientCache)
   x.Wcl_o .= 0.0
   x.Wcl_u .= 0.0
 

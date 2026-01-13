@@ -55,7 +55,7 @@ function InitParam_Soil(SoilType::Int, N::Int, FT::Type)
 
   SOIL_THERMAL_DENSITY = [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # [kg m-3]
   SOIL_ORGANIC_MATTER = [0.05, 0.02, 0.01, 0.01, 0.003]           # volume fraction, 0-1
-  
+
   κ_dry = fill(FT(p.κ_dry), n) # [W m-1 K-1]
   ρ_soil = FT.(SOIL_THERMAL_DENSITY[1:n]) # [kg m-3]
   V_SOM = FT.(SOIL_ORGANIC_MATTER[1:n])   # [volume fraction], 0-1
