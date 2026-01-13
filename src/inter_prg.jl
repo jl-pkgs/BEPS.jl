@@ -30,100 +30,59 @@ function inter_prg_jl(
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, GPP, LAI, PAI = var.TempLeafs
 
-  # 土壤分层临时变量
-  dz = zeros(layer + 1)
-  κ = zeros(layer + 2)
-
-  # 空气动力学阻抗和导度 [s/m] 或 [mol/m²/s]
-  ra_g = 0.0
-  Ga_o = 0.0
-  Gb_o = 0.0
-  Ga_u = 0.0
-  Gb_u = 0.0
-
-  # 净辐射 [W/m²]
-  radiation_o, radiation_u, radiation_g = 0.0, 0.0, 0.0
-
-  # /*****  Vcmax-Nitrogen calculations by G.Mo  *****/
-  (; LAI_max_o, LAI_max_u,
-    α_canopy_vis, α_canopy_nir,
-    α_soil_sat, α_soil_dry,
-    z_canopy_o, z_canopy_u, z_wind,
-    g0_w, g1_w,
-    VCmax25, N_leaf, slope_Vc) = param
+  # ===== 1. 参数提取和计算 =====
+  (; LAI_max_o, LAI_max_u, α_canopy_vis, α_canopy_nir,
+     α_soil_sat, α_soil_dry, z_canopy_o, z_canopy_u, z_wind,
+     g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = param
 
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
 
-  # /*****  LAI calculation module by B. Chen  *****/
+  # LAI分层计算
   lai_o = lai < 0.1 ? 0.1 : lai
-  if (VegType == 25 || VegType == 40) # C4植物参数
-    lai_u = 0.01
-  else
-    lai_u = 1.18 * exp(-0.99 * lai_o)
-  end
+  lai_u = (VegType == 25 || VegType == 40) ? 0.01 : 1.18 * exp(-0.99 * lai_o)
   (lai_u > lai_o) && (lai_u = 0.01)
 
-  stem_o = LAI_max_o * 0.2    # 上层茎面积指数
-  stem_u = LAI_max_u * 0.2    # 下层茎面积指数
-
-  # 分离阳叶和阴叶LAI
+  stem_o = LAI_max_o * 0.2
+  stem_u = LAI_max_u * 0.2
   lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
 
-  # /*****  Initialization of this time step  *****/
-  Srad = meteo.Srad      # 入射短波辐射 [W/m²]
-  RH = meteo.rh          # 相对湿度 [0-1]
-  wind = meteo.wind      # 风速 [m/s]
-  precip = meteo.rain / step  # 降水速率 [m/s]
-  T_air = meteo.temp     # 气温 [°C]
-
+  # ===== 2. 气象变量初始化 =====
+  Srad = meteo.Srad
+  RH = meteo.rh
+  wind = meteo.wind
+  precip = meteo.rain / step
+  T_air = meteo.temp
   met = meteo_pack_jl(T_air, RH)
   (; Δ, γ, cp, VPD, ea) = met
 
+  # ===== 3. 表面状态初始化 =====
   init_leaf_dbl(Tc_old, T_air - 0.5)
 
-  # Ground surface temperature
-  # [Ts0, Tsn, Tsm0, Tsn1, Tsn2]
-  var.Ts0[1] = clamp(state.Ts[1], T_air - 2.0, T_air + 2.0)  # ground0
-  var.Tsn0[1] = clamp(state.Ts[2], T_air - 2.0, T_air + 2.0) # snow0
-  var.Tsm0[1] = clamp(state.Ts[3], T_air - 2.0, T_air + 2.0) # any
-  var.Tsn1[1] = clamp(state.Ts[4], T_air - 2.0, T_air + 2.0) # snow1
-  var.Tsn2[1] = clamp(state.Ts[5], T_air - 2.0, T_air + 2.0) # snow2
+  # 表面温度 [°C]
+  for i in 1:5
+    var_field = [:T_ground, :T_surf_snow, :T_surf_mix, :T_snow_L1, :T_snow_L2][i]
+    getfield(var, var_field)[1] = clamp(state.Ts[i], T_air - 2.0, T_air + 2.0)
+  end
   var.Qhc_o[1] = state.Qhc_o
 
-  # 雪和水的质量状态 [kg/m²]
-  m_snow_pre = state.m_snow
-  m_water_pre = state.m_water
-  m_snow = Layer3(0.0)
-  m_water = Layer2()
-
-  # 雪和水的深度 [m]
+  # 雪水状态 [kg/m² or m]
+  m_snow_pre, m_water_pre = state.m_snow, state.m_water
+  m_snow, m_water = Layer3(0.0), Layer2()
   z_snow = soil.z_snow
-  z_water = soil.z_water
-  (z_water < 0.001) && (z_water = 0.0)
+  z_water = soil.z_water < 0.001 ? 0.0 : soil.z_water
 
-  # 雪覆盖分数 [-]
-  f_snow = Layer3(0.0)
-  A_snow = Layer2()
-  f_water = Layer2()
-
-  # 反照率 [-]
-  if (Srad <= 0)
-    α_v = Layer3()
-    α_n = Layer3()
-  else
-    α_v = Layer3(α_canopy_vis)
-    α_n = Layer3(α_canopy_nir)
-  end
-
-  # 雪密度和反照率
-  ρ_snow = init_dbl(state.ρ_snow)
-  α_v_sw = init_dbl()
-  α_n_sw = init_dbl()
-
-  # 冠层温度 [°C]
+  # 雪覆盖和反照率 [-]
+  f_snow, A_snow, f_water = Layer3(0.0), Layer2(), Layer2()
+  α_v = Srad <= 0 ? Layer3() : Layer3(α_canopy_vis)
+  α_n = Srad <= 0 ? Layer3() : Layer3(α_canopy_nir)
+  ρ_snow, α_v_sw, α_n_sw = init_dbl(state.ρ_snow), init_dbl(), init_dbl()
   Tc = Layer3()
 
-  # 十次亚小时循环: 每小时分10步, 每步360秒
+  # 土壤临时变量和中间变量
+  dz, κ = zeros(layer + 1), zeros(layer + 2)
+  radiation_o = radiation_u = radiation_g = ra_g = 0.0
+
+  # ===== 4. 亚小时循环 (10步/小时, 360秒/步) =====
   @inbounds for k_step = 2:kloop+1
     !fix_snowpack && (ρ_snow[] = 0.0) # TODO: exact as C
     α_v_sw[], α_n_sw[] = 0.0, 0.0
@@ -138,12 +97,13 @@ function inter_prg_jl(
     # /*****  Rainfall stage 1 by X. Luo  *****/
     var.r_rain_g[k_step] = rainfall_stage1_jl(T_air, precip, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
 
-    if (soil.θ_prev[2] < soil.θ_vwp[2] * 0.5)
-      α_g = α_soil_dry
+    # 土壤反照率计算 [-]
+    α_g = if soil.θ_prev[2] < soil.θ_vwp[2] * 0.5
+      α_soil_dry
     else
-      α_g = (soil.θ_prev[2] - soil.θ_vwp[2] * 0.5) / (soil.θ_sat[2] - soil.θ_vwp[2] * 0.5) * (α_soil_sat - α_soil_dry) + α_soil_dry
+      (soil.θ_prev[2] - soil.θ_vwp[2] * 0.5) / (soil.θ_sat[2] - soil.θ_vwp[2] * 0.5) *
+      (α_soil_sat - α_soil_dry) + α_soil_dry
     end
-
     α_v.g = 2.0 / 3.0 * α_g
     α_n.g = 4.0 / 3.0 * α_g
 
@@ -267,7 +227,7 @@ function inter_prg_jl(
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
     var.Evap_soil[k_step], var.Evap_SW[k_step], var.Evap_SS[k_step], z_water, z_snow =
-      evaporation_soil_jl(Tc.g, var.Ts0[k_step-1], RH, radiation_g, Gheat_g,
+      evaporation_soil_jl(T_air, var.T_ground[k_step-1], RH, radiation_g, Gheat_g,
         f_snow,
         z_water, z_snow, mass_water_g, m_snow,
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
@@ -277,41 +237,35 @@ function inter_prg_jl(
     Update_Cs(soil)
 
     # /*****  Surface temperature by X. Luo  *****/
-    var.Cs .= 0.0
-    var.Tm .= 0.0
-    var.G .= 0.0
-
-    var.Cs[1, k_step] = soil.Cs[1]
-    var.Cs[2, k_step] = soil.Cs[1]
+    # 初始化土壤热变量
+    var.Cs[1:2, k_step] .= soil.Cs[1]
     var.Tc_u[k_step] = Tc.u
     κ[2] = soil.κ[1]
     dz[2] = soil.dz[1]
-
-    var.Tm[1, k_step-1] = soil.Tsoil_p[1]
-    var.Tm[2, k_step-1] = soil.Tsoil_p[2]
+    var.T_soil[1, k_step-1] = soil.Tsoil_p[1]
+    var.T_soil[2, k_step-1] = soil.Tsoil_p[2]
     var.G[2, k_step] = soil.G[1]
 
-    var.G[1, k_step], var.Ts0[k_step], var.Tm[1, k_step], var.Tsm0[k_step],
-    var.Tsn0[k_step], var.Tsn1[k_step], var.Tsn2[k_step] =
+    var.G[1, k_step], var.T_ground[k_step], var.T_soil[1, k_step], var.T_surf_mix[k_step],
+    var.T_surf_snow[k_step], var.T_snow_L1[k_step], var.T_snow_L2[k_step] =
       surface_temperature_jl(T_air, RH, z_snow, z_water,
         var.Cs[2, k_step], var.Cs[1, k_step], Gheat_g, dz[2], ρ_snow[], var.Tc_u[k_step],
         radiation_g, var.Evap_soil[k_step], var.Evap_SW[k_step], var.Evap_SS[k_step],
-        κ[2],
-        f_snow.g, var.G[2, k_step],
-        var.Ts0[k_step-1],
-        var.Tm[2, k_step-1], var.Tm[1, k_step-1], var.Tsm0[k_step-1],
-        var.Tsn0[k_step-1], var.Tsn1[k_step-1], var.Tsn2[k_step-1])
+        κ[2], f_snow.g, var.G[2, k_step],
+        var.T_ground[k_step-1],
+        var.T_soil[2, k_step-1], var.T_soil[1, k_step-1], var.T_surf_mix[k_step-1],
+        var.T_surf_snow[k_step-1], var.T_snow_L1[k_step-1], var.T_snow_L2[k_step-1])
 
-    soil.Tsoil_c[1] = var.Tm[1, k_step]
+    soil.Tsoil_c[1] = var.T_soil[1, k_step]
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
-    z_snow, z_water = snowpack_stage3_jl(T_air, var.Tsn0[k_step], var.Tsn0[k_step-1],
+    z_snow, z_water = snowpack_stage3_jl(T_air, var.T_surf_snow[k_step], var.T_surf_snow[k_step-1],
       ρ_snow[], z_snow, z_water, m_snow)
     set!(m_snow_pre, m_snow)
 
     # /*****  Sensible heat flux by X. Luo  *****/
     var.Qhc_o[k_step], var.Qhc_u[k_step], var.Qhg[k_step] =
-      sensible_heat_jl(Tc_new, var.Ts0[k_step], T_air, RH,
+      sensible_heat_jl(Tc_new, var.T_ground[k_step], T_air, RH,
         Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
@@ -328,23 +282,22 @@ function inter_prg_jl(
     z_water = soil.z_water
   end  # end of sub-hourly loop
 
-  k_step = kloop + 1  # 最后一步索引
-  var.Tsn1[k_step] = clamp(var.Tsn1[k_step], -40.0, 40.0)
-  var.Tsn2[k_step] = clamp(var.Tsn2[k_step], -40.0, 40.0)
+  # ===== 5. 时间步结束：状态更新 =====
+  k_step = kloop + 1
+  var.T_snow_L1[k_step] = clamp(var.T_snow_L1[k_step], -40.0, 40.0)
+  var.T_snow_L2[k_step] = clamp(var.T_snow_L2[k_step], -40.0, 40.0)
 
-  # 更新状态变量
-  state.Ts[1] = var.Ts0[k_step]
-  state.Ts[2] = var.Tsn0[k_step]
-  state.Ts[3] = var.Tsm0[k_step]
-  state.Ts[4] = var.Tsn1[k_step]
-  state.Ts[5] = var.Tsn2[k_step]
+  # 更新表面温度状态
+  state.Ts .= [var.T_ground[k_step], var.T_surf_snow[k_step], var.T_surf_mix[k_step],
+               var.T_snow_L1[k_step], var.T_snow_L2[k_step]]
 
+  # 更新其他状态变量
   state.Qhc_o = var.Qhc_o[k_step]
   set!(state.m_water, m_water)
   set!(state.m_snow, m_snow)
   state.ρ_snow = ρ_snow[]
 
-  # 输出结果汇总
+  # ===== 6. 输出结果汇总 =====
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 
   OutputET!(mid_ET,
@@ -354,7 +307,7 @@ function inter_prg_jl(
     var.Evap_soil, var.Evap_SW, var.Evap_SS, var.Qhc_o, var.Qhc_u, var.Qhg, k_step)
   update_ET!(mid_ET, mid_res, T_air)
 
-  mid_res.gpp_o_sunlit = GPP.o_sunlit   # [umol C/m2/s], !note
+  mid_res.gpp_o_sunlit = GPP.o_sunlit
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded
   mid_res.gpp_u_shaded = GPP.u_shaded
@@ -364,6 +317,6 @@ function inter_prg_jl(
   mid_res.ρ_snow = ρ_snow[]
 
   GPP = GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded
-  mid_res.GPP = GPP * 12 * step * 1e-6 # [umol m-2 s-1] -> [gC m-2]
+  mid_res.GPP = GPP * 12 * step * 1e-6  # [umol m-2 s-1] -> [gC m-2]
   nothing
 end
