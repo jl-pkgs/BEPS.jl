@@ -124,8 +124,8 @@ using BEPS, Test
   end
 end
 
-@testset "init_soil_layers Function" begin
-  using BEPS: init_soil_layers
+@testset "InitParam_Soil Function" begin
+  using BEPS: InitParam_Soil
 
   @testset "All Soil Types" begin
     soil_types = [
@@ -143,7 +143,7 @@ end
     ]
 
     for (soil_type, name) in soil_types
-      hydraulic, thermal = init_soil_layers(soil_type, 5, Float64)
+      hydraulic, thermal = InitParam_Soil(soil_type, 5, Float64)
 
       @test hydraulic isa BEPS.ParamSoilHydraulicLayers{Float64,5}
       @test thermal isa BEPS.ParamSoilThermalLayers{Float64,5}
@@ -162,7 +162,7 @@ end
   end
 
   @testset "Physical Constraints" begin
-    hydraulic, thermal = init_soil_layers(4, 5, Float64)
+    hydraulic, thermal = InitParam_Soil(4, 5, Float64)
 
     # θ_vwp < θ_sat (wilting point less than saturation)
     @test all(hydraulic.θ_vwp .< hydraulic.θ_sat)

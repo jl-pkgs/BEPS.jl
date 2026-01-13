@@ -1,5 +1,5 @@
 # - `lc`: [1, 2, 6, 9, 13, 40, -1]
-function readVegParam(lc::Int=1)
+function ReadParamVeg(lc::Int=1)
   param = zeros(Float64, 48)
   param[5] = lc
 
@@ -53,3 +53,6 @@ function readVegParam(lc::Int=1)
 
   return param
 end
+
+
+export ReadParamVeg

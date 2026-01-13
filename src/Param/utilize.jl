@@ -1,11 +1,11 @@
 export theta2par, theta2par!, par2theta, par2theta!
 
 function theta2par(theta::Vector{FT}) where {FT<:Real}
-  par = VegParam{FT}()
+  par = ParamVeg{FT}()
   theta2par!(par, theta)
 end
 
-function theta2par!(par::VegParam{FT}, theta::Vector{FT}) where {FT<:Real}
+function theta2par!(par::ParamVeg{FT}, theta::Vector{FT}) where {FT<:Real}
   # par.Ω0 = theta[3]
   # par.lc = theta[5]
   par.LAI_max_o = theta[9]
@@ -27,12 +27,12 @@ function theta2par!(par::VegParam{FT}, theta::Vector{FT}) where {FT<:Real}
   return par
 end
 
-function par2theta(par::VegParam{FT}; kw...) where {FT<:Real}
+function par2theta(par::ParamVeg{FT}; kw...) where {FT<:Real}
   theta = zeros(FT, 48)
   par2theta!(theta, par; kw...)
 end
 
-function par2theta!(theta::Vector{FT}, par::VegParam{FT}; clumping=0.7, VegType::Int=1)
+function par2theta!(theta::Vector{FT}, par::ParamVeg{FT}; clumping=0.7, VegType::Int=1)
   theta[3] = clumping
   theta[5] = VegType
   theta[9] = par.LAI_max_o

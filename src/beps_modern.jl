@@ -3,9 +3,9 @@ using Statistics
 using ModelParams: of_RMSE
 
 function init_model()
-  theta = readVegParam(VegType)  # n = 48
+  theta = ReadParamVeg(VegType)  # n = 48
   vegpar = theta2par(theta)
-  theta = par2theta(vegpar; clumping, VegType) # 为移除readVegParam铺垫
+  theta = par2theta(vegpar; clumping, VegType) # 为移除ReadParamVeg铺垫
 end
 
 function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=nothing,
@@ -22,9 +22,9 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
   var = TransientCache()
 
   if isnothing(model)
-    theta = readVegParam(VegType)  # n = 48
+    theta = ReadParamVeg(VegType)  # n = 48
     vegpar = theta2par(theta)
-    theta = par2theta(vegpar; clumping, VegType) # 为移除readVegParam铺垫
+    theta = par2theta(vegpar; clumping, VegType) # 为移除ReadParamVeg铺垫
   else
     vegpar = model.veg
     theta = par2theta(vegpar; clumping, VegType)

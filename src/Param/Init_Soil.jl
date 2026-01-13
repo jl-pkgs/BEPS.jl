@@ -67,38 +67,6 @@ const SOIL_PARAMS = [
     κ_dry=4.4)
 ]
 
-const SOIL_THERMAL_DENSITY = [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # [kg m-3]
-const SOIL_ORGANIC_MATTER = [0.05, 0.02, 0.01, 0.01, 0.003]           # volume fraction, 0-1
-
-
-"""
-    init_soil_layers(SoilType::Int, N::Int, FT::Type)
-
-Initialize soil hydraulic and thermal parameters.
-SoilType: 1=sand, 2=loamy sand, 3=sandy loam, 4=loam, 5=silty loam,
-          6=sandy clay loam, 7=clay loam, 8=silty clay loam,
-          9=sandy clay, 10=silty clay, 11=clay
-"""
-function init_soil_layers(SoilType::Int, N::Int, FT::Type)
-  idx = (1 <= SoilType <= 11) ? SoilType : 11
-  p = SOIL_PARAMS[idx]
-
-  n = min(N, 5)
-  b = FT.(p.b[1:n])            # [-], campbell's b parameter
-  K_sat = FT.(p.K_sat[1:n])    # [m s-1], 应该把它转为[cm h-1]
-  θ_sat = fill(FT(p.θ_sat), n) # [%]
-  θ_vfc = fill(FT(p.θ_vfc), n) # [%]
-  θ_vwp = fill(FT(p.θ_vwp), n) # [%]
-  ψ_sat = FT.(-p.ψ_sat[1:n])   # [m]
-
-  κ_dry = fill(FT(p.κ_dry), n) # [W m-1 K-1]
-  ρ_soil = FT.(SOIL_THERMAL_DENSITY[1:n]) # [kg m-3]
-  V_SOM = FT.(SOIL_ORGANIC_MATTER[1:n])   # [volume fraction], 0-1
-
-  hydraulic = ParamSoilHydraulicLayers{FT,N}(; θ_vfc, θ_vwp, θ_sat, K_sat, ψ_sat, b)
-  thermal = ParamSoilThermalLayers{FT,N}(; κ_dry, ρ_soil, V_SOM)
-  return hydraulic, thermal
-end
 
 
 function init_soil!(soil::Soil, model::BEPSmodel{FT}) where {FT}
@@ -124,5 +92,5 @@ function init_soil!(soil::Soil, model::BEPSmodel{FT}) where {FT}
 end
 
 
-export init_soil_layers, init_soil!
+export InitParam_Soil, init_soil!
 export SOIL_PARAMS

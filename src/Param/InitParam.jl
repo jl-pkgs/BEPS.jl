@@ -21,7 +21,7 @@ end
 """
     InitParam_Veg(lc::Int=1; FT=Float64)
 
-读取 JSON 配置文件并返回 VegParam 结构体。
+读取 JSON 配置文件并返回 ParamVeg 结构体。
 """
 function InitParam_Veg(lc::Int=1; FT=Float64)
   veg_data = JSON.parsefile(path_veg)
@@ -31,7 +31,7 @@ function InitParam_Veg(lc::Int=1; FT=Float64)
   type_str = type_idx !== nothing ? _types[type_idx] : "default"
   v = veg_data[type_str]
 
-  return VegParam{FT}(
+  return ParamVeg{FT}(
     LAI_max_o    = FT(v["LAI_max_o"]),
     LAI_max_u    = FT(v["LAI_max_u"]),
     α_canopy_vis = FT(v["albedo_canopy_vis"]),
@@ -51,45 +51,38 @@ end
 
 
 """
-    Init_Soil_Parameters(p::Soil, VegType::Integer, SoilType::Integer, r_root_decay::Float64)
+    InitParam_Soil(SoilType::Int, N::Int, FT::Type)
 
-Initialize soil parameters
-
-- `Ksat`         : saturated hydraulic conductivity
-- `porosity`     : porosity
-- `θ_vfc`        : field capacity
-- `θ_vwp`        : wilt point
-- `ψ_sat`        : water potential at saturate
-- `κ_dry`        : thermal conductivity
+Initialize soil hydraulic and thermal parameters.
+SoilType: 1=sand, 2=loamy sand, 3=sandy loam, 4=loam, 5=silty loam,
+          6=sandy clay loam, 7=clay loam, 8=silty clay loam,
+          9=sandy clay, 10=silty clay, 11=clay
 """
-function InitParam_Soil(p::Soil, VegType::Integer, SoilType::Integer, r_root_decay::Float64)
-  p.n_layer = 5
-  p.dz[1:5] .= [0.05, 0.10, 0.20, 0.40, 1.25] # BEPS V2023
-  # z = [0, 5, 15, 25, 35, 45, 55.0] ./ 100
-  # z_mid = (z[1:end-1] .+ z[2:end]) ./ 2
-  # dz = diff(z)
-  # n = length(z)
-  # p.dz[1:n-1] = dz
-  p.r_root_decay = r_root_decay
-  SoilRootFraction(p)
-
+function InitParam_Soil(SoilType::Int, N::Int, FT::Type)
   idx = (1 <= SoilType <= 11) ? SoilType : 11
-  par = SOIL_PARAMS[idx]
+  p = SOIL_PARAMS[idx]
 
-  p.ρ_soil[1:5] .= [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # from flux tower.
-  p.V_SOM[1:5] .= [5, 2, 1, 1, 0.3]
+  n = min(N, 5)
+  b = FT.(p.b[1:n])            # [-], campbell's b parameter
 
-  p.b[1:5] .= par.b
-  p.Ksat[1:5] .= par.K_sat
-  p.θ_sat[1:5] .= fill(par.θ_sat, 5)
-  p.θ_vfc[1:5] .= fill(par.θ_vfc, 5)
-  p.θ_vwp[1:5] .= fill(par.θ_vwp, 5)
-  p.κ_dry[1:5] .= fill(par.κ_dry, 5)
-  p.ψ_sat[1:5] .= par.ψ_sat
-  return p
+  K_sat = FT.(p.K_sat[1:n])    # [m s-1], 应该把它转为[cm h-1]
+  θ_sat = fill(FT(p.θ_sat), n) # [%]
+  θ_vfc = fill(FT(p.θ_vfc), n) # [%]
+  θ_vwp = fill(FT(p.θ_vwp), n) # [%]
+  ψ_sat = FT.(-p.ψ_sat[1:n])   # [m]
+
+  SOIL_THERMAL_DENSITY = [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # [kg m-3]
+  SOIL_ORGANIC_MATTER = [0.05, 0.02, 0.01, 0.01, 0.003]           # volume fraction, 0-1
+  
+  κ_dry = fill(FT(p.κ_dry), n) # [W m-1 K-1]
+  ρ_soil = FT.(SOIL_THERMAL_DENSITY[1:n]) # [kg m-3]
+  V_SOM = FT.(SOIL_ORGANIC_MATTER[1:n])   # [volume fraction], 0-1
+
+  hydraulic = ParamSoilHydraulicLayers{FT,N}(; θ_vfc, θ_vwp, θ_sat, K_sat, ψ_sat, b)
+  thermal = ParamSoilThermalLayers{FT,N}(; κ_dry, ρ_soil, V_SOM)
+  return hydraulic, thermal
 end
 
-# 这可以切分为: 
 
 # if VegType == 6 || VegType == 9 # DBF or EBF, low constaint threshold
 #   p.ψ_min = 10.0 # ψ_min

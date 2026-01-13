@@ -49,9 +49,9 @@ end
 # function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, SoilType, soilp, mid_res)
 #     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil_c}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, SoilType, soilp, mid_res)
 # end
-function readVegParam(lc::Int=1)
+function ReadParamVeg(lc::Int=1)
   parameter1 = zeros(Cdouble, 48)
-  # readVegParam(short lc, double* parameter1)
+  # ReadParamVeg(short lc, double* parameter1)
   ccall((:readparam, libbeps), Cvoid, (Cshort, Ptr{Cdouble}), lc, parameter1)
   parameter1
 end
@@ -142,7 +142,7 @@ include("snowpack_stage.jl")
 
 export inter_prg_c,
   # Vcmax_Jmax, 
-  # readVegParam, 
+  # ReadParamVeg, 
   # readcoef, 
   # lai2, s_coszs,
   # latent_heat!, 

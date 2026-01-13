@@ -23,7 +23,7 @@ include("photosynthesis.jl")
 
 include("inter_prg.jl")
 
-export s_coszs, lai2, readVegParam, 
+export s_coszs, lai2, ReadParamVeg, 
   rainfall_stage1_jl, rainfall_stage2_jl, 
   snowpack_stage1_jl, snowpack_stage2_jl, snowpack_stage3_jl
 

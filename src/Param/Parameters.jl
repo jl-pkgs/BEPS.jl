@@ -1,4 +1,4 @@
-export VegParam
+export ParamVeg
 export ParamSoilHydraulic, ParamSoilThermal, ParamSoil,
   ParamSoilHydraulicLayers, ParamSoilThermalLayers
 export BEPSmodel
@@ -8,7 +8,7 @@ import FieldMetadata: @metadata, @units, units
 @metadata bounds nothing
 
 
-@with_kw mutable struct VegParam{FT<:AbstractFloat}
+@with_kw mutable struct ParamVeg{FT<:AbstractFloat}
   # lc::Int = 1
   # Ω0::FT = 0.7             # // clumping_index
   LAI_max_o::FT = 4.5     # ? 应该不重要
@@ -77,25 +77,23 @@ end
   hydraulic::ParamSoilHydraulicLayers{FT} = ParamSoilHydraulicLayers{FT,N}()
   thermal::ParamSoilThermalLayers{FT} = ParamSoilThermalLayers{FT,N}()
 
-  veg::VegParam{FT} = VegParam{FT}()
+  veg::ParamVeg{FT} = ParamVeg{FT}()
 end
 
 include("Init_Soil.jl")
 include("InitParam.jl")
-include("deprecated/readVegParam.jl")
+include("deprecated/ReadParamVeg.jl")
 
 
 function BEPSmodel(VegType::Int, SoilType::Int; N::Int=5, FT=Float64)
-  vegpar = readVegParam(VegType; FT=FT)
-  gen_data = readGeneralParam(FT)
-  veg_raw = readVegRaw(VegType)
-
+  vegpar = InitParam_Veg(VegType; FT=FT)
+  
   # 从 JSON 中提取 BEPSmodel 特有参数
   r_drainage = FT(gen_data["r_drainage"])
-  r_root_decay = FT(veg_raw["r_root_decay"])
+  r_root_decay = FT(veg_raw["r_root_decay"]) # 根系
 
   ψ_min, alpha = (VegType == 6 || VegType == 9) ? (FT(10.0), FT(1.5)) : (FT(33.0), FT(0.4))
-  hydraulic, thermal = init_soil_layers(SoilType, N, FT)
+  hydraulic, thermal = InitParam_Soil(SoilType, N, FT)
 
   BEPSmodel{FT}(;
     N,

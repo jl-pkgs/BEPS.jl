@@ -50,7 +50,7 @@ function init_soil()
     clumping=0.85,
     Tsoil0=2.2, θ0=0.4115, z_snow0=0.0
   )
-  param = readVegParam(kw.VegType)      # n = 48
+  param = ReadParamVeg(kw.VegType)      # n = 48
 
   rad = 100.0
   temp = -4.0
