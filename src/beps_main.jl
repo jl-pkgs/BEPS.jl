@@ -3,7 +3,7 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
   VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
   r_drainage::FT=0.5, r_root_decay::FT=0.95,
-  version="julia", debug=false, fix_snowpack=true, kw...) where {FT<:AbstractFloat}
+  version="julia", fix_snowpack=true, kw...) where {FT<:AbstractFloat}
 
   meteo = Met()
   mid_res = Results()
@@ -64,11 +64,11 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
     if version == "julia"
       inter_prg_jl(jday, hour, _lai, clumping, vegpar, meteo, CosZs,
         state, soil,
-        Ra, mid_res, mid_ET, var; VegType, debug, fix_snowpack)
+        Ra, mid_res, mid_ET, var; VegType, fix_snowpack)
     elseif version == "c"
       inter_prg_c(jday, hour, _lai, clumping, theta, meteo, CosZs,
         state, state_n, soil,
-        Ra, mid_res, mid_ET, var; debug)
+        Ra, mid_res, mid_ET, var;)
       state .= state_n # state variables
     end
 

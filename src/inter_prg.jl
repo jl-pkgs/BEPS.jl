@@ -35,15 +35,8 @@ function inter_prg_jl(
      g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = veg
 
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
-  
-  lai_o = lai < 0.1 ? 0.1 : lai
-  lai_u = !veg.has_understory ? 0.01 : 1.18 * exp(-0.99 * lai_o)
-  lai_u > lai_o && (lai_u = 0.01)
+  lai_o, lai_u, stem_o, stem_u = lai2!(veg, Ω, CosZs, lai, LAI, PAI)
 
-  stem_o = veg.LAI_max_o * 0.2
-  stem_u = veg.LAI_max_u * 0.2
-  lai2!(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
-  
   # ===== 2. 气象变量初始化 =====
   Srad = met.Srad
   RH = met.rh

@@ -68,7 +68,7 @@ function Update_ice_ratio(p::Soil)
 end
 
 # Function to update soil thermal conductivity
-function UpdateSoilThermalConductivity(p::Soil)
+@fastmath function UpdateSoilThermalConductivity(p::Soil)
   (; θ, ice_ratio, κ, θ_sat) = p
   ki = 2.1  # the thermal conductivity of ice
   kw = 0.61  # the thermal conductivity of water

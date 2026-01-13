@@ -15,12 +15,11 @@ kw = (lon=120.5, lat=30.5,
   Tsoil0=2.2, θ0=0.4115, z_snow0=0.0
 )
 
-# @testset "besp_main julia" 
-begin
+@testset "besp_main julia" begin
   d = deserialize(path_proj("data/p1_meteo"))
   d.tem = d.tem .- 5.0
 
-  @time df_jl, df_ET_jl = besp_main(d, lai; kw..., version="julia", fix_snowpack=false)
+  @time df_jl, df_ET_jl = besp_main(d, lai; kw..., version="julia", fix_snowpack=false);
   @time df_c, df_ET_c = besp_main(d, lai; kw..., version="c")
   r = sum(df_jl)
 

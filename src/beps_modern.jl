@@ -1,7 +1,7 @@
 function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=nothing,
   lon::FT=120.0, lat::FT=20.0, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
-  debug=false, fix_snowpack=true, kw...) where {FT<:AbstractFloat}
+  fix_snowpack=true, kw...) where {FT<:AbstractFloat}
 
   met = Met()
   mid_res = Results()
@@ -41,7 +41,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
 
     inter_prg_jl(jday, hour, _lai, clumping, vegpar, met, CosZs,
       state, soil,
-      Ra, mid_res, mid_ET, cache; debug, fix_snowpack)
+      Ra, mid_res, mid_ET, cache; fix_snowpack)
 
     output_Tsoil[i, :] .= soil.Tsoil_c[1:layer]
     output_θ[i, :] .= soil.θ[1:layer]

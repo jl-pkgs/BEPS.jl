@@ -189,7 +189,7 @@ Ag = a(c_i - Gamma) / (e c_i + b})
 A = Ag - Rd
 ```
 """
-function solve_cubic(α::T, β::T, γ::T, θ::T, Rd::T, a::T, b::T, d::T, e::T, ca::T) where {T<:Real}
+@fastmath function solve_cubic(α::T, β::T, γ::T, θ::T, Rd::T, a::T, b::T, d::T, e::T, ca::T) where {T<:AbstractFloat}
   m = e * α
   p = (e * β + b * θ - a * α + e * Rd * α) / m
   q = (e * γ + (b * γ / ca) - a * β + a * d * θ + e * Rd * β + Rd * b * θ) / m
@@ -201,7 +201,7 @@ function solve_cubic(α::T, β::T, γ::T, θ::T, Rd::T, a::T, b::T, d::T, e::T, 
   (Q < 0) && return T(0.0)
 
   r3q = U / sqrt(Q * Q * Q)
-  r3q = clamp(r3q, -1, 1) #  by G. Mo
+  r3q = clamp(r3q, -1.0, 1.0) #  by G. Mo
   ψ = acos(r3q)
 
   root1 = -2sqrt(Q) * cos(ψ / 3.0) - p / 3.0  # real roots

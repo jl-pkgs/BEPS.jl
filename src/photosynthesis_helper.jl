@@ -109,13 +109,8 @@ end
 
 # Function to calculate saturation vapor pressure function in mb
 @fastmath function ES(t::T)::T where {T<:Real}
-  if t > 0.0
-    y1::T = 54.8781919 - 6790.4985 / t - 5.02808 * log(t)
-    y = exp(y1)
-  else
-    println("bad es calc")
-    y = 0.0
-  end
+  y1::T = 54.8781919 - 6790.4985 / t - 5.02808 * log(t)
+  y::T = exp(y1)
   return y
 end
 
