@@ -1,6 +1,6 @@
-export InterTempLeafs
+export LeafCache
 
-@with_kw mutable struct InterTempLeafs
+@with_kw mutable struct LeafCache
   x0::Float64 = 0.0
   Cc_new::Leaf = Leaf(x0)
   Cs_old::Leaf = Leaf(x0)
@@ -30,10 +30,10 @@ export InterTempLeafs
   PAI::Leaf = Leaf(x0)
 end
 
-InterTempLeafs(x0) = InterTempLeafs(; x0)
+LeafCache(x0) = LeafCache(; x0)
 
-# function reset!(l::InterTempLeafs)
-#   names = fieldnames(InterTempLeafs)[2:end]
+# function reset!(l::LeafCache)
+#   names = fieldnames(LeafCache)[2:end]
 #   for name in names
 #     x = getfield(l, name)
 #     reset!(x)
@@ -96,7 +96,7 @@ InterTempLeafs(x0) = InterTempLeafs(; x0)
   G::Matrix{FT} = zeros(layer + 2, MAX_Loop)       # 土壤层热通量
 
   # Leafs
-  TempLeafs::InterTempLeafs = InterTempLeafs(0.0)
+  leaf_cache::LeafCache = LeafCache(0.0)
 end
 
 function init_cache!(x::TransientCache)

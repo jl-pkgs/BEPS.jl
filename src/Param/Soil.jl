@@ -66,9 +66,9 @@ end
 @with_kw mutable struct State{FT}
   "Surface Temperature: [T_ground, T_surf_snow, T_surf_mix, T_snow_L1, T_snow_L2]"
   Ts::Vector{FT} = zeros(FT, 5)         # 4:8
-  Tsoil_prev::Vector{FT} = zeros(FT, 6) # 10:15
-  θ_prev::Vector{FT} = zeros(FT, 6)      # 22:27
-  ice_ratio::Vector{FT} = zeros(FT, 6)   # 28:33
+  Tsoil_prev::Vector{FT} = zeros(FT, 5) # 10:15
+  θ_prev::Vector{FT} = zeros(FT, 5)      # 22:27
+  ice_ratio::Vector{FT} = zeros(FT, 5)   # 28:33
 
   Qhc_o::FT = 0.0                    # [11] sensible heat flux
   m_water::Layer2 = Layer2{FT}()     # [15, 18] + 1

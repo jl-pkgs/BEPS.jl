@@ -27,7 +27,7 @@ function inter_prg_jl(
   @unpack Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
-  leleaf, GPP, LAI, PAI = cache.TempLeafs
+  leleaf, GPP, LAI, PAI = cache.leaf_cache
 
   # ===== 1. 参数提取和计算 =====
   (; α_canopy_vis, α_canopy_nir,

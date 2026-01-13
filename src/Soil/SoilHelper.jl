@@ -6,18 +6,17 @@ get_ice_ratio(Tsoil::FT) where {FT} = clamp(-Tsoil, FT(0), FT(1))
 function UpdateRootFraction!(soil::Soil)
   f_root = soil.f_root
   β = soil.r_root_decay
+  n = soil.n_layer
 
-  cum_depth = zeros(soil.n_layer) # cumulative depth of soil layers
-  cum_depth[1] = soil.dz[1] 
-  f_root[1] = 1 - β^(cum_depth[1] * 100)
+  z = zeros(n) # cumulative depth of soil layers
+  z[1] = soil.dz[1] * 100
+  f_root[1] = 1 - β^(z[1])
 
-  # For 2 to n_layer - 1
-  for i in 2:(soil.n_layer-1)
-    cum_depth[i] = cum_depth[i-1] + soil.dz[i]
-    f_root[i] = β^(cum_depth[i-1] * 100) - β^(cum_depth[i] * 100)
+  for i in 2:(n-1)
+    z[i] = z[i-1] + soil.dz[i] * 100
+    f_root[i] = β^(z[i-1]) - β^(z[i])
   end
-  # For the last layer
-  f_root[soil.n_layer] = β^(cum_depth[soil.n_layer-1] * 100)
+  f_root[n] = β^(z[n-1])
 end
 
 
@@ -28,18 +27,17 @@ end
 """
 function Init_Soil_T_θ!(p::Soil, Tsoil::Float64, Tair::Float64, θ0::Float64, snowdepth::Float64)
   d_t = clamp(Tsoil - Tair, -5.0, 5.0)
+  p.z_snow = snowdepth
   # p.z_water = 0.0
   # p.r_rain_g = 0.0
-  p.z_snow = snowdepth
-
-  temp_scale_factors = [0.4, 0.5, 1.0, 1.2, 1.4]
-  moisture_scale_factors = [0.8, 1.0, 1.05, 1.10, 1.15]
+  T_scale_factors = [0.4, 0.5, 1.0, 1.2, 1.4]
+  θ_scale_factors = [0.8, 1.0, 1.05, 1.10, 1.15]
 
   for i in 1:p.n_layer
-    p.Tsoil_c[i] = Tair + temp_scale_factors[i] * d_t
-    p.Tsoil_p[i] = Tair + temp_scale_factors[i] * d_t
-    p.θ[i] = moisture_scale_factors[i] * θ0
-    p.θ_prev[i] = moisture_scale_factors[i] * θ0
+    p.Tsoil_c[i] = Tair + T_scale_factors[i] * d_t
+    p.Tsoil_p[i] = Tair + T_scale_factors[i] * d_t
+    p.θ[i] = θ_scale_factors[i] * θ0
+    p.θ_prev[i] = θ_scale_factors[i] * θ0
     p.ice_ratio[i] = get_ice_ratio(p.Tsoil_c[i])
   end
 end
