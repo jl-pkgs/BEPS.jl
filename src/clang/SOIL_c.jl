@@ -1,6 +1,6 @@
 import BEPS: SoilRootFraction,
   Init_Soil_Parameters,
-  Init_Soil_Status,
+  Init_Soil_T_θ!,
   soil_water_factor_v2,
   Root_Water_Uptake,
   Update_Cs,
@@ -15,13 +15,13 @@ function SoilRootFraction(p::Soil_c)
   ccall((:SoilRootFraction, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
 end
 
-function Init_Soil_Parameters(landcover::Int, stxt::Int, r_root_decay::Real, p::Soil_c)
+function Init_Soil_Parameters(p::Soil_c, landcover::Int, stxt::Int, r_root_decay::Real)
   ccall((:Init_Soil_Parameters, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Ptr{Soil_c}),
     Cint(landcover), Cint(stxt), Cfloat(r_root_decay), Ref(p))
 end
 
-function Init_Soil_Status(p::Soil_c, Tsoil, Tair, Ms, snowdepth)
+function Init_Soil_T_θ!(p::Soil_c, Tsoil, Tair, Ms, snowdepth)
   ccall((:Init_Soil_Status, libbeps), Cvoid,
     (Ptr{Soil_c}, Cdouble, Cdouble, Cdouble, Cdouble),
     Ref(p), Tsoil, Tair, Ms, snowdepth)

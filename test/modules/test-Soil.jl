@@ -38,8 +38,8 @@ end
   # stxt = 7: fix const κ_dry
   # stxt = 6: fix Ksat
   for stxt = [1, 2, 3, 4, 5, 8, 9, 10, 11] # skip 6, 7
-    Init_Soil_Parameters(1, stxt, 0.1, p_jl)
-    clang.Init_Soil_Parameters(1, stxt, 0.1, p_c)
+    Init_Soil_Parameters(p_jl, 1, stxt, 0.1)
+    clang.Init_Soil_Parameters(p_c, 1, stxt, 0.1)
     is_soil_equal(p_jl, p_c; tol=1e-8, verbose=false)
   end
 end

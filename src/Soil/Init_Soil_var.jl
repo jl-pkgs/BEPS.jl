@@ -9,16 +9,43 @@ function Init_Soil_var(soil::AbstractSoil, state::Union{State,Vector}, Ta::FT;
   # r_drainage = param[27]
   # r_root_decay = param[28]
   soil.r_drainage = r_drainage
-  Init_Soil_Parameters(VegType, SoilType, r_root_decay, soil)
-  Init_Soil_Status(soil, Tsoil0, Ta, θ0, z_snow0) # LHE
-  Init_State!(state, soil, Ta)
+  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
+  Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0) 
+  Sync_Soil_to_State!(soil, state, Ta)
+end
+
+
+# T < -1℃, all frozen; T > 0℃, no frozen; else partially frozen
+get_ice_ratio(Tsoil::FT) where {FT} = clamp(-Tsoil, FT(0), FT(1))
+
+"""
+    Init_Soil_T_θ!(p::Soil, Tsoil, Tair, θ0, snowdepth)
+
+初始化土壤剖面的温度(T)和含水量(θ)。
+"""
+function Init_Soil_T_θ!(p::Soil, Tsoil::Float64, Tair::Float64, θ0::Float64, snowdepth::Float64)
+  d_t = clamp(Tsoil - Tair, -5.0, 5.0)
+  # p.z_water = 0.0
+  # p.r_rain_g = 0.0
+  p.z_snow = snowdepth
+
+  temp_scale_factors = [0.4, 0.5, 1.0, 1.2, 1.4]
+  moisture_scale_factors = [0.8, 1.0, 1.05, 1.10, 1.15]
+
+  for i in 1:p.n_layer
+    p.Tsoil_c[i] = Tair + temp_scale_factors[i] * d_t
+    p.Tsoil_p[i] = Tair + temp_scale_factors[i] * d_t
+    p.θ[i] = moisture_scale_factors[i] * θ0
+    p.θ_prev[i] = moisture_scale_factors[i] * θ0
+    p.ice_ratio[i] = get_ice_ratio(p.Tsoil_c[i])
+  end
 end
 
 # for (i=3;i<=8;i++)   var_o[i] = tem;
 # for(i=9;i<=14;i++) var_o[i] = soil->Tsoil_p[i-9];
 # for(i=21;i<=26;i++) var_o[i] = soil->θ_prev[i-21];
 # for(i=27;i<=32;i++) var_o[i] = soil->ice_ratio[i-27];
-function Init_State!(state::Vector, soil::AbstractSoil, Ta)
+function Sync_Soil_to_State!(soil::AbstractSoil, state::Vector, Ta)
   state .= 0
   for i = 1:6
     state[i+3] = Ta
@@ -29,7 +56,7 @@ function Init_State!(state::Vector, soil::AbstractSoil, Ta)
   return nothing
 end
 
-function Init_State!(state::State, soil::AbstractSoil, Ta)
+function Sync_Soil_to_State!(soil::AbstractSoil, state::State, Ta)
   state.Ts .= Ta
   state.Tsoil_prev .= soil.Tsoil_p[1:6]
   state.θ_prev .= soil.θ_prev[1:6]

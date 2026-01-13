@@ -1,5 +1,5 @@
 """
-    Init_Soil_Parameters(landcover::Integer, stxt::Integer, r_root_decay::Float64, p::Soil)
+    Init_Soil_Parameters(p::Soil, VegType::Integer, SoilType::Integer, r_root_decay::Float64)
 
 Initialize soil parameters
 
@@ -10,7 +10,7 @@ Initialize soil parameters
 - `ψ_sat`        : water potential at saturate
 - `κ_dry`        : thermal conductivity
 """
-function Init_Soil_Parameters(VegType::Integer, SoilType::Integer, r_root_decay::Float64, p::Soil)
+function Init_Soil_Parameters(p::Soil, VegType::Integer, SoilType::Integer, r_root_decay::Float64)
   p.n_layer = 5
 
   if VegType == 6 || VegType == 9 # DBF or EBF, low constaint threshold
@@ -65,28 +65,4 @@ function SoilRootFraction(soil::Soil)
 
   # For the last layer
   soil.f_root[soil.n_layer] = (soil.r_root_decay)^(cum_depth[soil.n_layer-1] * 100)
-end
-
-
-function Init_Soil_Status(p::Soil, Tsoil::Float64, Tair::Float64, θ0::Float64, snowdepth::Float64)
-  d_t = clamp(Tsoil - Tair, -5.0, 5.0)
-
-  # p.z_water = 0.0
-  # p.r_rain_g = 0.0
-  p.z_snow = snowdepth
-
-  temp_scale_factors = [0.4, 0.5, 1.0, 1.2, 1.4]
-  moisture_scale_factors = [0.8, 1.0, 1.05, 1.10, 1.15]
-
-  for i in 1:p.n_layer
-    p.Tsoil_c[i] = Tair + temp_scale_factors[i] * d_t
-    p.Tsoil_p[i] = Tair + temp_scale_factors[i] * d_t
-    p.θ[i] = moisture_scale_factors[i] * θ0
-    p.θ_prev[i] = moisture_scale_factors[i] * θ0
-    p.ice_ratio[i] = get_ice_ratio(p.Tsoil_c[i])
-  end
-end
-
-function get_ice_ratio(Tsoil::FT) where {FT}
-  clamp(-Tsoil, FT(0), FT(1)) # T < -1℃, all frozen; T > 0℃, no frozen; else partially frozen
 end
