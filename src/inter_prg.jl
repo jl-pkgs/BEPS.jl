@@ -20,7 +20,7 @@ function inter_prg_jl(
   lai::T, Ω::T, param::VegParam{T}, meteo::Met, CosZs::T,
   state::State{T}, soil::AbstractSoil,
   Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET, var::InterTempVars; 
+  mid_res::Results, mid_ET::OutputET, var::TransientCache; 
   VegType::Int=1, 
   fix_snowpack::Bool=true, kw...) where {T}
 

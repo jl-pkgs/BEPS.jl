@@ -156,12 +156,12 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
     if T_snow > 0.0 && T_snow_last <= 0.0 && z_snow > 0.0
       T_snow = 0
     end
+
     if T_snow < 0.0 && T_snow_last >= 0.0 && z_water > 0.0
       T_snow = 0
     end
     T_ground = T_snow
   end
-
   return G, T_ground, T_soil_surf, T_soil0, T_snow, T_snow1, T_snow2
 end
 
@@ -195,7 +195,7 @@ end
 - 修改 dz[2], κ[2]（临时数组）
 """
 function surface_temperature!(
-  soil::AbstractSoil, var::InterTempVars, k::Int,
+  soil::AbstractSoil, var::TransientCache, k::Int,
   T_air::FT, RH::FT, z_snow::FT, z_water::FT,
   Gheat_g::FT, ρ_snow::FT, Tc_u::FT,
   radiation_g::FT, Evap_soil::FT, Evap_SW::FT, Evap_SS::FT,
@@ -210,7 +210,7 @@ function surface_temperature!(
   # 2. 准备上一时刻的温度状态
   var.T_soil[1, k-1] = soil.Tsoil_p[1]  # 第1层土壤温度 [°C]
   var.T_soil[2, k-1] = soil.Tsoil_p[2]  # 第2层土壤温度 [°C]
-  var.G[2, k] = soil.G[1]                # 第1层土壤热通量 [W m-2]
+  var.G[2, k] = soil.G[1]               # 第1层土壤热通量 [W m-2]
 
   # 3. 调用 surface_temperature_jl 计算
   var.G[1, k], var.T_ground[k], var.T_soil[1, k], var.T_surf_mix[k],

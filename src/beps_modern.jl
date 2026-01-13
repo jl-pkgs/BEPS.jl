@@ -11,7 +11,7 @@ function beps_modern(d::DataFrame, lai::Vector;
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
-  var = InterTempVars()
+  var = TransientCache()
 
   if isnothing(model)
     theta_raw = readVegParam(VegType)  # n = 48

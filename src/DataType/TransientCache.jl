@@ -41,7 +41,7 @@ InterTempLeafs(x0) = InterTempLeafs(; x0)
 # end
 
 
-@with_kw mutable struct InterTempVars
+@with_kw mutable struct TransientCache
   Tc_u::Vector{FT} = zeros(MAX_Loop)
   T_ground::Vector{FT} = zeros(MAX_Loop)      # 地表温度
   T_surf_mix::Vector{FT} = zeros(MAX_Loop)    # 混合表面温度
@@ -91,15 +91,15 @@ InterTempLeafs(x0) = InterTempLeafs(; x0)
   κ_snow::Vector{FT} = zeros(MAX_Loop)
 
   # 土壤温度和热通量
-  Cs::Matrix{FT} = zeros(layer + 2, MAX_Loop)
+  Cs::Matrix{FT} = zeros(layer + 2, MAX_Loop)      # 土壤体积热容
   T_soil::Matrix{FT} = zeros(layer + 2, MAX_Loop)  # 土壤层温度
-  G::Matrix{FT} = zeros(layer + 2, MAX_Loop)
+  G::Matrix{FT} = zeros(layer + 2, MAX_Loop)       # 土壤层热通量
 
   # Leafs
   TempLeafs::InterTempLeafs = InterTempLeafs(0.0)
 end
 
-function init_vars!(x::InterTempVars)
+function init_vars!(x::TransientCache)
   x.Wcl_o .= 0.0
   x.Wcl_u .= 0.0
 

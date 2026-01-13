@@ -28,7 +28,7 @@ function inter_prg_c(jday, rstep,
   lai::T, Ω::T, parameter::Vector{T}, meteo::Met, CosZs::T,
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
   Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET, var::InterTempVars; debug=false, kw...) where {T<:Real}
+  mid_res::Results, mid_ET::OutputET, var::TransientCache; debug=false, kw...) where {T<:Real}
 
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},

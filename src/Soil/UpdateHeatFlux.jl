@@ -20,7 +20,6 @@ function UpdateHeatFlux(p::Soil,
     Tsoil_c[i] = Tsoil_p[i] + (G[i] - G[i+1] + S) / (p.Cs[i] * dz[i]) * period_in_seconds
     Tsoil_c[i] = clamp(Tsoil_c[i], -50.0, 50.0)
   end
-
   Update_ice_ratio(p)
   Tsoil_p[1:n] .= Tsoil_c[1:n]
 end

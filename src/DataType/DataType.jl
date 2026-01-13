@@ -15,7 +15,7 @@ include("Constant.jl")
 include("CanopyLayer.jl")
 include("../Param/Soil.jl")
 
-include("InterTempVars.jl")
+include("TransientCache.jl")
 include("Met.jl")
 include("OUTPUT.jl")
 
@@ -102,6 +102,6 @@ end
 
 
 export Leaf, Soil, AbstractSoil, 
-  Met, Results, Cpools, InterTempVars, OutputET, Radiation
+  Met, Results, Cpools, TransientCache, OutputET, Radiation
 
 export FT, init_dbl, set!

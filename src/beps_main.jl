@@ -13,7 +13,7 @@ function besp_main(d::DataFrame, lai::Vector;
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
-  var = InterTempVars()
+  var = TransientCache()
 
   if isnothing(model)
     theta = readVegParam(VegType)  # n = 48
