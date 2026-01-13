@@ -238,26 +238,11 @@ function inter_prg_jl(
     Update_Cs(soil)
 
     # /*****  Surface temperature by X. Luo  *****/
-    # 初始化土壤热变量
-    var.Cs[1:2, k] .= soil.Cs[1]
-    var.Tc_u[k] = Tc.u
-    κ[2] = soil.κ[1]
-    dz[2] = soil.dz[1]
-    var.T_soil[1, k-1] = soil.Tsoil_p[1]
-    var.T_soil[2, k-1] = soil.Tsoil_p[2]
-    var.G[2, k] = soil.G[1]
-
-    var.G[1, k], var.T_ground[k], var.T_soil[1, k], var.T_surf_mix[k],
-    var.T_surf_snow[k], var.T_snow_L1[k], var.T_snow_L2[k] =
-      surface_temperature_jl(T_air, RH, z_snow, z_water,
-        var.Cs[2, k], var.Cs[1, k], Gheat_g, dz[2], ρ_snow[], var.Tc_u[k],
-        radiation_g, var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k],
-        κ[2], f_snow.g, var.G[2, k],
-        var.T_ground[k-1],
-        var.T_soil[2, k-1], var.T_soil[1, k-1], var.T_surf_mix[k-1],
-        var.T_surf_snow[k-1], var.T_snow_L1[k-1], var.T_snow_L2[k-1])
-
-    soil.Tsoil_c[1] = var.T_soil[1, k]
+    prepare_and_compute_surface_temperature!(
+      soil, var, k, T_air, RH, z_snow, z_water,
+      Gheat_g, ρ_snow[], Tc.u, radiation_g,
+      var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k],
+      f_snow.g, dz, κ)
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
     z_snow, z_water = snowpack_stage3_jl(T_air, var.T_surf_snow[k], var.T_surf_snow[k-1],
