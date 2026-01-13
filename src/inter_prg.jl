@@ -68,8 +68,8 @@ function inter_prg_jl(
   # 雪水状态 [kg/m² or m]
   m_snow_pre, m_water_pre = state.m_snow, state.m_water
   m_snow, m_water = Layer3(0.0), Layer2()
-  z_snow, z_water = soil.z_snow, soil.z_water
-  (z_water < 0.001) && (z_water = 0.0)
+  z_snow = soil.z_snow
+  z_water = soil.z_water < 0.001 ? 0.0 : soil.z_water
 
   # 雪覆盖和反照率 [-]
   f_snow, A_snow, f_water = Layer3(0.0), Layer2(), Layer2()
@@ -97,12 +97,13 @@ function inter_prg_jl(
     # /*****  Rainfall stage 1 by X. Luo  *****/
     var.r_rain_g[k_step] = rainfall_stage1_jl(T_air, precip, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
 
-    if (soil.θ_prev[2] < soil.θ_vwp[2] * 0.5)
-      α_g = α_soil_dry
+    # 土壤反照率计算 [-]
+    α_g = if soil.θ_prev[2] < soil.θ_vwp[2] * 0.5
+      α_soil_dry
     else
-      α_g = (soil.θ_prev[2] - soil.θ_vwp[2] * 0.5) / (soil.θ_sat[2] - soil.θ_vwp[2] * 0.5) * (α_soil_sat - α_soil_dry) + α_soil_dry
+      (soil.θ_prev[2] - soil.θ_vwp[2] * 0.5) / (soil.θ_sat[2] - soil.θ_vwp[2] * 0.5) *
+      (α_soil_sat - α_soil_dry) + α_soil_dry
     end
-
     α_v.g = 2.0 / 3.0 * α_g
     α_n.g = 4.0 / 3.0 * α_g
 
@@ -236,16 +237,11 @@ function inter_prg_jl(
     Update_Cs(soil)
 
     # /*****  Surface temperature by X. Luo  *****/
-    var.Cs .= 0.0
-    var.T_soil .= 0.0
-    var.G .= 0.0
-
-    var.Cs[1, k_step] = soil.Cs[1]
-    var.Cs[2, k_step] = soil.Cs[1]
+    # 初始化土壤热变量
+    var.Cs[1:2, k_step] .= soil.Cs[1]
     var.Tc_u[k_step] = Tc.u
     κ[2] = soil.κ[1]
     dz[2] = soil.dz[1]
-
     var.T_soil[1, k_step-1] = soil.Tsoil_p[1]
     var.T_soil[2, k_step-1] = soil.Tsoil_p[2]
     var.G[2, k_step] = soil.G[1]
