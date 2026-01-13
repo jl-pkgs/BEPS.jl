@@ -84,17 +84,18 @@ end
 
 
 function BEPSmodel(VegType::Int, SoilType::Int; N::Int=5, FT=Float64)
-  veg = InitParam_Veg(VegType; FT=FT)  
+  veg = InitParam_Veg(VegType; FT)  
   
   # TODO: fix this
-  r_drainage = FT(gen_data["r_drainage"])
-  r_root_decay = FT(veg_raw["r_root_decay"]) # 根系
+  # r_drainage = FT(gen_data["r_drainage"])
+  # r_root_decay = FT(veg_raw["r_root_decay"]) # 根系
 
   ψ_min, alpha = (VegType == 6 || VegType == 9) ? (FT(10.0), FT(1.5)) : (FT(33.0), FT(0.4))
   hydraulic, thermal = InitParam_Soil(SoilType, N, FT)
 
   BEPSmodel{FT}(;
-    N, r_drainage, r_root_decay,
+    N, 
+    # r_drainage, r_root_decay,
     ψ_min, alpha,
     hydraulic, thermal, veg
   )
