@@ -1,30 +1,10 @@
-using JSON
-
-_types = ["ENF", "DNF", "DBF", "EBF", "Shrub-SH", "C4", "default"]
-_codes = [1, 2, 6, 9, 13, 40, -1]
-
-const RTIMES = 24.0 # 呼吸作用系数转换常数 (day -> hour)
-
-"""
-    readVegParam(lc::Int=1)
-# Arguments
-- `lc`: [1, 2, 6, 9, 13, 40, -1]
-"""
+# - `lc`: [1, 2, 6, 9, 13, 40, -1]
 function readVegParam(lc::Int=1)
   param = zeros(Float64, 48)
   param[5] = lc
 
-  # 获取当前文件路径
-  dir = @__DIR__
-  path_veg = joinpath(dir, "backup", "ParamVeg.json")
-  path_gen = joinpath(dir, "backup", "ParamGeneral.json")
-
-  veg_data = JSON.parsefile(path_veg)
-  gen_data = JSON.parsefile(path_gen)
-
-  type_idx = findfirst(x -> x == lc, _codes)
-  type_str = type_idx !== nothing ? _types[type_idx] : "default"
-  v = veg_data[type_str]
+  gen_data = readGeneralParam()
+  v = readVegRaw(lc)
 
   # Vegetation parameters
   param[3] = v["clumping_index"]

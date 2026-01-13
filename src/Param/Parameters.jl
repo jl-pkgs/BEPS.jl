@@ -38,7 +38,6 @@ import FieldMetadata: @metadata, @units, units
 end
 
 include("utilize.jl")
-include("readVegParam.jl")
 include("macro.jl")
 
 
@@ -82,18 +81,26 @@ end
 end
 
 include("Init_Soil.jl")
+include("InitParam.jl")
+include("deprecated/readVegParam.jl")
+
 
 function BEPSmodel(VegType::Int, SoilType::Int; N::Int=5, FT=Float64)
-  theta = FT.(readVegParam(VegType))
-  vegpar = theta2par(theta)
+  vegpar = readVegParam(VegType; FT=FT)
+  gen_data = readGeneralParam(FT)
+  veg_raw = readVegRaw(VegType)
+
+  # 从 JSON 中提取 BEPSmodel 特有参数
+  r_drainage = FT(gen_data["r_drainage"])
+  r_root_decay = FT(veg_raw["r_root_decay"])
 
   ψ_min, alpha = (VegType == 6 || VegType == 9) ? (FT(10.0), FT(1.5)) : (FT(33.0), FT(0.4))
   hydraulic, thermal = init_soil_layers(SoilType, N, FT)
 
   BEPSmodel{FT}(;
     N,
-    r_drainage=theta[27],
-    r_root_decay=theta[28],
+    r_drainage,
+    r_root_decay,
     ψ_min,
     alpha,
     hydraulic,

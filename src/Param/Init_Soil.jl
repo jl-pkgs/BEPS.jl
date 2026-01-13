@@ -70,6 +70,7 @@ const SOIL_PARAMS = [
 const SOIL_THERMAL_DENSITY = [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # [kg m-3]
 const SOIL_ORGANIC_MATTER = [0.05, 0.02, 0.01, 0.01, 0.003]           # volume fraction, 0-1
 
+
 """
     init_soil_layers(SoilType::Int, N::Int, FT::Type)
 

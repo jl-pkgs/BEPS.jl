@@ -1,8 +1,16 @@
-function beps_modern(d::DataFrame, lai::Vector;
-  model::Union{Nothing,BEPSmodel}=nothing,
+using ModelParams
+using Statistics
+using ModelParams: of_RMSE
+
+function init_model()
+  theta = readVegParam(VegType)  # n = 48
+  vegpar = theta2par(theta)
+  theta = par2theta(vegpar; clumping, VegType) # 为移除readVegParam铺垫
+end
+
+function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=nothing,
   lon::FT=120.0, lat::FT=20.0,
-  VegType::Int=25, SoilType::Int=8,
-  clumping::FT=0.85,
+  VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
   r_drainage::FT=0.5, r_root_decay::FT=0.95,
   debug=false, fix_snowpack=true, kw...) where {FT<:AbstractFloat}
@@ -14,10 +22,12 @@ function beps_modern(d::DataFrame, lai::Vector;
   var = TransientCache()
 
   if isnothing(model)
-    theta_raw = readVegParam(VegType)  # n = 48
-    vegpar = theta2par(theta_raw)
+    theta = readVegParam(VegType)  # n = 48
+    vegpar = theta2par(theta)
+    theta = par2theta(vegpar; clumping, VegType) # 为移除readVegParam铺垫
   else
     vegpar = model.veg
+    theta = par2theta(vegpar; clumping, VegType)
     (; r_drainage, r_root_decay) = model
   end
 
@@ -25,43 +35,43 @@ function beps_modern(d::DataFrame, lai::Vector;
   vars = fieldnames(Results) |> collect
   vars_ET = fieldnames(OutputET) |> collect
 
+  ## OUTPUTs
   df_out = DataFrame(zeros(n, length(vars)), vars)
   df_ET = DataFrame(zeros(n, length(vars_ET)), vars_ET)
 
-  Tsoil = zeros(n, layer) # layer is defined in Constant.jl
-  θ = zeros(n, layer)
+  output_Tsoil = zeros(n, layer) ## 返回变量
+  output_θ = zeros(n, layer)
 
   soil = Soil()
   state = State()
-  Ta = d.tem[1]
 
-  ## 土壤水力参数也应从model中读取
-  Init_Soil_var(soil, state, Ta; VegType, SoilType,
-    r_drainage=r_drainage, r_root_decay=r_root_decay,
+  Ta = d.tem[1] # 第一天的温度
+  Init_Soil_var(soil, state, Ta;
+    VegType, SoilType, r_drainage, r_root_decay,
     Tsoil0, θ0, z_snow0
   )
-  !isnothing(model) && init_soil!(soil, model)
+  !isnothing(model) && init_soil!(soil, model) # 这是何意?
 
   for i = 1:n
     jday = d.day[i]
     hour = d.hour[i]
-
     _day = ceil(Int, i / 24)
-    fill_meteo!(meteo, d, i)
+    mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
-    _lai = lai[_day]
-    CosZs = s_coszs(jday, hour, lat, lon)
+    _lai = lai[_day] * theta[3] / clumping # re-calculate LAI & renew clump index
+    fill_meteo!(meteo, d, i) # 驱动数据
 
-    # Main simulation step
+    CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
+
     inter_prg_jl(jday, hour, _lai, clumping, vegpar, meteo, CosZs,
       state, soil,
       Ra, mid_res, mid_ET, var; VegType, debug, fix_snowpack)
 
-    Tsoil[i, :] .= soil.Tsoil_c[1:layer]
-    θ[i, :] .= soil.θ[1:layer]
-
+    output_Tsoil[i, :] .= soil.Tsoil_c[1:layer]
+    output_θ[i, :] .= soil.θ[1:layer]
     fill_res!(df_out, mid_res, i)
     fill_res!(df_ET, mid_ET, i)
   end
-  df_out, df_ET, Tsoil, θ
+
+  df_out, df_ET, output_Tsoil, output_θ
 end
