@@ -77,8 +77,8 @@ function init_soil()
   r_drainage = param[27]
   r_root_decay = param[28]
 
-  Init_Soil_var_o(p_jl, state_jl, Ta; r_drainage, r_root_decay, kw...)
-  Init_Soil_var_o(p_c, state_c, Ta; r_drainage, r_root_decay, kw...)
+  Init_Soil_var(p_jl, state_jl, Ta; r_drainage, r_root_decay, kw...)
+  Init_Soil_var(p_c, state_c, Ta; r_drainage, r_root_decay, kw...)
   p_jl, p_c
 end
 
@@ -103,7 +103,7 @@ end
 end
 
 
-@testset "Init_Soil_var_o" begin
+@testset "Init_Soil_var" begin
   p_jl, p_c = init_soil()
   funs = [
     Update_Cs,

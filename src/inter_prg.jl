@@ -238,11 +238,10 @@ function inter_prg_jl(
     Update_Cs(soil)
 
     # /*****  Surface temperature by X. Luo  *****/
-    prepare_and_compute_surface_temperature!(
+    surface_temperature!(
       soil, var, k, T_air, RH, z_snow, z_water,
       Gheat_g, ρ_snow[], Tc.u, radiation_g,
-      var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k],
-      f_snow.g, dz, κ)
+      var.Evap_soil[k], var.Evap_SW[k], var.Evap_SS[k], f_snow.g, dz, κ)
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
     z_snow, z_water = snowpack_stage3_jl(T_air, var.T_surf_snow[k], var.T_surf_snow[k-1],
@@ -250,14 +249,12 @@ function inter_prg_jl(
     set!(m_snow_pre, m_snow)
 
     # /*****  Sensible heat flux by X. Luo  *****/
-    var.Qhc_o[k], var.Qhc_u[k], var.Qhg[k] =
-      sensible_heat_jl(Tc_new, var.T_ground[k], T_air, RH,
-        Gh, Gheat_g, PAI)
+    var.Qhc_o[k], var.Qhc_u[k], var.Qhg[k] = 
+      sensible_heat_jl(Tc_new, var.T_ground[k], T_air, RH, Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
     soil.z_snow = z_snow
     soil.G[1] = var.G[1, k]
-
     UpdateHeatFlux(soil, T_air, kstep)
     Root_Water_Uptake(soil, var.Trans_o[k], var.Trans_u[k], var.Evap_soil[k])
 

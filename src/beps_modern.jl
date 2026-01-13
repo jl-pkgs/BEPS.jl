@@ -36,7 +36,7 @@ function beps_modern(d::DataFrame, lai::Vector;
   Ta = d.tem[1]
 
   ## 土壤水力参数也应从model中读取
-  Init_Soil_var_o(soil, state, Ta; VegType, SoilType,
+  Init_Soil_var(soil, state, Ta; VegType, SoilType,
     r_drainage=r_drainage, r_root_decay=r_root_decay,
     Tsoil0, θ0, z_snow0
   )

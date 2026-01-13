@@ -1,9 +1,8 @@
 include("Init_Soil_Parameters.jl")
-include("Init_Soil_var_o.jl")
+include("Init_Soil_var.jl")
 include("UpdateHeatFlux.jl")
 include("UpdateSoilMoisture.jl")
 include("soil_water_factor_v2.jl")
-include("surface_temperature_helpers.jl")
 
 
 function Update_Tsoil_c(p::Soil, value::Cdouble)
