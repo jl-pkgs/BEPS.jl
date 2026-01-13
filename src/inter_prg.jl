@@ -55,7 +55,6 @@ function inter_prg_jl(
     var_field = var_fields[i]
     getfield(cache, var_field)[1] = clamp(state.Ts[i], T_air - 2.0, T_air + 2.0)
   end
-  cache.Qhc_o[1] = state.Qhc_o
 
   # 雪水状态 [kg/m² or m]
   m_snow_pre, m_water_pre = state.m_snow, state.m_water
@@ -74,6 +73,17 @@ function inter_prg_jl(
   dz, κ = zeros(layer + 1), zeros(layer + 2)
   radiation_o = radiation_u = radiation_g = ra_g = 0.0
 
+  # ET 相关局部变量（替代 cache 中的标量）
+  Trans_o, Trans_u = 0.0, 0.0
+  Eil_o, Eil_u = 0.0, 0.0
+  EiS_o, EiS_u = 0.0, 0.0
+  Evap_soil, Evap_SW, Evap_SS = 0.0, 0.0, 0.0
+  Qhc_o, Qhc_u, Qhg = state.Qhc_o, 0.0, 0.0  # Qhc_o 从 state 初始化
+  r_rain_g = 0.0
+
+  pai_o = lai_o + stem_o
+  pai_u = lai_u + stem_u
+
   # ===== 4. 亚小时循环 (10步/小时, 360秒/步) =====
   @inbounds for k = 2:kloop+1
     !fix_snowpack && (ρ_snow[] = 0.0) # TODO: exact as C
@@ -87,7 +97,7 @@ function inter_prg_jl(
       α_v_sw, α_n_sw)
 
     # /*****  Rainfall stage 1 by X. Luo  *****/
-    cache.r_rain_g[k] = rainfall_stage1_jl(T_air, precip, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
+    r_rain_g = rainfall_stage1_jl(T_air, precip, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
 
     # 土壤反照率计算 [-]
     α_g = if soil.θ_prev[2] < soil.θ_vwp[2] * 0.5
@@ -104,7 +114,7 @@ function inter_prg_jl(
     f_soilwater = min(soil.f_soilwater, 1.0) # used in `photosynthesis`
 
     # 感热通量初值用于空气动力学导度计算 [W/m²]
-    H_canopy_o = cache.Qhc_o[k-1]
+    H_canopy_o = Qhc_o  # 使用上一步的值
 
     init_leaf_dbl(Ci_old, 0.7 * CO2_air)
     init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
@@ -121,7 +131,7 @@ function inter_prg_jl(
       # /***** Aerodynamic conductance module by G.Mo  *****/
       ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
         aerodynamic_conductance_jl(z_canopy_o, z_canopy_u, z_wind, Ω, T_air, wind, H_canopy_o,
-          lai_o + stem_o, lai_u + stem_u)
+          pai_o, pai_u)
 
       # 热量传输导度 [mol/m²/s]
       init_leaf_dbl2(Gh,
@@ -141,7 +151,7 @@ function inter_prg_jl(
       # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
       radiation_o, radiation_u, radiation_g = netRadiation_jl(
         Srad, CosZs, Tc,
-        lai_o, lai_u, lai_o + stem_o, lai_u + stem_u, PAI,
+        lai_o, lai_u, pai_o, pai_u, PAI,
         Ω, T_air, RH,
         α_v_sw[], α_n_sw[], α_v, α_n,
         perc_snow_o, perc_snow_u, f_snow.g,
@@ -196,29 +206,28 @@ function inter_prg_jl(
         end
       end
     end  # end of energy balance iteration
-
     multiply!(GPP, Ac, LAI)
 
     # /*****  Transpiration by X. Luo  *****/
-    cache.Trans_o[k], cache.Trans_u[k] = transpiration_jl(Tc_new, T_air, RH, Gw, LAI)
+    Trans_o, Trans_u = transpiration_jl(Tc_new, T_air, RH, Gw, LAI)
 
     # /*****  Evaporation and sublimation from canopy by X. Luo  *****/
-    cache.Eil_o[k], cache.Eil_u[k], cache.EiS_o[k], cache.EiS_u[k] = evaporation_canopy_jl(
+    Eil_o, Eil_u, EiS_o, EiS_u = evaporation_canopy_jl(
       Tc_new, T_air, RH,
       Gww, PAI, f_water, f_snow)
 
     # /*****  Rainfall stage 2 by X. Luo  *****/
-    rainfall_stage2_jl(cache.Eil_o[k], cache.Eil_u[k], m_water)
+    rainfall_stage2_jl(Eil_o, Eil_u, m_water)
     set!(m_water_pre, m_water)
 
     # /*****  Snowpack stage 2 by X. Luo  *****/
-    snowpack_stage2_jl(cache.EiS_o[k], cache.EiS_u[k], m_snow)
+    snowpack_stage2_jl(EiS_o, EiS_u, m_snow)
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g  # 地表传热导度 [mol/m²/s]
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
-    cache.Evap_soil[k], cache.Evap_SW[k], cache.Evap_SS[k], z_water, z_snow =
+    Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
       evaporation_soil_jl(T_air, cache.T_ground[k-1], RH, radiation_g, Gheat_g,
         f_snow,
         z_water, z_snow, mass_water_g, m_snow,
@@ -232,7 +241,7 @@ function inter_prg_jl(
     surface_temperature!(
       soil, cache, k, T_air, RH, z_snow, z_water,
       Gheat_g, ρ_snow[], Tc.u, radiation_g,
-      cache.Evap_soil[k], cache.Evap_SW[k], cache.Evap_SS[k], f_snow.g, dz, κ)
+      Evap_soil, Evap_SW, Evap_SS, f_snow.g, dz, κ)
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
     z_snow, z_water = snowpack_stage3_jl(T_air, cache.T_surf_snow[k], cache.T_surf_snow[k-1],
@@ -240,16 +249,16 @@ function inter_prg_jl(
     set!(m_snow_pre, m_snow)
 
     # /*****  Sensible heat flux by X. Luo  *****/
-    cache.Qhc_o[k], cache.Qhc_u[k], cache.Qhg[k] = 
+    Qhc_o, Qhc_u, Qhg =
       sensible_heat_jl(Tc_new, cache.T_ground[k], T_air, RH, Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
     soil.z_snow = z_snow
     soil.G[1] = cache.G[1, k]
     UpdateHeatFlux(soil, T_air, kstep)
-    Root_Water_Uptake(soil, cache.Trans_o[k], cache.Trans_u[k], cache.Evap_soil[k])
+    Root_Water_Uptake(soil, Trans_o, Trans_u, Evap_soil)
 
-    soil.r_rain_g = cache.r_rain_g[k]
+    soil.r_rain_g = r_rain_g
     soil.z_water = z_water
 
     UpdateSoilMoisture(soil, kstep)
@@ -266,7 +275,7 @@ function inter_prg_jl(
                cache.T_snow_L1[k_step], cache.T_snow_L2[k_step]]
 
   # 更新其他状态变量
-  state.Qhc_o = cache.Qhc_o[k_step]
+  state.Qhc_o = Qhc_o
   set!(state.m_water, m_water)
   set!(state.m_snow, m_snow)
   state.ρ_snow = ρ_snow[]
@@ -274,11 +283,8 @@ function inter_prg_jl(
   # ===== 6. 输出结果汇总 =====
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
 
-  OutputET!(mid_ET,
-    cache.Trans_o, cache.Trans_u,
-    cache.Eil_o, cache.Eil_u,
-    cache.EiS_o, cache.EiS_u,
-    cache.Evap_soil, cache.Evap_SW, cache.Evap_SS, cache.Qhc_o, cache.Qhc_u, cache.Qhg, k_step)
+  @pack! mid_ET = Trans_o, Trans_u, Eil_o, Eil_u, EiS_o, EiS_u,
+                  Evap_soil, Evap_SW, Evap_SS, Qhc_o, Qhc_u, Qhg
   update_ET!(mid_ET, mid_res, T_air)
 
   mid_res.gpp_o_sunlit = GPP.o_sunlit

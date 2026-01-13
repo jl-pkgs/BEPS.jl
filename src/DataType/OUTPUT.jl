@@ -45,29 +45,6 @@ end
   LH::Cdouble = 0.0
 end
 
-function OutputET!(x::OutputET, 
-  Trans_o::AbstractVector{T}, Trans_u::AbstractVector{T},
-  Eil_o::AbstractVector{T}, Eil_u::AbstractVector{T},
-  EiS_o::AbstractVector{T}, EiS_u::AbstractVector{T},
-  Evap_soil::AbstractVector{T}, Evap_SW::AbstractVector{T}, Evap_SS::AbstractVector{T}, 
-  Qhc_o::AbstractVector{T}, Qhc_u::AbstractVector{T}, Qhg::AbstractVector{T},
-  kkk) where {T<:Real}
-  
-  x.Trans_o   = Trans_o[kkk]
-  x.Trans_u   = Trans_u[kkk]
-  x.Eil_o     = Eil_o[kkk]
-  x.Eil_u     = Eil_u[kkk]
-  x.EiS_o     = EiS_o[kkk]
-  x.EiS_u     = EiS_u[kkk]
-  x.Evap_soil = Evap_soil[kkk]
-  x.Evap_SW   = Evap_SW[kkk]
-  x.Evap_SS   = Evap_SS[kkk]
-  x.Qhc_o     = Qhc_o[kkk]
-  x.Qhc_u     = Qhc_u[kkk]
-  x.Qhg       = Qhg[kkk]
-  x
-end
-
 
 function update_ET!(x::OutputET, mid_res::Results, Ta)
   Lv_liquid = (2.501 - 0.00237 * Ta) * 1000000  # The latent heat of water vaporization in j/kg

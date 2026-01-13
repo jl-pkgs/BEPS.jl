@@ -168,7 +168,7 @@ end
 
 
 """
-    prepare_and_compute_surface_temperature!(soil, var, k, T_air, RH,
+    surface_temperature!(soil, cache, k, T_air, RH,
         z_snow, z_water, Gheat_g, ρ_snow, Tc_u, radiation_g,
         Evap_soil, Evap_SW, Evap_SS, f_snow_g, dz, κ)
 
@@ -176,21 +176,20 @@ end
 
 # 功能说明
 这个函数封装了以下操作：
-1. 从 soil 提取并准备热力学参数（Cs, κ, dz, T, G）
-2. 保存到 var 的相应位置
-3. 调用 surface_temperature_jl 计算表面温度
-4. 将结果保存回 var 和 soil
+1. 从 soil 提取并准备热力学参数（Cs, κ, dz, G）
+2. 调用 surface_temperature_jl 计算表面温度
+3. 将结果保存到 cache（用于子时间步循环）和 soil
 
 # 参数
 - `soil`: 土壤状态结构体
-- `var`: 中间临时变量结构体
+- `cache`: 中间临时变量结构体
 - `k`: 当前时间步索引
 - 其他参数同 surface_temperature_jl
 
 # 副作用
-- 修改 var.Cs, var.Tc_u, var.T_soil, var.G
-- 修改 var.G[1,k], var.T_ground[k], var.T_soil[1,k], var.T_surf_mix[k],
-  var.T_surf_snow[k], var.T_snow_L1[k], var.T_snow_L2[k]
+- 修改 cache.Cs, cache.Tc_u, cache.G
+- 修改 cache.G[1,k], cache.T_ground[k], cache.T_surf_mix[k],
+  cache.T_surf_snow[k], cache.T_snow_L1[k], cache.T_snow_L2[k]
 - 修改 soil.Tsoil_c[1]
 - 修改 dz[2], κ[2]（临时数组）
 """
@@ -204,26 +203,32 @@ function surface_temperature!(
   # 1. 准备土壤热力学参数
   cache.Cs[1:2, k] .= soil.Cs[1]      # 体积热容 [J m-3 K-1]
   cache.Tc_u[k] = Tc_u                # 下层冠层温度 [°C]
-  κ[2] = soil.κ[1]                  # 热导率 [W m-1 K-1]; 表皮为1, 第一层为2
-  dz[2] = soil.dz[1]                # 层厚度 [m]
+  κ[2] = soil.κ[1]                    # 热导率 [W m-1 K-1]; 表皮为1, 第一层为2
+  dz[2] = soil.dz[1]                  # 层厚度 [m]
+  cache.G[2, k] = soil.G[1]           # 第1层土壤热通量 [W m-2]
 
-  # 2. 准备上一时刻的温度状态
-  cache.T_soil[1, k-1] = soil.Tsoil_p[1]  # 第1层土壤温度 [°C]
-  cache.T_soil[2, k-1] = soil.Tsoil_p[2]  # 第2层土壤温度 [°C]
-  cache.G[2, k] = soil.G[1]               # 第1层土壤热通量 [W m-2]
-
-  # 3. 调用 surface_temperature_jl 计算
-  cache.G[1, k], cache.T_ground[k], cache.T_soil[1, k], cache.T_surf_mix[k],
-  cache.T_surf_snow[k], cache.T_snow_L1[k], cache.T_snow_L2[k] =
+  # 2. 调用 surface_temperature_jl 计算
+  # 直接使用 soil.Tsoil_p 作为输入，避免通过 cache.T_soil 中转
+  G, T_ground, T_soil_surf, T_soil0, T_snow, T_snow1, T_snow2 =
     surface_temperature_jl(T_air, RH, z_snow, z_water,
       cache.Cs[2, k], cache.Cs[1, k], Gheat_g, dz[2], ρ_snow, cache.Tc_u[k],
       radiation_g, Evap_soil, Evap_SW, Evap_SS,
       κ[2], f_snow_g, cache.G[2, k],
       cache.T_ground[k-1],
-      cache.T_soil[2, k-1], cache.T_soil[1, k-1], cache.T_surf_mix[k-1],
+      soil.Tsoil_p[2],      # T_soil1_last: 第一层土壤温度 [°C]
+      soil.Tsoil_p[1],      # T_soil_surf_last: 土壤表面温度（雪-土交界面）[°C]
+      cache.T_surf_mix[k-1],
       cache.T_surf_snow[k-1], cache.T_snow_L1[k-1], cache.T_snow_L2[k-1])
 
+  # 3. 保存结果到 cache（用于子时间步循环）
+  cache.G[1, k] = G
+  cache.T_ground[k] = T_ground
+  cache.T_surf_mix[k] = T_soil0
+  cache.T_surf_snow[k] = T_snow
+  cache.T_snow_L1[k] = T_snow1
+  cache.T_snow_L2[k] = T_snow2
+
   # 4. 更新 soil 的当前温度状态
-  soil.Tsoil_c[1] = cache.T_soil[1, k]
+  soil.Tsoil_c[1] = T_soil_surf
   return nothing
 end

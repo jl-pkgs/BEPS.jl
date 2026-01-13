@@ -49,10 +49,6 @@ LeafCache(x0) = LeafCache(; x0)
   T_snow_L1::Vector{FT} = zeros(MAX_Loop)     # 雪层1温度
   T_snow_L2::Vector{FT} = zeros(MAX_Loop)     # 雪层2温度
 
-  Qhc_o::Vector{FT} = zeros(MAX_Loop)
-  Qhc_u::Vector{FT} = zeros(MAX_Loop)
-  Qhg::Vector{FT} = zeros(MAX_Loop)
-
   # the masses of liquid and snow on the canopy
   Wcl_o::Vector{FT} = zeros(MAX_Loop)
   Wcl_u::Vector{FT} = zeros(MAX_Loop)
@@ -74,25 +70,14 @@ LeafCache(x0) = LeafCache(; x0)
   Ac_snow_u::Vector{FT} = zeros(MAX_Loop)
 
   rho_snow::Vector{FT} = zeros(MAX_Loop)
-  r_rain_g::Vector{FT} = zeros(MAX_Loop)
 
   alpha_v_sw::Vector{FT} = zeros(MAX_Loop)
   alpha_n_sw::Vector{FT} = zeros(MAX_Loop)
 
-  Trans_o::Vector{FT} = zeros(MAX_Loop)
-  Trans_u::Vector{FT} = zeros(MAX_Loop)
-  Eil_o::Vector{FT} = zeros(MAX_Loop)
-  Eil_u::Vector{FT} = zeros(MAX_Loop)
-  EiS_o::Vector{FT} = zeros(MAX_Loop)
-  EiS_u::Vector{FT} = zeros(MAX_Loop)
-  Evap_soil::Vector{FT} = zeros(MAX_Loop)
-  Evap_SW::Vector{FT} = zeros(MAX_Loop)
-  Evap_SS::Vector{FT} = zeros(MAX_Loop)
   κ_snow::Vector{FT} = zeros(MAX_Loop)
 
   # 土壤温度和热通量
   Cs::Matrix{FT} = zeros(layer + 2, MAX_Loop)      # 土壤体积热容
-  T_soil::Matrix{FT} = zeros(layer + 2, MAX_Loop)  # 土壤层温度
   G::Matrix{FT} = zeros(layer + 2, MAX_Loop)       # 土壤层热通量
 
   # Leafs
