@@ -1,10 +1,9 @@
 function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=nothing,
-  lon::FT=120.0, lat::FT=20.0,
-  VegType::Int=25, clumping::FT=0.85,
+  lon::FT=120.0, lat::FT=20.0, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
   debug=false, fix_snowpack=true, kw...) where {FT<:AbstractFloat}
 
-  meteo = Met()
+  met = Met()
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
@@ -32,17 +31,17 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
   for i = 1:ntime
     jday = d.day[i]
     hour = d.hour[i]
+    CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
+    
     _day = ceil(Int, i / 24)
     mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
     _lai = lai[_day]
-    fill_meteo!(meteo, d, i) # 驱动数据
+    fill_meteo!(met, d, i) # 驱动数据
 
-    CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
-
-    inter_prg_jl(jday, hour, _lai, clumping, vegpar, meteo, CosZs,
+    inter_prg_jl(jday, hour, _lai, clumping, vegpar, met, CosZs,
       state, soil,
-      Ra, mid_res, mid_ET, cache; VegType, debug, fix_snowpack)
+      Ra, mid_res, mid_ET, cache; debug, fix_snowpack)
 
     output_Tsoil[i, :] .= soil.Tsoil_c[1:layer]
     output_θ[i, :] .= soil.θ[1:layer]

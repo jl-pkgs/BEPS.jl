@@ -85,12 +85,12 @@ end
 function lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u)
   LAI = Leaf()
   PAI = Leaf()
-  lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
+  lai2!(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
   LAI, PAI
 end
 
 ## add Leaf struct
-function lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI::Leaf, PAI::Leaf)
+function lai2!(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI::Leaf, PAI::Leaf)
   ccall((:lai2, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Ptr{Leaf}, Ptr{Leaf}),
     Ω, CosZs, stem_o, stem_u, lai_o, lai_u, Ref(LAI), Ref(PAI))
 end

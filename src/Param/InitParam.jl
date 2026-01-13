@@ -14,10 +14,11 @@ function InitParam_Veg(lc::Int=1; FT=Float64)
   v = veg_data[type_str]
 
   return ParamVeg{FT}(
+    has_understory = !(lc == 25 || lc == 40),
     LAI_max_o    = FT(v["LAI_max_o"]),
     LAI_max_u    = FT(v["LAI_max_u"]),
     α_canopy_vis = FT(v["albedo_canopy_vis"]),
-    α_canopy_nir = FT(v["albedo_c_nir_observed"]),
+    α_canopy_nir = FT(v["albedo_canopy_nir"]),
     α_soil_sat   = FT(gen_data["albedo_saturated_soil"]),
     α_soil_dry   = FT(gen_data["albedo_dry_soil"]),
     z_canopy_o   = FT(v["z_canopy_o"]),

@@ -1,6 +1,11 @@
 using BEPS, DataFrames, Test
 using BEPS: path_proj
 
+function nanmax(x)
+  x = collect(x)
+  x = x[.!isnan.(x)]
+  maximum(x)
+end
 
 lai = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
 
@@ -10,7 +15,8 @@ kw = (lon=120.5, lat=30.5,
   Tsoil0=2.2, θ0=0.4115, z_snow0=0.0
 )
 
-@testset "besp_main julia" begin
+# @testset "besp_main julia" 
+begin
   d = deserialize(path_proj("data/p1_meteo"))
   d.tem = d.tem .- 5.0
 

@@ -8,6 +8,8 @@ end
 function theta2par!(par::ParamVeg{FT}, theta::Vector{FT}) where {FT<:Real}
   # par.Ω0 = theta[3]
   # par.lc = theta[5]
+  lc = theta[5]
+  par.has_understory = !(lc == 25 || lc == 40)
   par.LAI_max_o = theta[9]
   par.LAI_max_u = theta[10]
   par.α_canopy_vis = theta[23]

@@ -15,6 +15,9 @@ include("macro.jl")
 @bounds @with_kw mutable struct ParamVeg{FT<:AbstractFloat}
   # lc::Int = 1
   # Ω0::FT = 0.7             # // clumping_index
+  has_understory::Bool = true      # 
+  is_bforest::Bool = false         # broadleaf forest
+
   LAI_max_o::FT = 4.5 | (0.1, 7.0)      # LAI max for overstory
   LAI_max_u::FT = 2.4 | (0.1, 7.0)      # LAI max for understory
 
@@ -70,7 +73,7 @@ end
 
 @bounds @with_kw_noshow mutable struct BEPSmodel{FT<:AbstractFloat}
   N::Int = 5
-  r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)      # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
+  r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)  # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
 
   ψ_min::FT = Cdouble(33.0)  # [m], about 0.10~0.33 MPa开始胁迫点
   alpha::FT = Cdouble(0.4)   # [-], 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
@@ -84,8 +87,10 @@ end
 # `kw...`: other params like, `r_drainage`
 function BEPSmodel(VegType::Int, SoilType::Int; N::Int=5, FT=Float64, kw...)
   veg = InitParam_Veg(VegType; FT)  
-  ψ_min, alpha = (VegType == 6 || VegType == 9) ? (FT(10.0), FT(1.5)) : (FT(33.0), FT(0.4))
   hydraulic, thermal = InitParam_Soil(SoilType, N, FT)
+
+  ψ_min = veg.is_bforest ? FT(10.0) : FT(33.0) # 开始胁迫点
+  alpha = veg.is_bforest ? FT(1.5) : FT(0.4)   # 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
 
   BEPSmodel{FT}(;
     N,  kw..., ψ_min, alpha,

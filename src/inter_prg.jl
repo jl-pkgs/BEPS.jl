@@ -17,11 +17,10 @@ The inter-module function between main program and modules
 """
 function inter_prg_jl(
   jday::Int, hour::Int,
-  lai::T, Ω::T, param::ParamVeg{T}, meteo::Met, CosZs::T,
+  lai::T, Ω::T, veg::ParamVeg{T}, met::Met, CosZs::T,
   state::State{T}, soil::AbstractSoil,
   Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, cache::TransientCache; 
-  VegType::Int=1, 
   fix_snowpack::Bool=true, kw...) where {T}
 
   init_cache!(cache)
@@ -31,27 +30,26 @@ function inter_prg_jl(
   leleaf, GPP, LAI, PAI = cache.TempLeafs
 
   # ===== 1. 参数提取和计算 =====
-  (; LAI_max_o, LAI_max_u, α_canopy_vis, α_canopy_nir,
+  (; α_canopy_vis, α_canopy_nir,
      α_soil_sat, α_soil_dry, z_canopy_o, z_canopy_u, z_wind,
-     g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = param
+     g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = veg
 
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
-
-  # LAI分层计算
+  
   lai_o = lai < 0.1 ? 0.1 : lai
-  lai_u = (VegType == 25 || VegType == 40) ? 0.01 : 1.18 * exp(-0.99 * lai_o)
-  (lai_u > lai_o) && (lai_u = 0.01)
+  lai_u = !veg.has_understory ? 0.01 : 1.18 * exp(-0.99 * lai_o)
+  lai_u > lai_o && (lai_u = 0.01)
 
-  stem_o = LAI_max_o * 0.2
-  stem_u = LAI_max_u * 0.2
-  lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
-
+  stem_o = veg.LAI_max_o * 0.2
+  stem_u = veg.LAI_max_u * 0.2
+  lai2!(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
+  
   # ===== 2. 气象变量初始化 =====
-  Srad = meteo.Srad
-  RH = meteo.rh
-  wind = meteo.wind
-  precip = meteo.rain / step
-  T_air = meteo.temp
+  Srad = met.Srad
+  RH = met.rh
+  wind = met.wind
+  precip = met.rain / step
+  T_air = met.temp
   met = meteo_pack_jl(T_air, RH)
   (; Δ, γ, cp, VPD, ea) = met
 

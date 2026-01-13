@@ -1,4 +1,4 @@
-function lai2(Ω::Float64, CosZs::Float64,
+function lai2!(Ω::Float64, CosZs::Float64,
   stem_o::Float64, stem_u::Float64,
   lai_o::Float64, lai_u::Float64,
   LAI::Leaf, PAI::Leaf)
@@ -22,8 +22,7 @@ function lai2(Ω::Float64, CosZs::Float64,
 
   LAI = Leaf()
   PAI = Leaf()
-  
-  lai2(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
+  lai2!(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
   LAI, PAI
 end
 
@@ -33,4 +32,3 @@ function partition_lai(lai, Ω, CosZs)
   shaded = max(0, lai - sunlit)
   sunlit, shaded
 end
-
