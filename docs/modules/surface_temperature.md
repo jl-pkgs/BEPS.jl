@@ -77,18 +77,18 @@ $$
 离散化为隐式格式（Implicit Euler）：
 
 $$
-\Delta E (T^{n+1} - T^n) = G_{net} \cdot \frac{z_{rad}}{z} - \rho C_p \frac{T^{n+1} - T_{up}}{r_a} - \kappa_{bot} \frac{c_s}{z} (T^{n+1} - T_{bot})
+\Delta M (T^{n+1} - T^n) = G_{net} \cdot \frac{z_{rad}}{z} - \rho C_p \frac{T^{n+1} - T_{up}}{r_a} - \kappa_{bot} \frac{c_s}{z} (T^{n+1} - T_{bot})
 $$
 
-其中 $\Delta E = \frac{C_v \Delta z}{\Delta t}$。引入比例因子 $z_{rad}/z$ 和 $c_s$ 是为了处理不同物理过程的作用深度差异（如辐射吸收深度与热传导距离不同）。
+其中 $\Delta M = \frac{C_v \Delta z}{\Delta t}$。引入==比例因子 $z_{rad}/z$==和 $c_s$ 是为了处理不同物理过程的作用深度差异（如辐射吸收深度与热传导距离不同）。
 
 为消除分母，方程两边同乘以 $r_a \cdot z$：
 
 $$
-\Delta E \cdot r_a z (T^{n+1} - T^n) = G_{net} r_a z_{rad} - \rho C_p z (T^{n+1} - T_{up}) - c_s r_a \kappa_{bot} (T^{n+1} - T_{bot})
+\Delta M \cdot r_a z (T^{n+1} - T^n) = G_{net} r_a z_{rad} - \rho C_p z (T^{n+1} - T_{up}) - c_s r_a \kappa_{bot} (T^{n+1} - T_{bot})
 $$
 
-令惯性项 $I = \Delta E \cdot r_a \cdot z$，展开并整理 $T^{n+1}$ 项：
+令惯性项 $I = \Delta M \cdot r_a \cdot z$，展开并整理 $T^{n+1}$ 项：
 
 $$
 I T^{n+1} - I T^n = G_{net} r_a z_{rad} - \rho C_p z T^{n+1} + \rho C_p z T_{up} - c_s r_a \kappa_{bot} T^{n+1} + c_s r_a \kappa_{bot} T_{bot}
@@ -136,7 +136,7 @@ $$
 
 积雪热导率随密度变化，采用 Jordan (1991) 经验公式 `cal_κ_snow`：
 
-$$ 
+$$
 \kappa_{snow} = 0.021 + 4.2 \times 10^{-4} \cdot \rho + 2.2 \times 10^{-9} \cdot \rho^3 
 $$
 

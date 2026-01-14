@@ -1,6 +1,6 @@
 name = "BEPS"
 uuid = "28258c4d-138d-4793-867a-264e32c782b1"
-version = "0.1.7"
+version = "0.1.8"
 authors = ["Dongdong Kong <kongdd@users.noreply.github.com>"]
 
 [deps]
