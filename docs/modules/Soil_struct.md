@@ -62,25 +62,23 @@ inter_prg 每小时更新循环:
 输出结果
 ```
 
-## 5. 字段分类
+## 6. JAX 风格状态/参数分离适配进度
 
-### 状态变量 [state]
-- `z_water`, `z_snow` - 地表积水/积雪深度
-- `θ[1:10]` - 土壤含水量
-- `Tsoil_c[1:10]` - 当前土壤温度
-- `ice_ratio[1:10]` - 冰比例
-- `ψ[1:10]` - 土壤水势
-- `G[1:10]` - 土壤热通量
+| 函数 | 状态 | 说明 |
+|------|------|------|
+| `SoilState` 定义 | ✅ 完成 | 包含所有状态变量，支持从 `Soil` 转换 |
+| `BEPSmodel` 扩展 | ✅ 完成 | 添加 `dz` 字段 |
+| `soil_water_factor_v2` | ✅ 完成 | 支持 `(st::SoilState, ps::BEPSmodel)` |
+| `UpdateRootFraction!` | ✅ 完成 | 支持 `(st::SoilState, ps::BEPSmodel)` |
+| `Init_Soil_T_θ!` | ✅ 完成 | 支持 `(st::SoilState, ...)` |
+| `UpdateSoilThermalConductivity` | ✅ 完成 | 支持 `(st, ps)` |
+| `Update_Cs` | ✅ 完成 | 支持 `(st, ps)` |
+| `Update_ice_ratio` | ✅ 完成 | 支持 `(st, ps)` |
+| `UpdateHeatFlux` | ✅ 完成 | 支持 `(st, ps)` |
+| `UpdateSoilMoisture` | ✅ 完成 | 支持 `(st, ps)` |
+| `Root_Water_Uptake` | ✅ 完成 | 支持 `(st, ps)` |
+| `Init_Soil_var` | ✅ 完成 | 支持 `(st, ps)` |
+| `Sync_Param_to_Soil!` | ⚠️ 部分 | 仅用于旧版 Soil 兼容 |
+| `surface_temperature!` | ⏳ 待办 | 涉及 `TransientCache`，暂未适配 |
 
-### 参数 [param]
-- `dz[1:10]` - 土壤层厚度
-- `θ_sat`, `θ_vfc`, `θ_vwp` - 饱和/田间持水量/凋萎点
-- `Ksat`, `ψ_sat`, `b` - 水力参数
-- `κ_dry`, `ρ_soil`, `V_SOM` - 热力参数
-- `ψ_min`, `alpha` - 水分胁迫参数
-
-### 派生变量 [derived]
-- `km`, `KK` - 水力导度
-- `κ`, `Cs` - 热导率和热容
-- `Ett[1:10]` - 每层蒸散量
-- `f_soilwater` - 总水分胁迫因子
+**兼容性保证**：所有新函数均保留了旧版 `(soil::Soil)` 签名，通过单元测试验证了新旧 API 结果的一致性。

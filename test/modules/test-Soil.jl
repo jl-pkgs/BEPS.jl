@@ -1,6 +1,7 @@
 using Test
 using BEPS
 import BEPS: kstep, Sync_Param_to_Soil!, sync_state!, UpdateRootFraction!, Init_Soil_T_θ!
+import BEPS: UpdateSoilThermalConductivity, Update_Cs, Update_ice_ratio, UpdateHeatFlux, UpdateSoilMoisture, Root_Water_Uptake, Init_Soil_var
 
 
 function Base.getindex(x::Union{Soil,Soil_c}, i::Integer)
@@ -158,6 +159,64 @@ end
   @test st.f_soilwater ≈ soil.f_soilwater
   @test st.fpsisr[1:5] ≈ soil.fpsisr[1:5]
   @test st.dt[1:5] ≈ soil.dt[1:5]
+
+  # 测试 UpdateSoilThermalConductivity
+  UpdateSoilThermalConductivity(soil)
+  UpdateSoilThermalConductivity(st, ps)
+  @test st.κ[1:5] ≈ soil.κ[1:5]
+
+  # 测试 Update_Cs
+  Update_Cs(soil)
+  Update_Cs(st, ps)
+  @test st.Cs[1:5] ≈ soil.Cs[1:5]
+
+  # 测试 UpdateHeatFlux (implicit Update_ice_ratio)
+  UpdateHeatFlux(soil, 20.0, 3600.0)
+  UpdateHeatFlux(st, ps, 20.0, 3600.0)
+  @test st.Tsoil_c[1:5] ≈ soil.Tsoil_c[1:5]
+  @test st.Tsoil_p[1:5] ≈ soil.Tsoil_p[1:5]
+  @test st.G[1:5] ≈ soil.G[1:5]
+  @test st.ice_ratio[1:5] ≈ soil.ice_ratio[1:5]
+
+  # 测试 UpdateSoilMoisture
+  UpdateSoilMoisture(soil, 3600.0)
+  UpdateSoilMoisture(st, ps, 3600.0)
+  @test st.θ[1:5] ≈ soil.θ[1:5]
+  @test st.z_water ≈ soil.z_water
+  @test st.r_waterflow[1:5] ≈ soil.r_waterflow[1:5]
+  @test st.ψ[1:5] ≈ soil.ψ[1:5]
+
+  # 测试 Root_Water_Uptake
+  Root_Water_Uptake(soil, 1.0, 2.0, 0.5)
+  Root_Water_Uptake(st, ps, 1.0, 2.0, 0.5)
+  @test st.Ett[1:5] ≈ soil.Ett[1:5]
+end
+
+@testset "Init_Soil_var API 兼容性" begin
+  ps = BEPSmodel(25, 8)
+  
+  # 旧版本初始化
+  soil = Soil()
+  state_old = State()
+  # 注意：Init_Soil_var 内部调用了 Init_Soil_Parameters，所以需要先设置好
+  # 但我们的 Init_Soil_var 会处理它
+  Init_Soil_var(soil, state_old, 20.0; r_drainage=0.5, r_root_decay=0.95, Tsoil0=10.0, θ0=0.3, z_snow0=0.0)
+
+  # 新版本初始化
+  st = SoilState()
+  state_new = State()
+  # 设置 n_layer 和 dz，因为 Init_Soil_var (新) 假设 st.n_layer 已正确设置，或者它不负责这个
+  # 查看 Init_Soil_var 实现：UpdateRootFraction! 使用 st.n_layer。
+  # 所以构造 SoilState 时需要设置好层数。
+  st.n_layer = Cint(ps.N)
+  st.dz[1:ps.N] .= ps.dz
+  
+  Init_Soil_var(st, ps, state_new, 20.0; r_drainage=0.5, r_root_decay=0.95, Tsoil0=10.0, θ0=0.3, z_snow0=0.0)
+
+  @test st.Tsoil_c[1:5] ≈ soil.Tsoil_c[1:5]
+  @test st.θ[1:5] ≈ soil.θ[1:5]
+  @test st.f_root[1:5] ≈ soil.f_root[1:5]
+  @test state_new.Ts_prev ≈ state_old.Ts_prev
 end
 
 

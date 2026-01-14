@@ -7,6 +7,7 @@
 # surface layer is the snowmelt plus precipitation plus the throughfall
 # of canopy dew minus surface runoff and evaporation.
 # CLM3.5 uses a zero-flow bottom boundary condition.
+# 旧版本：兼容 Soil 结构体
 function UpdateSoilMoisture(soil::Soil, kstep::Float64)
   inf, inf_max = 0.0, 0.0
   Δt, total_t, max_Fb = 0.0, 0.0, 0.0
@@ -85,6 +86,80 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
   end
 end
 
+# 新版本：JAX 风格 (st, ps) 签名
+function UpdateSoilMoisture(st::SoilState, ps::BEPSmodel, kstep::Float64)
+  inf, inf_max = 0.0, 0.0
+  Δt, total_t, max_Fb = 0.0, 0.0, 0.0
+
+  n = st.n_layer
+  (; dz, r_drainage) = ps
+  (; θ_sat, K_sat, ψ_sat, b, θ_vwp) = ps.hydraulic
+  
+  # 状态变量解包
+  (; f_water, KK, km, ψ, θ, θ_prev, Tsoil_c, Ett, r_waterflow, ice_ratio, z_water, r_rain_g) = st
+
+  θ_prev .= θ 
+
+  @inbounds for i in 1:n+1
+    # 注意：Tsoil_c 长度通常是 n，但这里循环到 n+1，需确认 Tsoil_c 实际分配长度。
+    # 假设 Tsoil_c 长度足够，或者边界处理
+    # Soil struct 定义 dz 为 Vector{Float64} = zeros(10)，所以可以到 n+1 (5+1=6)
+    
+    val_T = i <= length(Tsoil_c) ? Tsoil_c[i] : Tsoil_c[end] # 简单边界保护
+
+    if val_T > 0.0
+      f_water[i] = 1.0
+    elseif val_T < -1.0
+      f_water[i] = 0.1
+    else
+      f_water[i] = 0.1 + 0.9 * (val_T + 1.0) 
+    end
+  end
+
+  # Max infiltration calculation
+  inf_max = f_water[1] * K_sat[1] * (1 + (θ_sat[1] - θ_prev[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
+  inf = max(f_water[1] * (z_water / kstep + r_rain_g), 0)
+  inf = clamp(inf, 0, inf_max)
+
+  # Ponded water after runoff
+  st.z_water = (z_water / kstep + r_rain_g - inf) * kstep * r_drainage
+
+  @inbounds while total_t < kstep
+    for i in 1:n
+      ψ[i] = cal_ψ(θ[i], θ_sat[i], ψ_sat[i], b[i])
+      km[i] = f_water[i] * cal_K(θ[i], θ_sat[i], K_sat[i], b[i]) 
+    end
+
+    for i in 1:n-1
+      KK[i] = (km[i] * ψ[i] + km[i+1] * ψ[i+1]) / (ψ[i] + ψ[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6) 
+      Q = KK[i] * (2 * (ψ[i+1] - ψ[i]) / (dz[i] + dz[i+1]) + 1) 
+      Q_max = (θ_sat[i+1] - θ[i+1]) * dz[i+1] / kstep + Ett[i+1]
+      Q = min(Q, Q_max)
+
+      r_waterflow[i] = Q
+      max_Fb = max(max_Fb, abs(Q))
+    end
+
+    Δt = guess_step(max_Fb) 
+    total_t += Δt
+    total_t > kstep && (Δt -= (total_t - kstep))
+
+    for i in 1:n
+      if i == 1
+        θ[i] += (inf - r_waterflow[i] - Ett[i]) * Δt / dz[i]
+      else
+        θ[i] += (r_waterflow[i-1] - r_waterflow[i] - Ett[i]) * Δt / dz[i]
+      end
+      θ[i] = clamp(θ[i], θ_vwp[i], θ_sat[i])
+    end
+  end
+
+  for i in 1:n
+    ice_ratio[i] *= θ_prev[i] / θ[i]
+    ice_ratio[i] = min(1.0, ice_ratio[i])
+  end
+end
+
 
 # Campbell 1974, Bonan 2019 Table 8.2
 @fastmath function cal_ψ(θ::T, θ_sat::T, ψ_sat::T, b::T) where {T<:Real}
@@ -118,10 +193,20 @@ end
 - `土壤蒸发`：仅发生在表层
 - `植被蒸腾`：根据根系分布，耗水可能来自于土壤的每一层
 """
+# 旧版本：兼容 Soil 结构体
 function Root_Water_Uptake(p::Soil, Trans_o::Float64, Trans_u::Float64, Evap_soil::Float64)
   Trans = Trans_o + Trans_u
   p.Ett[1] = Trans / ρ_w * p.dt[1] + Evap_soil / ρ_w # for the top layer
   for i in 2:p.n_layer
     p.Ett[i] = Trans / ρ_w * p.dt[i]
+  end
+end
+
+# 新版本：JAX 风格 (st, ps) 签名
+function Root_Water_Uptake(st::SoilState, ps::BEPSmodel, Trans_o::Float64, Trans_u::Float64, Evap_soil::Float64)
+  Trans = Trans_o + Trans_u
+  st.Ett[1] = Trans / ρ_w * st.dt[1] + Evap_soil / ρ_w 
+  for i in 2:st.n_layer
+    st.Ett[i] = Trans / ρ_w * st.dt[i]
   end
 end

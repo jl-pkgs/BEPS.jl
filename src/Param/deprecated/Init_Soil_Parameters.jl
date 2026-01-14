@@ -49,6 +49,7 @@ end
 
 # landcover::Int, soil_type::Int, Tsoil, soilwater, snowdepth
 # initialize soil conditions, read soil parameters and set depth
+# 旧版本：兼容 Soil 结构体
 function Init_Soil_var(soil::AbstractSoil, state::Union{State,Vector}, Ta::FT;
   VegType::Int=25, SoilType::Int=8,
   r_drainage::FT, r_root_decay::FT,
@@ -61,6 +62,23 @@ function Init_Soil_var(soil::AbstractSoil, state::Union{State,Vector}, Ta::FT;
   Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
   Sync_Soil_to_State!(soil, state, Ta)
+end
+
+# 新版本：JAX 风格 (st, ps) 签名
+function Init_Soil_var(st::SoilState, ps::BEPSmodel, state::Union{State,Vector}, Ta::FT;
+  r_drainage::FT, r_root_decay::FT,
+  Tsoil0::FT=Ta, θ0::FT=0.2, z_snow0::FT=0.0,
+  ignored...
+) where {FT<:Real}
+  
+  # 更新参数
+  ps.r_drainage = r_drainage
+  ps.veg.r_root_decay = r_root_decay
+  
+  # 初始化状态
+  UpdateRootFraction!(st, ps)
+  Init_Soil_T_θ!(st, Tsoil0, Ta, θ0, z_snow0)
+  Sync_Soil_to_State!(st, state, Ta)
 end
 
 
