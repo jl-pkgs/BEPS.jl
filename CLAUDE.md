@@ -1,12 +1,54 @@
-# CLAUDE - Codebase Context for AI Assistants
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
 BEPS (Boreal Ecosystem Productivity Simulator) - Julia implementation of a land surface model simulating vegetation photosynthesis, energy balance, and soil processes.
 
-**Current Branch:** `vk/322f-sm` (SM = Soil Moisture standalone optimization)
+**Performance:** ~2.5x faster than C version
 **Main Branch:** `master`
-**Recent Work:** BEPS modernization, optimization, manual documentation
+**Julia Version:** 1.8, 1.9, 1.10
+
+## Development Commands
+
+### Setup
+```bash
+# Clone repository
+git clone https://github.com/jl-pkgs/BEPS.jl
+cd BEPS.jl
+
+# For developers - also clone C version for comparison
+cd deps
+git clone https://github.com/jl-pkgs/BEPS.c
+```
+
+### Testing
+```bash
+# Activate project environment
+julia --project
+
+# Run all tests
+julia --project -e "using Pkg; Pkg.test()"
+
+# Compile check only
+julia --project -e "using BEPS"
+
+# Run specific example
+julia --project examples/example_01.qmd
+```
+
+### Running the Model
+```julia
+using BEPS
+d = deserialize("data/p1_meteo")
+lai = readdlm("examples/input/p1_lai.txt")[:]
+
+par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
+  soil_type=8, Tsoil=2.2, soilwater=0.4115, snowdepth=0.0)
+
+@time df_jl, df_ET_jl, Tg = besp_main(d, lai, par; version="julia")
+```
 
 ## Soil Water & Heat Module Summary
 
@@ -137,6 +179,7 @@ UpdateSoilMoisture(soil, kstep)
 
 **Julia Patterns:**
 - `@unpack` for struct field extraction
+- `@pack!` for struct field assignment (replaces manual field-by-field assignment)
 - `@inbounds` for performance-critical loops
 - `@fastmath` for mathematical functions
 - `@with_kw` for struct definitions with defaults
@@ -153,12 +196,61 @@ UpdateSoilMoisture(soil, kstep)
 - Inline comments in Chinese
 - References to papers (e.g., "Campbell 1974", "Chen 2007, Eq. 18")
 
+## Data Structure Optimizations (Recent Work)
+
+### TransientCache Simplification
+The `TransientCache` struct (src/DataType/TransientCache.jl) has been heavily optimized to remove redundant storage:
+
+**Current structure (9 fields only):**
+```julia
+@with_kw mutable struct TransientCache
+  # Temperature state (need k-1 access for thermal calculations)
+  Tc_u::Vector{FT}          # Understory canopy temperature
+  T_ground::Vector{FT}      # Ground surface temperature
+  T_surf_mix::Vector{FT}    # Mixed surface temperature
+  T_surf_snow::Vector{FT}   # Snow surface temperature
+  T_snow_L1::Vector{FT}     # Snow layer 1 temperature
+  T_snow_L2::Vector{FT}     # Snow layer 2 temperature
+
+  # Soil thermal (multi-layer × timestep)
+  Cs::Matrix{FT}            # Soil volumetric heat capacity
+  G::Matrix{FT}             # Soil layer heat flux
+
+  # Leaf cache (energy balance iteration state)
+  leaf_cache::LeafCache
+end
+```
+
+**Optimization principles:**
+1. **ET variables** - Now local variables in `inter_prg.jl`, not cached
+2. **Soil temperature** - Use `soil.Tsoil_p` directly, no `cache.T_soil` matrix
+3. **Water/snow masses** - Removed 16 unused vector fields (Wcl_*, Wcs_*, Xcl_*, etc.)
+4. **Total savings:** ~4.8 KB per instance, 70% reduction in fields
+
+**Key pattern:** Only cache variables that need historical access (k-1) for thermal calculations. All single-timestep values should be local variables.
+
+### State vs Cache vs Parameters
+- **State** (`src/Param/Soil.jl`) - Persistent across hours, saved between runs
+- **Cache** (`src/DataType/TransientCache.jl`) - Temporary sub-hourly loop storage
+- **Parameters** - Model configuration, constant during simulation
+
+**State struct:**
+```julia
+@with_kw mutable struct State{FT}
+  Ts::Vector{FT}         # Surface temperatures [T_ground, T_surf_snow, ...]
+  Qhc_o::FT              # Sensible heat flux (needs previous value)
+  m_water::Layer2        # Canopy water mass
+  m_snow::Layer3         # Canopy/ground snow mass
+  ρ_snow::FT             # Snow density
+end
+```
+
 ## File Structure
 
 ```
 src/
-├── beps_modern.jl              # Top-level interface (replicates beps.c)
-├── inter_prg.jl                # Main integration loop (replicates inter_prg.c)
+├── beps_main.jl                # Top-level interface (besp_main function)
+├── inter_prg.jl                # Main integration loop (hourly timestep)
 ├── surface_temperature.jl      # Surface energy balance
 ├── evaporation_soil.jl         # Bare soil evaporation
 ├── Soil/
@@ -167,44 +259,56 @@ src/
 │   ├── Init_Soil_Parameters.jl # Soil texture database
 │   └── soil_water_factor_v2.jl # Water stress calculation
 ├── Param/
-│   └── Soil.jl                 # Soil struct definition
+│   └── Soil.jl                 # Soil and State struct definitions
 ├── DataType/
-│   ├── DataType.jl             # State, Results, etc.
+│   ├── OUTPUT.jl               # Results and OutputET structs
+│   ├── TransientCache.jl       # Sub-hourly cache (optimized)
 │   └── Constant.jl             # Physical constants
 └── standalone/
     └── UpdateSoilMoisture.jl   # Simplified version (no f_water, ice updates)
+
+test/
+├── test-beps_main.jl           # Integration tests
+└── modules/
+    └── test-Soil.jl            # Soil module unit tests
 ```
 
-## Current Task: SM Standalone Module
+## Known Issues and Bug Fixes
 
-**Goal:** Create `soil_sm()` function that simulates only soil water + soil heat, isolated from vegetation.
+### Critical Fixes (2024-10-13 ~ 2024-10-14)
 
-**Design Decisions (from plan):**
-1. **Implementation:** Single file `src/soil_sm.jl` (~300 lines)
-2. **Surface Energy:** Simplified bare soil albedo + neutral stability aerodynamics
-3. **ET:** No transpiration, only soil evaporation via `evaporation_soil_jl()`
-4. **Snow:** Simple accumulation/melt, prescribed density evolution
-5. **Reuse:** Call existing functions directly, no wrappers
-6. **Future:** Add `ModuleConfig` struct in Phase 2 for flexible control
+**Snowpack bugs** - Snow accumulation issues causing unrealistic depths:
+- `snowpack_stage1`: Uninitialized `snowrate_o` causing incorrect conditions
+- `snowpack_stage3`: `max` should be `min` for `mass_water_frozen`
+- **Fix**: Corrected melt/freeze conditions and added 10m depth limit
+  ```julia
+  # Correct conditions:
+  con_melt = Tsnow > 0 && ms_sup > 0
+  con_frozen = Tsnow <= 0 && z_water > 0
+  ```
+- `ρ_snow`: Initial value set to 250 kg/m³ (now in `state.ρ_snow`)
 
-**Key Simplifications:**
-- No canopy radiation interception → bulk soil albedo
-- No plant transpiration → `Trans_o = Trans_u = 0`
-- No full snowpack model → simple snow layer
-- Neutral atmosphere → fixed roughness, no stability correction
+**Photosynthesis bug** - Incorrect latent heat constant:
+- `LAMBDA` in photosynthesis: `lambda_ice` was 333 J/kg, should be 333000 J/kg
 
-**Physics Retained:**
-- ✓ 5-layer Campbell hydraulic model
-- ✓ Darcy flow with adaptive timestep
-- ✓ 5-layer heat conduction
-- ✓ Freeze-thaw with latent heat
-- ✓ Surface energy balance with snow
-- ✓ Ice fraction dynamics
+### Outstanding Issues (2025-10-25)
+- [ ] Leaf temperature parameter passing in photosynthesis module needs correction
 
-**Expected Performance:**
-- Accuracy: 80-90% of full model for soil variables
-- Speed: ~5x faster (no photosynthesis, no iteration)
-- Best for: Bare/sparse vegetation, soil process studies
+## Testing
+
+**Unit tests:** `test/modules/test-Soil.jl`
+**Integration:** `test/test-beps_main.jl`
+
+**Key validation checks:**
+- Mass balance: `Σ(Δθ * dz) = infiltration - runoff - ET - drainage`
+- Energy balance: `Rn - LE - H - G ≈ 0`
+- Physical bounds: `θ ∈ [θ_vwp, θ_sat]`, `T ∈ [-50, 50]`, `ice ∈ [0, 1]`
+- C/Julia comparison: All soil struct fields match between versions
+
+**Test structure:**
+- Tests compare Julia vs C implementation results
+- Format: "C and Julia: field_name, field_name" for each validated field
+- 39 fields validated in UpdateHeatFlux and Init_Soil_var tests
 
 ## Quick Reference
 

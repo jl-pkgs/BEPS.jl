@@ -32,7 +32,7 @@ data
 examples
 deps
 
-docs
+# docs
 *.rda
 *.rds
 *.xlsx
