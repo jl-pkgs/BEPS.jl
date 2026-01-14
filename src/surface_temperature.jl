@@ -35,6 +35,11 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
   cp::FT = cal_cp(T_air, RH)
   ra_g::FT = 1.0 / Gheat_g
   ρCp::FT = ρₐ * cp
+  
+  # Parameters for Case 3 (Deep Snow)
+  dz_snow_s1::FT = 0.02
+  dz_snow_s2::FT = 0.02
+  dz_soil_s0::FT = 0.02
 
   κ_dry_snow::FT = cal_κ_snow(ρ_snow) # 雪热导率
   Gg::FT = Rn_g - E_snow_g * λ_snow - (E_water_g + E_soil) * λ_water # 地表可用能量
@@ -98,19 +103,21 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
 
   else  # z_snow > 0.05
     # Case 3: 深雪 (>5cm) - 3层雪模型
-    ΔM_snow = cp_ice * ρ_snow * 0.02 / Δt
-    T_snow = solve_imp(T_snow_last, T_air, T_snow1_last, ΔM_snow, ra_g, 0.04, Gg, ρCp, κ_dry_snow; z_rad=0.02, μ=T_air)
+    dz_snow_s12 = dz_snow_s1 + dz_snow_s2
+    
+    ΔM_snow = cp_ice * ρ_snow * dz_snow_s1 / Δt
+    T_snow = solve_imp(T_snow_last, T_air, T_snow1_last, ΔM_snow, ra_g, dz_snow_s12, Gg, ρCp, κ_dry_snow; z_rad=dz_snow_s1, μ=T_air)
 
-    G_snow = κ_dry_snow * (T_snow - T_snow1_last) / 0.04
+    G_snow = κ_dry_snow * (T_snow - T_snow1_last) / dz_snow_s12
     G = clamp(G_snow, -100.0, 100.0)
 
-    G_snow1 = κ_dry_snow * (T_snow1_last - T_snow2_last) / (z_snow - 0.02)
-    T_snow1 = step_exp(T_snow1_last, G, G_snow1, cp_ice * ρ_snow * 0.02, Δt)
+    G_snow1 = κ_dry_snow * (T_snow1_last - T_snow2_last) / (z_snow - dz_snow_s1)
+    T_snow1 = step_exp(T_snow1_last, G, G_snow1, cp_ice * ρ_snow * dz_snow_s2, Δt)
 
-    G_snow2 = (T_snow2_last - T_soil_surf_last) / ((0.5 * (z_snow - 0.04) / κ_dry_snow) + (0.02 / κ_soil1))
-    T_snow2 = step_exp(T_snow2_last, G_snow1, G_snow2, cp_ice * ρ_snow * (z_snow - 0.04), Δt)
+    G_snow2 = (T_snow2_last - T_soil_surf_last) / ((0.5 * (z_snow - dz_snow_s12) / κ_dry_snow) + (dz_soil_s0 / κ_soil1))
+    T_snow2 = step_exp(T_snow2_last, G_snow1, G_snow2, cp_ice * ρ_snow * (z_snow - dz_snow_s12), Δt)
 
-    T_soil_surf = step_exp(T_soil_surf_last, G_snow2, G_soil1, Cv_soil0 * 0.02, Δt)
+    T_soil_surf = step_exp(T_soil_surf_last, G_snow2, G_soil1, Cv_soil0 * dz_soil_s0, Δt)
     T_soil0 = T_soil_surf
 
     # 相变检查
