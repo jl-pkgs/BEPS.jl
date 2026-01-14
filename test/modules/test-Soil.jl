@@ -1,6 +1,6 @@
 using Test
 using BEPS
-import BEPS: kstep
+import BEPS: kstep, Sync_Param_to_Soil!, sync_state!, UpdateRootFraction!, Init_Soil_T_θ!
 
 
 function Base.getindex(x::Union{Soil,Soil_c}, i::Integer)
@@ -122,4 +122,71 @@ end
   UpdateHeatFlux(p_jl, 20.0, 3600.0)
   UpdateHeatFlux(p_c, 20.0, 3600.0)
   is_soil_equal(p_jl, p_c; tol=1e-7, verbose=true)
+end
+
+
+# 测试新旧 API 兼容性：SoilState + BEPSmodel vs Soil
+@testset "SoilState + BEPSmodel API 兼容性" begin
+  # 创建 BEPSmodel 参数
+  ps = BEPSmodel(25, 8)  # VegType=25, SoilType=8
+
+  # 创建旧版 Soil 结构
+  soil = Soil()
+  Sync_Param_to_Soil!(soil, ps)
+  Init_Soil_T_θ!(soil, 2.2, 10.0, 0.4, 0.0)
+  UpdateRootFraction!(soil)
+
+  # 创建新版 SoilState
+  st = SoilState()
+  st.n_layer = Cint(ps.N)
+  st.dz[1:ps.N] .= ps.dz
+  Init_Soil_T_θ!(st, 2.2, 10.0, 0.4, 0.0)
+  UpdateRootFraction!(st, ps)
+
+  # 验证两种 API 结果一致
+  @test st.z_snow ≈ soil.z_snow
+  @test st.f_root[1:5] ≈ soil.f_root[1:5]
+  @test st.Tsoil_c[1:5] ≈ soil.Tsoil_c[1:5]
+  @test st.Tsoil_p[1:5] ≈ soil.Tsoil_p[1:5]
+  @test st.θ[1:5] ≈ soil.θ[1:5]
+  @test st.ice_ratio[1:5] ≈ soil.ice_ratio[1:5]
+
+  # 测试 soil_water_factor_v2
+  soil_water_factor_v2(soil)
+  soil_water_factor_v2(st, ps)
+
+  @test st.f_soilwater ≈ soil.f_soilwater
+  @test st.fpsisr[1:5] ≈ soil.fpsisr[1:5]
+  @test st.dt[1:5] ≈ soil.dt[1:5]
+end
+
+
+@testset "Soil → SoilState 转换" begin
+  # 创建并初始化 Soil
+  ps = BEPSmodel(25, 8)
+  soil = Soil()
+  Sync_Param_to_Soil!(soil, ps)
+  Init_Soil_T_θ!(soil, 2.2, 10.0, 0.4, 0.0)
+  UpdateRootFraction!(soil)
+  soil_water_factor_v2(soil)
+
+  # 从 Soil 构造 SoilState
+  st = SoilState(soil)
+
+  # 验证所有状态变量一致
+  @test st.n_layer == soil.n_layer
+  @test st.z_water ≈ soil.z_water
+  @test st.z_snow ≈ soil.z_snow
+  @test st.f_soilwater ≈ soil.f_soilwater
+  @test st.θ[1:5] ≈ soil.θ[1:5]
+  @test st.Tsoil_c[1:5] ≈ soil.Tsoil_c[1:5]
+  @test st.ice_ratio[1:5] ≈ soil.ice_ratio[1:5]
+  @test st.f_root[1:5] ≈ soil.f_root[1:5]
+
+  # 测试 sync_state! 回写
+  st.θ[1] = 0.5
+  st.Tsoil_c[1] = 15.0
+  sync_state!(soil, st)
+  @test soil.θ[1] ≈ 0.5
+  @test soil.Tsoil_c[1] ≈ 15.0
 end

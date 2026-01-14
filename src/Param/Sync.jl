@@ -9,7 +9,7 @@ function Sync_Param_to_Soil!(soil::Soil, model::BEPSmodel{FT}; BF=false) where {
 
   soil.r_drainage = Cdouble(model.r_drainage)
   soil.r_root_decay = Cdouble(model.veg.r_root_decay)
-  UpdateRootFraction!(p) # 更新根系分布
+  UpdateRootFraction!(soil) # 更新根系分布
 
   soil.ψ_min = Cdouble(model.ψ_min)
   soil.alpha = Cdouble(model.alpha)

@@ -73,6 +73,7 @@ end
 
 @bounds @with_kw_noshow mutable struct BEPSmodel{FT<:AbstractFloat}
   N::Int = 5
+  dz::Vector{FT} = FT[0.05, 0.10, 0.20, 0.40, 1.25]  # 土壤层厚度 [m], BEPS V2023
   r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)  # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
 
   ψ_min::FT = Cdouble(33.0)  # [m], about 0.10~0.33 MPa开始胁迫点
