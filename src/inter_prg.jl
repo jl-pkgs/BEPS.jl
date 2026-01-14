@@ -254,7 +254,7 @@ function inter_prg_jl(
 
     # /*****  Soil water module by L. He  *****/
     soil.z_snow = z_snow
-    soil.G[1] = cache.G[1, k]
+    soil.G[1] = cache.G[1]
     UpdateHeatFlux(soil, T_air, kstep)
     Root_Water_Uptake(soil, Trans_o, Trans_u, Evap_soil)
 

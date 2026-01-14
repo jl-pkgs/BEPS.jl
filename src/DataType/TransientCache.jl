@@ -51,8 +51,8 @@ LeafCache(x0) = LeafCache(; x0)
   T_snow_L2::Vector{FT} = zeros(MAX_Loop)     # 雪层2温度
 
   # 土壤温度和热通量（多层×时间步）
-  Cs::Matrix{FT} = zeros(layer + 2, MAX_Loop)      # 土壤体积热容
-  G::Matrix{FT} = zeros(layer + 2, MAX_Loop)       # 土壤层热通量
+  Cs::Vector{FT} = zeros(layer + 2)      # 土壤体积热容
+  G::Vector{FT} = zeros(layer + 2)       # 土壤层热通量
 
   # 叶片缓存（能量平衡迭代状态）
   leaf_cache::LeafCache = LeafCache(0.0)
