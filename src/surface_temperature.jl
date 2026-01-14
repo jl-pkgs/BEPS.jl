@@ -8,18 +8,18 @@
 @inline check_phase(T, Told, w) = ((T > 0 >= Told) || (T < 0 <= Told && w)) ? zero(T) : T
 
 # Formula: (T_old*Inertia + Rad + Air + Cond_Below) / Denom
-function solve_imp(T_old, T_bnd, T_bot, ΔE, ra, z, G, ρCp, λ_bot; z_rad=z, c_s=1.0)
+function solve_imp(T_old, T_bnd, T_bot, ΔE, ra, z, G, ρCp, κ_bot; z_rad=z, c_s=1.0)
   I = ΔE * ra * z
-  numerator = T_old * I + G * ra * z_rad + ρCp * T_bnd * z + c_s * ra * λ_bot * T_bot
-  denominator = ρCp * z + c_s * ra * λ_bot + I
+  numerator = T_old * I + G * ra * z_rad + ρCp * T_bnd * z + c_s * ra * κ_bot * T_bot
+  denominator = ρCp * z + c_s * ra * κ_bot + I
   return numerator / denominator
 end
 
 
-function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
-  cp_soil1::FT, cp_soil0::FT, Gheat_g::FT,
+function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
+  Cv_soil1::FT, Cv_soil0::FT, Gheat_g::FT,
   z_soil1::FT, ρ_snow::FT, tempL_u::FT, Rn_g::FT,
-  E_soil::FT, E_water_g::FT, E_snow_g::FT, λ_soil1::FT,
+  E_soil::FT, E_water_g::FT, E_snow_g::FT, κ_soil1::FT,
   perc_snow_g::FT, G_soil1::FT,
   T_ground_last::FT,
   T_soil1_last::FT, T_soil_surf_last::FT, T_soil0_last::FT,
@@ -29,7 +29,7 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
   cp_ice::FT = 2228.261
   λ_water::FT = cal_lambda(T_air)
   λ_snow::FT = 2.83e6
-  cp::FT = cal_cp(T_air, rh_air)
+  cp::FT = cal_cp(T_air, RH)
   ra_g::FT = 1.0 / Gheat_g
   ρCp::FT = ρₐ * cp
 
@@ -44,10 +44,11 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
   T_snow2::FT = 0.0
   G::FT = 0.0
 
+  ΔM_soil1 = Cv_soil1 * 0.02 / Δt # soil heat capacity per unit area, Cv = ρ cp
+
   if z_snow <= 0.02
     # Case 1: 无雪或极浅雪 (≤2cm)
-    ΔE = cp_soil1 * 0.02 / Δt
-    T_ground = solve_imp(T_ground_last, T_air, T_soil1_last, ΔE, ra_g, z_soil1, Gg, ρCp, λ_soil1)
+    T_ground = solve_imp(T_ground_last, T_air, T_soil1_last, ΔM_soil1, ra_g, z_soil1, Gg, ρCp, κ_soil1)
     T_ground = clamp(T_ground, T_ground_last - 25, T_ground_last + 25)
 
     T_soil_surf = T_ground
@@ -56,22 +57,20 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
     T_snow1 = T_soil_surf
     T_snow2 = T_soil_surf
 
-    G = 2 * λ_soil1 * (T_soil_surf - T_soil1_last) / z_soil1
+    G = 2 * κ_soil1 * (T_soil_surf - T_soil1_last) / z_soil1
     G = clamp(G, -100.0, 100.0)
 
   elseif z_snow > 0.02 && z_snow <= 0.05
     # Case 2: 中等雪深 (2-5cm) - 雪土混合
-    ΔE_soil = cp_soil1 * 0.02 / Δt
-    T_soil0 = solve_imp(T_soil0_last, T_air, T_soil1_last, ΔE_soil, ra_g, z_soil1, Gg, ρCp, λ_soil1; c_s=2.0)
+    T_soil0 = solve_imp(T_soil0_last, T_air, T_soil1_last, ΔM_soil1, ra_g, z_soil1, Gg, ρCp, κ_soil1; c_s=2.0)
     T_soil0 = clamp(T_soil0, T_air - 25.0, T_air + 25.0)
 
-    ΔE_snow = cp_ice * ρ_snow * z_snow / Δt
-    T_snow = solve_imp(T_snow_last, tempL_u, T_soil_surf_last, ΔE_snow, ra_g, z_snow, Gg, ρCp, κ_dry_snow)
+    ΔM_snow = cp_ice * ρ_snow * z_snow / Δt
+    T_snow = solve_imp(T_snow_last, tempL_u, T_soil_surf_last, ΔM_snow, ra_g, z_snow, Gg, ρCp, κ_dry_snow)
     T_snow = clamp(T_snow, T_air - 25.0, T_air + 25.0)
 
-    T_weighted = (λ_soil1 * T_soil1_last / z_soil1 + T_snow * κ_dry_snow +
-                  0.02 * cp_soil1 / Δt * T_soil_surf_last) /
-                 (λ_soil1 / z_soil1 + κ_dry_snow / z_snow + 0.02 * cp_soil1 / Δt)
+    T_weighted = (κ_soil1 / z_soil1 * T_soil1_last + κ_dry_snow / z_snow * T_snow + ΔM_soil1 * T_soil_surf_last) /
+                 (κ_soil1 / z_soil1 + κ_dry_snow / z_snow + ΔM_soil1)
     T_soil_surf = T_soil0 * (1 - perc_snow_g) + T_weighted * perc_snow_g
 
     G_snow = κ_dry_snow / (z_snow + 0.5 * z_soil1) * (T_snow - T_soil1_last)
@@ -79,7 +78,9 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
     G = G_snow * perc_snow_g + G_soil * (1 - perc_snow_g)
     G = clamp(G, -100.0, 100.0)
 
-    T_snow = check_phase(T_snow, T_snow_last, z_water > 0.0) # 相变检查
+    # 相变检查
+    (T_snow > 0.0 && T_snow_last <= 0.0 && z_snow > 0.0) && (T_snow = 0.0)
+    (T_snow < 0.0 && T_snow_last >= 0.0 && z_water > 0.0) && (T_snow = 0.0)
 
     T_ground = T_snow * perc_snow_g + T_soil0 * (1 - perc_snow_g)
     T_ground = clamp(T_ground, T_air - 25.0, T_air + 25.0)
@@ -89,8 +90,8 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
 
   else  # z_snow > 0.05
     # Case 3: 深雪 (>5cm) - 3层雪模型
-    ΔE_snow = cp_ice * ρ_snow * 0.02 / Δt
-    T_snow = solve_imp(T_snow_last, T_air, T_snow1_last, ΔE_snow, ra_g, 0.04, Gg, ρCp, κ_dry_snow; z_rad=0.02)
+    ΔM_snow = cp_ice * ρ_snow * 0.02 / Δt
+    T_snow = solve_imp(T_snow_last, T_air, T_snow1_last, ΔM_snow, ra_g, 0.04, Gg, ρCp, κ_dry_snow; z_rad=0.02)
     T_snow = clamp(T_snow, T_air - 25.0, T_air + 25.0)
 
     G_snow = κ_dry_snow * (T_snow - T_snow1_last) / 0.04
@@ -99,14 +100,16 @@ function surface_temperature_jl(T_air::FT, rh_air::FT, z_snow::FT, z_water::FT,
     G_snow1 = κ_dry_snow * (T_snow1_last - T_snow2_last) / (z_snow - 0.02)
     T_snow1 = step_exp(T_snow1_last, G, G_snow1, cp_ice * ρ_snow * 0.02, Δt)
 
-    G_snow2 = (T_snow2_last - T_soil_surf_last) /
-              ((0.5 * (z_snow - 0.04) / κ_dry_snow) + (0.02 / λ_soil1))
+    G_snow2 = (T_snow2_last - T_soil_surf_last) / ((0.5 * (z_snow - 0.04) / κ_dry_snow) + (0.02 / κ_soil1))
     T_snow2 = step_exp(T_snow2_last, G_snow1, G_snow2, cp_ice * ρ_snow * (z_snow - 0.04), Δt)
 
-    T_soil_surf = step_exp(T_soil_surf_last, G_snow2, G_soil1, cp_soil0 * 0.02, Δt)
+    T_soil_surf = step_exp(T_soil_surf_last, G_snow2, G_soil1, Cv_soil0 * 0.02, Δt)
     T_soil0 = T_soil_surf
 
-    T_snow = check_phase(T_snow, T_snow_last, z_water > 0.0) # 相变检查
+    # 相变检查
+    (T_snow > 0.0 && T_snow_last <= 0.0 && z_snow > 0.0) && (T_snow = 0.0)
+    (T_snow < 0.0 && T_snow_last >= 0.0 && z_water > 0.0) && (T_snow = 0.0)
+
     T_ground = T_snow
   end
   return G, T_ground, T_soil_surf, T_soil0, T_snow, T_snow1, T_snow2

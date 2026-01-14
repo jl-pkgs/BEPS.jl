@@ -1,4 +1,5 @@
-@testset "surface_temperature_jl tests" begin
+# @testset "surface_temperature_jl tests" 
+begin
   T_air = 2.0  # Air temperature in Celsius
   rh_air = 0.5  # Relative humidity
   z_snow = 0.03  # Depth of snow in meters

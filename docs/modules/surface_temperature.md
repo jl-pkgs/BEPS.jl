@@ -28,7 +28,6 @@ function surface_temperature_jl(T_air, rh_air, z_snow, z_water,
     *   `T_soil_surf`: 土壤表面温度 [°C]
     *   `T_soil0`: 有效表层土壤温度 [°C]
     *   `T_snow...`: 积雪各层温度 [°C]
-
 ---
 
 ## 2. 物理模型与变量定义
@@ -65,44 +64,81 @@ function surface_temperature_jl(T_air, rh_air, z_snow, z_water,
 
 ## 3. 数学原理与公式推导
 
-### 3.1 通用隐式求解 (Implicit Solver)
+### 3.1 隐式求解 (Implicit Solver)
 
-对于地表温度或积雪温度，我们通常求解以下形式的能量平衡方程：
+对于地表温度或积雪温度，我们通常求解以下形式的能量平衡方程（针对厚度为 $\Delta z$ 的层）：
 
-$$ C \frac{\partial T}{\partial t} = R_n - H - LE - G $$
+$$
+C_v \Delta z \frac{\partial T}{\partial t} = G_{net} - H - G_{down} 
+$$
 
-离散化为隐式格式：
+其中 $G_{net} = R_n - LE$ 为净辐射及其他源项，$G_{down}$ 为向下传导热通量。
 
-$$ C \Delta z \frac{T^{n+1} - T^n}{\Delta t} = R_n - \rho C_p \frac{T^{n+1} - T_{air}}{r_a} - \lambda \frac{T^{n+1} - T_{bot}}{z} $$
+离散化为隐式格式（Implicit Euler）：
 
-整理为线性方程 $T^{n+1} = \frac{Numerator}{Denominator}$，即 `solve_imp` 函数：
+$$
+\Delta E (T^{n+1} - T^n) = G_{net} \cdot \frac{z_{rad}}{z} - \rho C_p \frac{T^{n+1} - T_{up}}{r_a} - \kappa_{bot} \frac{c_s}{z} (T^{n+1} - T_{bot})
+$$
+
+其中 $\Delta E = \frac{C_v \Delta z}{\Delta t}$。引入比例因子 $z_{rad}/z$ 和 $c_s$ 是为了处理不同物理过程的作用深度差异（如辐射吸收深度与热传导距离不同）。
+
+为消除分母，方程两边同乘以 $r_a \cdot z$：
+
+$$
+\Delta E \cdot r_a z (T^{n+1} - T^n) = G_{net} r_a z_{rad} - \rho C_p z (T^{n+1} - T_{up}) - c_s r_a \kappa_{bot} (T^{n+1} - T_{bot})
+$$
+
+令惯性项 $I = \Delta E \cdot r_a \cdot z$，展开并整理 $T^{n+1}$ 项：
+
+$$
+I T^{n+1} - I T^n = G_{net} r_a z_{rad} - \rho C_p z T^{n+1} + \rho C_p z T_{up} - c_s r_a \kappa_{bot} T^{n+1} + c_s r_a \kappa_{bot} T_{bot}
+$$
+
+移项合并 $T^{n+1}$：
+
+$$
+T^{n+1} (I + \rho C_p z + c_s r_a \kappa_{bot}) = I T^n + G_{net} r_a z_{rad} + \rho C_p z T_{up} + c_s r_a \kappa_{bot} T_{bot}
+$$
+
+最终得到线性方程 $T^{n+1} = \frac{Numerator}{Denominator}$，即 `solve_imp` 函数：
 
 **公式:**
-$$ T_{new} = \frac{T_{old} \cdot I + G_{net} \cdot r_a \cdot z_{rad} + \rho C_p \cdot T_{bnd} \cdot z + c_s \cdot r_a \cdot \lambda_{bot} \cdot T_{bot}}{\rho C_p \cdot z + c_s \cdot r_a \cdot \lambda_{bot} + I} $$
+$$
+T_{new} = \frac{T_{old} \cdot I + G_{net} \cdot r_a \cdot z_{rad} + \rho C_p \cdot T_{up} \cdot z + c_s \cdot r_a \cdot \kappa_{bot} \cdot T_{bot}}{\rho C_p \cdot z + c_s \cdot r_a \cdot \kappa_{bot} + I} 
+$$
 
 其中：
-*   $I = \frac{C \Delta z}{\Delta t} \cdot r_a \cdot z$: 热惯性项
-*   $G_{net}$: 净辐射及其他源项
-*   $T_{bnd}$: 上边界温度 (通常为 $T_{air}$)
-*   $T_{bot}$: 下边界温度 (下一层土壤或雪层)
-*   $\lambda_{bot}$: 下层热导率
-*   $r_a$: 空气动力学阻力
-*   $c_s$: 缩放系数 (用于调整热传导项)
+*   $I = \frac{C_v \Delta z}{\Delta t} \cdot r_a \cdot z$: 热惯性项 [$J \cdot m^{-2} \cdot K^{-1}$]
+*   $C_v$: 介质（土壤或积雪）的**体积热容** [$J \cdot m^{-3} \cdot K^{-1}$]，满足 $C_v = \rho_{medium} C_{p,medium}$
+*   $\rho C_p$: **空气**的体积热容 [$J \cdot m^{-3} \cdot K^{-1}$]，用于感热通量计算
+*   $G_{net}$: 净辐射及其他源项 [$W \cdot m^{-2}$]
+*   $T_{up}$: 上边界温度 (通常为 $T_{air}$ 或 $T_{c,u}$) [$^\circ C$]
+*   $T_{bot}$: 下边界温度 (下一层土壤或雪层) [$^\circ C$]
+*   $\kappa_{bot}$: 下层热导率 [$W \cdot m^{-1} \cdot K^{-1}$]
+*   $r_a$: 空气动力学阻力 [$s \cdot m^{-1}$]
+*   $z, z_{rad}, \Delta z$: 厚度或特征距离 [$m$]
+*   $c_s$: 缩放系数 [无量纲]
 
-### 3.2 显式时间步进 (Explicit Time Stepping)
+### 3.2 显式求解 (Explicit Time Stepping)
 
 对于内部节点（如积雪中间层），使用简单的显式欧拉法 `step_exp`：
 
-$$ C \Delta z \frac{T^{n+1} - T^n}{\Delta t} = F_{in} - F_{out} $$
+$$
+C_v \Delta z \frac{T^{n+1} - T^n}{\Delta t} = F_{in} - F_{out} 
+$$
 
 **公式:**
-$$ T_{new} = T_{old} + \frac{F_{in} - F_{out}}{C \Delta z} \cdot \Delta t $$
+$$
+T_{new} = T_{old} + \frac{F_{in} - F_{out}}{C_v \Delta z} \cdot \Delta t 
+$$
 
 ### 3.3 热导率计算
 
 积雪热导率随密度变化，采用 Jordan (1991) 经验公式 `cal_κ_snow`：
 
-$$ \kappa_{snow} = 0.021 + 4.2 \times 10^{-4} \cdot \rho + 2.2 \times 10^{-9} \cdot \rho^3 $$
+$$ 
+\kappa_{snow} = 0.021 + 4.2 \times 10^{-4} \cdot \rho + 2.2 \times 10^{-9} \cdot \rho^3 
+$$
 
 ---
 
@@ -135,7 +171,7 @@ BEPS 模型在垂直方向上采用节点中心网格系统，为了方便处理
 *   **物理含义**: 位于最后一层物理土壤下方的虚拟边界节点。
 *   **温度 $T[N+2]$**: 通常用于存储深层恒温值 ($T_{deep} \approx T_{air, annual\_mean}$)。
 *   **热通量 $G[N+2]$**: 代表从模型底部边界流失（或流入）的热通量。
-    *   **恒温边界 (Dirichlet)**: 假设深处温度恒定，计算 $G[N+2] = \lambda \frac{T[N+1] - T_{deep}}{\Delta z}$。
+    *   **恒温边界 (Dirichlet)**: 假设深处温度恒定，计算 $G[N+2] = \kappa \frac{T[N+1] - T_{deep}}{\Delta z}$。
     *   **零通量边界 (Neumann)**: 假设绝热，$G[N+2] = 0$。
     *   **BEPS 实现**: 采用恒温边界条件，连接到年平均气温。
 

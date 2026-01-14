@@ -103,6 +103,10 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 ### 2025-10-25
   - [ ] 植被光合中的叶片温度 传入参数有误，待修正
 
+### 2026-01-14
+
+  - [x] `surface_temperature_jl`中`T_weighted`求解公式错误，分子第二项漏写了`z_snow`，推导过程见：<docs/modules/TS_Case02.md>。
+
 ## Researches
 
 <!-- - [ ] 研究土壤温度和空气温度之间的关系，为sentinel-2遥感数据反演提供依据

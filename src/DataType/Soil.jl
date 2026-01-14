@@ -1,8 +1,5 @@
 abstract type AbstractSoil end
 
-# TODO: 这里应该把状态变量与模型参数分隔开
-# state, params = setup(model)
-
 # ?     : 需要优化的参数
 # state : 状态变量
 # //    : 未使用的参数
@@ -63,6 +60,46 @@ abstract type AbstractSoil end
 end
 
 
+## 设计哲学: 这里把状态变量与模型参数分隔开
+# state, params = setup(model)
+
+# 只保留状态变量，其他的丢到模型参数中去
+@with_kw mutable struct SoilState <: AbstractSoil
+  n_layer    ::Cint = Cint(5) # 土壤层数
+  dz         ::Vector{Float64} = zeros(10) # 土壤厚度
+
+  z_water    ::Cdouble = Cdouble(0) # [state]
+  z_snow     ::Cdouble = Cdouble(0) # [state]
+
+  # the rainfall rate, un--on understory on ground surface  m/s
+  r_rain_g   ::Cdouble = Cdouble(0)        # [state], 达到地地表降水, PE, [m/s]
+  f_soilwater::Cdouble = Cdouble(0)        # [state], 总体的土壤水限制因子
+
+  f_root     ::Vector{Float64} = zeros(10) # [state], 根系比例，root fraction
+  dt         ::Vector{Float64} = zeros(10) # [state], 每层的土壤水限制因子，已归一化
+  
+  ice_ratio  ::Vector{Float64} = zeros(10) # [state]，ice ratio，
+  θ          ::Vector{Float64} = zeros(10) # [state], soil moisture
+  θ_prev     ::Vector{Float64} = zeros(10) # [state], soil moisture in previous time
+  Tsoil_p    ::Vector{Float64} = zeros(10) # [state], soil temperature in previous time
+  Tsoil_c    ::Vector{Float64} = zeros(10) # [state], soil temperature in current time
+
+  ψ          ::Vector{Float64} = zeros(10) # [state], soil matric potential
+  r_waterflow::Vector{Float64} = zeros(10) # [state], vertical water flow rate
+  km         ::Vector{Float64} = zeros(10) # [state], hydraulic conductivity at middle point
+  KK         ::Vector{Float64} = zeros(10) # [state], average conductivity of two soil layers
+  Cs         ::Vector{Float64} = zeros(10) # [state], volume heat capacity
+  κ          ::Vector{Float64} = zeros(10) # [state]
+  Ett        ::Vector{Float64} = zeros(10) # [state], 每层蒸发量ET in each layer
+  G          ::Vector{Float64} = zeros(10) # [state], 土壤热通量
+
+  ##temporary variables in soil_water_factor_v2
+  ft         ::Vector{Float64} = zeros(10) # [state], f_i(Tsoil_i), 温度对水分限制影响, Eq. 5
+  dtt        ::Vector{Float64} = zeros(10) # [state], 叠加根系分布比例，f_root[i] * fpsisr[i]
+  fpsisr     ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3
+end
+
+
 @with_kw mutable struct State{FT}
   "Surface Temperature: [T_ground, T_surf_snow, T_surf_mix, T_snow_L1, T_snow_L2]"
   Ts::Vector{FT} = zeros(FT, 5)         # 4:8
@@ -78,4 +115,4 @@ end
 # 拖着`ρ_snow`，`ρ_snow`也是一个状态连续的变量
 # https://www.eoas.ubc.ca/courses/atsc113/snow/met_concepts/07-met_concepts/07b-newly-fallen-snow-density/
 
-export State, Soil
+export State, Soil, SoilState
