@@ -42,62 +42,23 @@ LeafCache(x0) = LeafCache(; x0)
 
 
 @with_kw mutable struct TransientCache
-  Tc_u::Vector{FT} = zeros(MAX_Loop)
+  # 温度状态变量（需要历史访问 k-1）
+  Tc_u::Vector{FT} = zeros(MAX_Loop)          # 下层冠层温度
   T_ground::Vector{FT} = zeros(MAX_Loop)      # 地表温度
   T_surf_mix::Vector{FT} = zeros(MAX_Loop)    # 混合表面温度
   T_surf_snow::Vector{FT} = zeros(MAX_Loop)   # 雪表面温度
   T_snow_L1::Vector{FT} = zeros(MAX_Loop)     # 雪层1温度
   T_snow_L2::Vector{FT} = zeros(MAX_Loop)     # 雪层2温度
 
-  # the masses of liquid and snow on the canopy
-  Wcl_o::Vector{FT} = zeros(MAX_Loop)
-  Wcl_u::Vector{FT} = zeros(MAX_Loop)
-
-  Wcs_o::Vector{FT} = zeros(MAX_Loop)
-  Wcs_u::Vector{FT} = zeros(MAX_Loop)
-  Wcs_g::Vector{FT} = zeros(MAX_Loop)
-
-  # the fraction of rain and snow on the canopy
-  Xcl_o::Vector{FT} = zeros(MAX_Loop)
-  Xcl_u::Vector{FT} = zeros(MAX_Loop)
-
-  Xcs_o::Vector{FT} = zeros(MAX_Loop)
-  Xcs_u::Vector{FT} = zeros(MAX_Loop)
-  Xcs_g::Vector{FT} = zeros(MAX_Loop)
-
-  # area
-  Ac_snow_o::Vector{FT} = zeros(MAX_Loop)
-  Ac_snow_u::Vector{FT} = zeros(MAX_Loop)
-
-  rho_snow::Vector{FT} = zeros(MAX_Loop)
-
-  alpha_v_sw::Vector{FT} = zeros(MAX_Loop)
-  alpha_n_sw::Vector{FT} = zeros(MAX_Loop)
-
-  κ_snow::Vector{FT} = zeros(MAX_Loop)
-
-  # 土壤温度和热通量
+  # 土壤温度和热通量（多层×时间步）
   Cs::Matrix{FT} = zeros(layer + 2, MAX_Loop)      # 土壤体积热容
   G::Matrix{FT} = zeros(layer + 2, MAX_Loop)       # 土壤层热通量
 
-  # Leafs
+  # 叶片缓存（能量平衡迭代状态）
   leaf_cache::LeafCache = LeafCache(0.0)
 end
 
 function init_cache!(x::TransientCache)
-  x.Wcl_o .= 0.0
-  x.Wcl_u .= 0.0
-
-  x.Wcs_o .= 0.0
-  x.Wcs_u .= 0.0
-  x.Wcs_g .= 0.0
-
-  x.Xcl_o .= 0.0
-  x.Xcl_u .= 0.0
-
-  x.Xcs_o .= 0.0
-  x.Xcs_u .= 0.0
-  x.Xcs_g .= 0.0
-
-  x.rho_snow .= 0.0
+  # 所有向量字段在创建时已经初始化为0，无需额外清零
+  nothing
 end
