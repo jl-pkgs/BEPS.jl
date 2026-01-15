@@ -41,10 +41,10 @@ begin
 
   # Test with explicit model object
   @info "Running beps_modern (with model object)..."
-  model = BEPSmodel()
+  model = ParamBEPS()
   # Update model with parameters from keyword args/defaults if necessary to match the previous run
   # However, kw args pass VegType=25, SoilType=8.
-  # BEPSmodel default constructor might have different defaults.
+  # ParamBEPS default constructor might have different defaults.
   # So passing model shouldn't break things unless parameters in model conflict with VegType logic?
   # Actually, if model is passed, beps_modern uses model.veg etc.
 

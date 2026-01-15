@@ -27,7 +27,7 @@ end
 
 # Function to update volume heat capacity
 # Bonan 2019, Table 5.2
-function UpdateThermal_Cv(st::S, ps::P) where {S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
+function UpdateThermal_Cv(st::S, ps::P) where {S<:Union{StateBEPS,Soil},P<:Union{ParamBEPS,Soil}}
   (; θ, ice_ratio) = st
   (; ρ_soil, V_SOM) = get_thermal(ps)
 
@@ -73,7 +73,7 @@ end
 
 # Function to update soil thermal conductivity
 @fastmath function UpdateThermal_κ(st::S, ps::P) where {
-  S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
+  S<:Union{StateBEPS,Soil},P<:Union{ParamBEPS,Soil}}
   (; θ, ice_ratio, κ) = st
   (; θ_sat) = get_hydraulic(ps)
   (; κ_dry) = get_thermal(ps)

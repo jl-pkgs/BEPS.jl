@@ -17,7 +17,7 @@ begin
     )
 
     # 2. Setup "True" Model and Generate Observations
-    model_true = BEPSmodel()
+    model_true = ParamBEPS()
     # Set specific values for optimizable parameters to act as "Truth"
     model_true.r_drainage = 0.55
     model_true.r_root_decay = 0.90
@@ -28,7 +28,7 @@ begin
     obs_ET = df_ET_true.LH
 
     # 3. Setup Initial Model for Optimization (perturbed parameters)
-    model_opt = BEPSmodel()
+    model_opt = ParamBEPS()
     model_opt.r_drainage = 0.30 # Initial guess far from 0.55
     model_opt.r_root_decay = 0.98 # Initial guess far from 0.90
 
@@ -53,7 +53,7 @@ begin
     println("Best RMSE: $best_rmse")
 
     @test best_rmse < 1.0 # Should be very small since data is synthetic, but maxn is low
-    @test model_final isa BEPSmodel
+    @test model_final isa ParamBEPS
     
     # Check if parameters moved in the right direction (optional, given low iterations)
     # But mainly we check that the code ran without error.

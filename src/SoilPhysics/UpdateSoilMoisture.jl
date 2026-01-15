@@ -13,7 +13,7 @@ UpdateSoilMoisture(soil::Soil, kstep::Float64) = UpdateSoilMoisture(soil, soil, 
 
 # 新版本：JAX 风格 (st, ps) 签名
 function UpdateSoilMoisture(st::S, ps::P, kstep::Float64) where {
-  S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
+  S<:Union{StateBEPS,Soil},P<:Union{ParamBEPS,Soil}}
 
   n = st.n_layer
   dz = st.dz

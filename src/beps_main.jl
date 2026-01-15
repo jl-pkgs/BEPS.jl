@@ -1,4 +1,4 @@
-function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,BEPSmodel}=nothing,
+function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=nothing,
   lon::FT=120.0, lat::FT=20.0,
   VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,

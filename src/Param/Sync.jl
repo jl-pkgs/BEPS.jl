@@ -1,5 +1,5 @@
 # DBF or EBF, low constaint threshold
-function Params2Soil!(soil::Soil, params::BEPSmodel{FT}; BF=false) where {FT}
+function Params2Soil!(soil::Soil, params::ParamBEPS{FT}; BF=false) where {FT}
   soil.ψ_min = BF ? 10.0 : 33.0 # [m], about 0.10~0.33 MPa开始胁迫点
   soil.alpha = BF ? 1.5 : 0.4   # He 2017 JGR-B, Eq. 4
 
@@ -29,7 +29,7 @@ end
 Params2Soil!(soil::AbstractSoil, params::Nothing) = nothing
 
 ## 添加一个逆函数
-function Soil2Params!(params::BEPSmodel{FT}, soil::Soil) where {FT}
+function Soil2Params!(params::ParamBEPS{FT}, soil::Soil) where {FT}
   N = Int(soil.n_layer)
   params.N = N
 

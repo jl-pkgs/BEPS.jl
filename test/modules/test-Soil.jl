@@ -126,10 +126,10 @@ end
 end
 
 
-# 测试新旧 API 兼容性：SoilState + BEPSmodel vs Soil
-@testset "StateBEPS + BEPSmodel API 兼容性" begin
-  # 创建 BEPSmodel 参数
-  ps = BEPSmodel(25, 8)  # VegType=25, SoilType=8
+# 测试新旧 API 兼容性：SoilState + ParamBEPS vs Soil
+@testset "StateBEPS + ParamBEPS API 兼容性" begin
+  # 创建 ParamBEPS 参数
+  ps = ParamBEPS(25, 8)  # VegType=25, SoilType=8
 
   # 创建旧版 Soil 结构
   soil = Soil()
@@ -195,7 +195,7 @@ end
 
 @testset "Soil → StateBEPS 转换" begin
   # 创建并初始化 Soil
-  ps = BEPSmodel(25, 8)
+  ps = ParamBEPS(25, 8)
   soil = Soil()
   Params2Soil!(soil, ps)
   Init_Soil_T_θ!(soil, 2.2, 10.0, 0.4, 0.0)
@@ -226,7 +226,7 @@ end
 
 @testset "Soil2Params! 逆函数测试" begin
   # Initialize with default
-  ps = BEPSmodel(25, 8)
+  ps = ParamBEPS(25, 8)
   soil = Soil()
   Params2Soil!(soil, ps)
   

@@ -1,7 +1,7 @@
 export ParamVeg
 export ParamSoilHydraulic, ParamSoilThermal, ParamSoil,
   ParamSoilHydraulicLayers, ParamSoilThermalLayers
-export BEPSmodel
+export ParamBEPS
 
 
 using Parameters, DataFrames
@@ -71,7 +71,7 @@ end
 end
 
 
-@bounds @with_kw_noshow mutable struct BEPSmodel{FT<:AbstractFloat}
+@bounds @with_kw_noshow mutable struct ParamBEPS{FT<:AbstractFloat}
   N::Int = 5
   dz::Vector{FT} = FT[0.05, 0.10, 0.20, 0.40, 1.25]  # 土壤层厚度 [m], BEPS V2023
   r_drainage::FT = Cdouble(0.50) | (0.2, 0.7)  # ? 地表排水速率（地表汇流），可考虑采用曼宁公式
@@ -86,14 +86,14 @@ end
 end
 
 # `kw...`: other params like, `r_drainage`
-function BEPSmodel(VegType::Int, SoilType::Int; N::Int=5, FT=Float64, kw...)
+function ParamBEPS(VegType::Int, SoilType::Int; N::Int=5, FT=Float64, kw...)
   veg = InitParam_Veg(VegType; FT)  
   hydraulic, thermal = InitParam_Soil(SoilType, N, FT)
 
   ψ_min = veg.is_bforest ? FT(10.0) : FT(33.0) # 开始胁迫点
   alpha = veg.is_bforest ? FT(1.5) : FT(0.4)   # 土壤水限制因子参数，He 2017 JGR-B, Eq. 4
 
-  BEPSmodel{FT}(;
+  ParamBEPS{FT}(;
     N,  kw..., ψ_min, alpha,
     hydraulic, thermal, veg
   )
@@ -101,7 +101,7 @@ end
 
 
 # 这里应该加一个show function，打印模型参数信息
-function Base.show(io::IO, model::M) where {M<:BEPSmodel}
+function Base.show(io::IO, model::M) where {M<:ParamBEPS}
   printstyled(io, "$M, N = $(model.N)\n", color=:blue, bold=true)
 
   fields_all = fieldnames(M)

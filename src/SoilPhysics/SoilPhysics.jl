@@ -6,13 +6,13 @@ export UpdateHeatFlux, UpdateThermal_Cv,
   UpdateSoilMoisture, Root_Water_Uptake
 
 
-get_hydraulic(ps::BEPSmodel) = ps.hydraulic
+get_hydraulic(ps::ParamBEPS) = ps.hydraulic
 get_hydraulic(ps::Soil) = ps
 
-get_thermal(ps::BEPSmodel) = ps.thermal
+get_thermal(ps::ParamBEPS) = ps.thermal
 get_thermal(ps::Soil) = ps
 
-get_root_decay(ps::BEPSmodel) = ps.veg.r_root_decay
+get_root_decay(ps::ParamBEPS) = ps.veg.r_root_decay
 get_root_decay(ps::Soil) = ps.r_root_decay
 
 include("UpdateHeatFlux.jl")
@@ -33,7 +33,7 @@ get_ice_ratio(Tsoil::FT) where {FT} = clamp(-Tsoil, FT(0), FT(1))
 
 # 新版本：JAX 风格 (st, ps) 签名
 function UpdateRootFraction!(st::S, ps::P) where {
-  S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
+  S<:Union{StateBEPS,Soil},P<:Union{ParamBEPS,Soil}}
 
   n = st.n_layer
   (; f_root, dz) = st

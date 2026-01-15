@@ -1,4 +1,4 @@
-function beps_optimize(d::DataFrame, lai::Vector, model::BEPSmodel, obs::AbstractVector;
+function beps_optimize(d::DataFrame, lai::Vector, model::ParamBEPS, obs::AbstractVector;
   col_sim::Symbol=:ET,
   maxn=2000,
   kstop=5, pcento=0.01, peps=0.001, iseed=1, iniflg=0,

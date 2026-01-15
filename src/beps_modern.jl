@@ -1,4 +1,4 @@
-function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=nothing,
+function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,ParamBEPS}=nothing,
   lon::FT=120.0, lat::FT=20.0, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
   fix_snowpack=true, kw...) where {FT<:AbstractFloat}

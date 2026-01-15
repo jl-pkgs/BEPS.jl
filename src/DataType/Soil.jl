@@ -86,7 +86,7 @@ end
 
 ## 设计哲学: 这里把状态变量与模型参数分隔开
 # state, params = setup(model)
-# st = StateBEPS, ps = BEPSmodel
+# st = StateBEPS, ps = ParamBEPS
 
 # 拖着`ρ_snow`，`ρ_snow`也是一个状态连续的变量
 # https://www.eoas.ubc.ca/courses/atsc113/snow/met_concepts/07-met_concepts/07b-newly-fallen-snow-density/

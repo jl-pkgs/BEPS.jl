@@ -1,12 +1,12 @@
 using BEPS, Test
 
-@testset "BEPSmodel Construction" begin
+@testset "ParamBEPS Construction" begin
   @testset "ENF (VegType=1) with Loam (SoilType=4)" begin
-    model = BEPSmodel(1, 4; N=5)
+    model = ParamBEPS(1, 4; N=5)
 
     # Test model structure
     @test model.N == 5
-    @test model isa BEPSmodel{Float64}
+    @test model isa ParamBEPS{Float64}
 
     # Test vegetation parameters
     @test model.veg.LAI_max_o ≈ 4.5
@@ -35,7 +35,7 @@ using BEPS, Test
   end
 
   @testset "DBF (VegType=6) with Sandy Loam (SoilType=3)" begin
-    model = BEPSmodel(6, 3; N=5)
+    model = ParamBEPS(6, 3; N=5)
 
     # Test DBF-specific vegetation parameters
     @test model.veg.VCmax25 ≈ 57.7
@@ -56,7 +56,7 @@ using BEPS, Test
   end
 
   @testset "EBF (VegType=9) with Clay (SoilType=11)" begin
-    model = BEPSmodel(9, 11; N=5)
+    model = ParamBEPS(9, 11; N=5)
 
     # Test EBF-specific vegetation parameters
     @test model.veg.VCmax25 ≈ 29.0
@@ -75,7 +75,7 @@ using BEPS, Test
   end
 
   @testset "C4 (VegType=40) with Sand (SoilType=1)" begin
-    model = BEPSmodel(40, 1; N=5)
+    model = ParamBEPS(40, 1; N=5)
 
     # Test C4-specific vegetation parameters
     @test model.veg.VCmax25 ≈ 30.0
@@ -92,8 +92,8 @@ using BEPS, Test
   end
 
   @testset "Different N layers" begin
-    model3 = BEPSmodel(1, 4; N=3)
-    model5 = BEPSmodel(1, 4; N=5)
+    model3 = ParamBEPS(1, 4; N=3)
+    model5 = ParamBEPS(1, 4; N=5)
 
     @test model3.N == 3
     @test model5.N == 5
@@ -102,17 +102,17 @@ using BEPS, Test
   end
 
   @testset "Different Float Types" begin
-    model_f64 = BEPSmodel(1, 4; N=5, FT=Float64)
-    model_f32 = BEPSmodel(1, 4; N=5, FT=Float32)
+    model_f64 = ParamBEPS(1, 4; N=5, FT=Float64)
+    model_f32 = ParamBEPS(1, 4; N=5, FT=Float32)
 
-    @test model_f64 isa BEPSmodel{Float64}
-    @test model_f32 isa BEPSmodel{Float32}
+    @test model_f64 isa ParamBEPS{Float64}
+    @test model_f32 isa ParamBEPS{Float32}
     @test eltype(model_f64.hydraulic.θ_sat) == Float64
     @test eltype(model_f32.hydraulic.θ_sat) == Float32
   end
 
   @testset "Model Display" begin
-    model = BEPSmodel(1, 4; N=5)
+    model = ParamBEPS(1, 4; N=5)
 
     # Test that show method works without error
     io = IOBuffer()
@@ -120,7 +120,7 @@ using BEPS, Test
     output = String(take!(io))
 
     @test !isempty(output)
-    @test occursin("BEPSmodel", output)
+    @test occursin("ParamBEPS", output)
   end
 end
 

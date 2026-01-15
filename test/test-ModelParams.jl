@@ -3,7 +3,7 @@ using BEPS, Test
 
 @testset "Model Parameters" begin
   # xs = ParamSoilHydraulicLayers{Float64,4}()
-  model = BEPSmodel{Float64}(; N=5)
+  model = ParamBEPS{Float64}(; N=5)
   params = parameters(model)
   display(model)
 
