@@ -24,7 +24,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
   soil = Soil()
   Params2Soil!(soil, model)
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
-  soil2state!(soil, state, Ta)
+  InitState!(soil, state, Ta)
 
   ps_veg = model.veg
 

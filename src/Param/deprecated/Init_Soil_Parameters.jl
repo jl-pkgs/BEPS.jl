@@ -58,7 +58,7 @@ function Init_Soil_var(soil::AbstractSoil, state::Union{State,Vector}, Ta::FT;
   soil.r_drainage = r_drainage
   Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
-  soil2state!(soil, state, Ta)
+  InitState!(soil, state, Ta)
 end
 
 
@@ -86,7 +86,7 @@ end
 # for(i=9;i<=14;i++) var_o[i] = soil->Tsoil_p[i-9];
 # for(i=21;i<=26;i++) var_o[i] = soil->θ_prev[i-21];
 # for(i=27;i<=32;i++) var_o[i] = soil->ice_ratio[i-27];
-function soil2state!(soil::AbstractSoil, state::Vector, Ta)
+function InitState!(soil::AbstractSoil, state::Vector, Ta)
   state .= 0
   for i = 1:6
     state[i+3] = Ta
@@ -97,7 +97,7 @@ function soil2state!(soil::AbstractSoil, state::Vector, Ta)
   return nothing
 end
 
-function soil2state!(soil::AbstractSoil, state::State, Ta)
+function InitState!(soil::AbstractSoil, state::State, Ta)
   state.Tsnow_c .= Ta
   # state.Ts_prev .= soil.Tsoil_p[1:5]
   state.θ_prev .= soil.θ_prev[1:5]

@@ -1,4 +1,4 @@
-function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=nothing,
+function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,BEPSmodel}=nothing,
   lon::FT=120.0, lat::FT=20.0,
   VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
@@ -11,15 +11,8 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
   Ra = Radiation()
   cache = LeafCache()
 
-  if isnothing(model)
-    theta = ReadParamVeg(VegType)  # n = 48
-    ps_veg = theta2par(theta)
-    theta = par2theta(ps_veg; clumping, VegType) # 为移除ReadParamVeg铺垫
-  else
-    ps_veg = model.veg
-    theta = par2theta(ps_veg; clumping, VegType)
-    (; r_drainage, r_root_decay) = model
-  end
+  ps_veg = isnothing(params) ? InitParam_Veg(VegType; FT) : params.veg  
+  theta = par2theta(ps_veg; clumping, VegType)
 
   n = size(d, 1)
   vars = fieldnames(Results) |> collect
@@ -28,37 +21,30 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
   df_out = DataFrame(zeros(n, length(vars)), vars)
   df_ET = DataFrame(zeros(n, length(vars_ET)), vars_ET)
 
-  # TODO: pass depth of soil as a parameter
   output_Tsoil = zeros(n, layer) ## 返回变量
   output_θ = zeros(n, layer)
 
-  if version == "julia"
-    soil = Soil()
-    state = State()
-    state_n = State()
-  elseif version == "c"
-    soil = Soil_c()
-    state = zeros(41)
-    state_n = zeros(41)
-  end
   Ta = d.tem[1]
+  soil = version == "julia" ? Soil() : Soil_c()
+  soil.r_drainage = r_drainage
+  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
+  Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
 
-  Init_Soil_var(soil, state, Ta;
-    VegType, SoilType, r_drainage, r_root_decay,
-    Tsoil0, θ0, z_snow0
-  )
-  !isnothing(model) && Params2Soil!(soil, model) # 这是何意?
+  state = version == "julia" ? State() : zeros(41)
+  state_n = deepcopy(state)
+  InitState!(soil, state, Ta) # initialize state variables, for C version
+  Params2Soil!(soil, params)  # put params into soil struct
 
   for i = 1:n
     jday = d.day[i]
     hour = d.hour[i]
+    CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
+
     _day = ceil(Int, i / 24)
     mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
     _lai = lai[_day] * theta[3] / clumping # re-calculate LAI & renew clump index
     fill_met!(met, d, i) # 驱动数据
-
-    CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
 
     # /***** start simulation modules *****/
     if version == "julia"

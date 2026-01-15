@@ -1,4 +1,4 @@
-export Init_Soil_Parameters, Init_Soil_T_θ!, soil2state!, UpdateRootFraction, Update_Tsoil_c, Update_G
+export Init_Soil_Parameters, Init_Soil_T_θ!, InitState!, UpdateRootFraction, Update_Tsoil_c, Update_G
 export UpdateHeatFlux, UpdateThermal_Cv,
   Update_ice_ratio,
   UpdateThermal_κ,
