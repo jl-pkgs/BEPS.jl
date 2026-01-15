@@ -3,7 +3,7 @@ import BEPS: UpdateRootFraction!,
   Init_Soil_T_θ!,
   soil_water_factor_v2,
   Root_Water_Uptake,
-  UpdateThermal_Cs,
+  UpdateThermal_Cv,
   Update_ice_ratio,
   UpdateThermal_κ,
   UpdateHeatFlux,
@@ -47,7 +47,7 @@ end
 #     T_USDA, S_USDA, Ref_Depth, T_Density, S_Density, T_OC, S_OC, Ref(p))
 # end
 
-function UpdateThermal_Cs(p::Soil_c)
+function UpdateThermal_Cv(p::Soil_c)
   ccall((:Update_Cs, libbeps), Cvoid, (Ptr{Soil_c},), Ref(p))
 end
 

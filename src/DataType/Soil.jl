@@ -48,7 +48,7 @@ abstract type AbstractSoil end
   km          ::Vector{Float64} = zeros(10) # [state], hydraulic conductivity at middle point
   Kb          ::Vector{Float64} = zeros(10) # // not used
   KK          ::Vector{Float64} = zeros(10) # [state], average conductivity of two soil layers
-  Cs          ::Vector{Float64} = zeros(10) # [state], volume heat capacity
+  Cv          ::Vector{Float64} = zeros(10) # [state], volume heat capacity
   κ           ::Vector{Float64} = zeros(10) # [state]
   Ett         ::Vector{Float64} = zeros(10) # [state], 每层蒸发量ET in each layer
   G           ::Vector{Float64} = zeros(10) # [state], 土壤热通量
@@ -90,7 +90,7 @@ end
   r_waterflow::Vector{Float64} = zeros(10) # [state], vertical water flow rate
   km         ::Vector{Float64} = zeros(10) # [state], hydraulic conductivity at middle point
   KK         ::Vector{Float64} = zeros(10) # [state], average conductivity of two soil layers
-  Cs         ::Vector{Float64} = zeros(10) # [state], volume heat capacity
+  Cv         ::Vector{Float64} = zeros(10) # [state], volume heat capacity
   κ          ::Vector{Float64} = zeros(10) # [state]
   Ett        ::Vector{Float64} = zeros(10) # [state], 每层蒸发量ET in each layer
   G          ::Vector{Float64} = zeros(10) # [state], 土壤热通量
@@ -105,7 +105,7 @@ end
 function SoilState(soil::Soil)
   @unpack n_layer, dz, z_water, z_snow, r_rain_g, f_soilwater,
           f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
-          f_water, ψ, r_waterflow, km, KK, Cs, κ, Ett, G,
+          f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
           ft, dtt, fpsisr = soil
 
   SoilState(; 
@@ -113,7 +113,7 @@ function SoilState(soil::Soil)
     r_rain_g, f_soilwater,
     f_root, dt, ice_ratio, θ, θ_prev,
     Tsoil_p, Tsoil_c, f_water, ψ,
-    r_waterflow, km, KK, Cs, κ,
+    r_waterflow, km, KK, Cv, κ,
     Ett, G, ft, dtt, fpsisr
   )
 end
@@ -122,12 +122,12 @@ end
 function sync_state_to_soil!(soil::Soil, st::SoilState)
   @unpack z_water, z_snow, r_rain_g, f_soilwater,
           f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
-          f_water, ψ, r_waterflow, km, KK, Cs, κ, Ett, G,
+          f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
           ft, dtt, fpsisr = st
 
   @pack! soil = z_water, z_snow, r_rain_g, f_soilwater,
                 f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
-                f_water, ψ, r_waterflow, km, KK, Cs, κ, Ett, G,
+                f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
                 ft, dtt, fpsisr
   return soil
 end

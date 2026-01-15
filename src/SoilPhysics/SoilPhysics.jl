@@ -1,5 +1,5 @@
 export Init_Soil_Parameters, Init_Soil_T_θ!, Sync_Soil_to_State!, UpdateRootFraction, Update_Tsoil_c, Update_G
-export UpdateHeatFlux, UpdateThermal_Cs,
+export UpdateHeatFlux, UpdateThermal_Cv,
   Update_ice_ratio,
   UpdateThermal_κ,
   soil_water_factor_v2,

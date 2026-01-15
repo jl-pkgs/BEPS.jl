@@ -46,8 +46,8 @@ function Vcmax_Jmax(lai_o, Ω, Vcmax0, slope_Vcmax_N, leaf_N, CosZs, Vcmax_sunli
 end
 
 
-# function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, SoilType, soilp, mid_res)
-#     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil_c}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cs, Cp, npp_yr, coef, SoilType, soilp, mid_res)
+# function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cv, Cp, npp_yr, coef, SoilType, soilp, mid_res)
+#     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil_c}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cv, Cp, npp_yr, coef, SoilType, soilp, mid_res)
 # end
 function ReadParamVeg(lc::Int=1)
   parameter1 = zeros(Cdouble, 48)

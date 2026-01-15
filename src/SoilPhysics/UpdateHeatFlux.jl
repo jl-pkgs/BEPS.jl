@@ -17,7 +17,7 @@ function UpdateHeatFlux(st::S, Tair_annual_mean::Float64, period_in_seconds::Flo
 
   source = 0.0
   for i in 1:n
-    Tsoil_c[i] = Tsoil_p[i] + (G[i] - G[i+1] + source) / (st.Cs[i] * dz[i]) * period_in_seconds
+    Tsoil_c[i] = Tsoil_p[i] + (G[i] - G[i+1] + source) / (st.Cv[i] * dz[i]) * period_in_seconds
     Tsoil_c[i] = clamp(Tsoil_c[i], -50.0, 50.0)
   end
   Update_ice_ratio(st)
@@ -25,10 +25,9 @@ function UpdateHeatFlux(st::S, Tair_annual_mean::Float64, period_in_seconds::Flo
 end
 
 
-  
 # Function to update volume heat capacity
 # Bonan 2019, Table 5.2
-function UpdateThermal_Cs(st::S, ps::P) where {S<:Union{SoilState,Soil},P<:Union{BEPSmodel,Soil}}
+function UpdateThermal_Cv(st::S, ps::P) where {S<:Union{SoilState,Soil},P<:Union{BEPSmodel,Soil}}
   (; θ, ice_ratio) = st
   (; ρ_soil, V_SOM) = get_thermal(ps)
 
@@ -37,33 +36,33 @@ function UpdateThermal_Cs(st::S, ps::P) where {S<:Union{SoilState,Soil},P<:Union
     term1 = 2.0e+6 * ρ_soil[i] / 2650.0 # soil solid, like Quartz
     term2 = 1.0e+6 * θ[i] * (4.2 * (1 - ice_ratio[i]) + 2.09 * ice_ratio[i]) # water and ice
     term3 = 2.5e+6 * V_SOM[i] # soil organic matter, 2.5 [MJ m-3 K-1]
-    st.Cs[i] = term1 + term2 + term3 # [MJ m-3 K-1]
+    st.Cv[i] = term1 + term2 + term3 # [MJ m-3 K-1]
   end
 end
-UpdateThermal_Cs(p::Soil) = UpdateThermal_Cs(p, p)
+UpdateThermal_Cv(p::Soil) = UpdateThermal_Cv(p, p)
 
 
 # Function to update the frozen status of each soil
 # 旧版本：兼容 Soil 结构体
 function Update_ice_ratio(st::S) where {S<:Union{SoilState,Soil}}
-  (; dz, θ, θ_prev, Tsoil_c, Tsoil_p, ice_ratio, Cs) = st
+  (; dz, θ, θ_prev, Tsoil_c, Tsoil_p, ice_ratio, Cv) = st
   Lf0 = 3.34 * 100000  # latent heat of fusion (liquid: solid) at 0C
   # 会不会这里出错了
   @inbounds for i in 1:st.n_layer
     # starting to freeze
     if Tsoil_p[i] >= 0.0 && Tsoil_c[i] < 0.0 && ice_ratio[i] < 1.0
-      Gsf = (0.0 - Tsoil_c[i]) * Cs[i] * dz[i]
+      Gsf = (0.0 - Tsoil_c[i]) * Cv[i] * dz[i]
       ice_ratio[i] += Gsf / Lf0 / 1000.0 / (θ[i] * dz[i])
       ice_ratio[i] = min(1.0, ice_ratio[i])
 
-      Tsoil_c[i] = 0
+      Tsoil_c[i] = 0.0
       # starting to melt
     elseif Tsoil_p[i] <= 0.0 && Tsoil_c[i] > 0.0 && ice_ratio[i] > 0.0
-      Gsm = (Tsoil_c[i] - 0.0) * Cs[i] * dz[i]
+      Gsm = (Tsoil_c[i] - 0.0) * Cv[i] * dz[i]
       ice_ratio[i] -= Gsm / Lf0 / 1000.0 / (θ[i] * dz[i])
       ice_ratio[i] = max(0.0, ice_ratio[i])
 
-      Tsoil_c[i] = 0
+      Tsoil_c[i] = 0.0
     end
 
     ice_ratio[i] *= θ_prev[i] / θ[i]
@@ -93,5 +92,3 @@ end
   end
 end
 UpdateThermal_κ(p::Soil) = UpdateThermal_κ(p, p)
-
-

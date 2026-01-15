@@ -1,7 +1,7 @@
 using Test
 using BEPS
 import BEPS: kstep, Sync_Param_to_Soil!, sync_state_to_soil!, UpdateRootFraction!, Init_Soil_T_θ!
-import BEPS: UpdateThermal_κ, UpdateThermal_Cs, Update_ice_ratio, UpdateHeatFlux, UpdateSoilMoisture, Root_Water_Uptake, Init_Soil_var
+import BEPS: UpdateThermal_κ, UpdateThermal_Cv, Update_ice_ratio, UpdateHeatFlux, UpdateSoilMoisture, Root_Water_Uptake, Init_Soil_var
 
 
 function Base.getindex(x::Union{Soil,Soil_c}, i::Integer)
@@ -88,7 +88,7 @@ end
   p_jl, p_c = init_soil()
 
   funs = [
-    # UpdateThermal_Cs,
+    # UpdateThermal_Cv,
     # Update_ice_ratio,
     UpdateThermal_κ,
     soil_water_factor_v2]
@@ -107,7 +107,7 @@ end
 @testset "Init_Soil_var" begin
   p_jl, p_c = init_soil()
   funs = [
-    UpdateThermal_Cs,
+    UpdateThermal_Cv,
     Update_ice_ratio,
     UpdateThermal_κ,
     soil_water_factor_v2]
@@ -165,10 +165,10 @@ end
   UpdateThermal_κ(st, ps)
   @test st.κ[1:5] ≈ soil.κ[1:5]
 
-  # 测试 UpdateThermal_Cs
-  UpdateThermal_Cs(soil)
-  UpdateThermal_Cs(st, ps)
-  @test st.Cs[1:5] ≈ soil.Cs[1:5]
+  # 测试 UpdateThermal_Cv
+  UpdateThermal_Cv(soil)
+  UpdateThermal_Cv(st, ps)
+  @test st.Cv[1:5] ≈ soil.Cv[1:5]
 
   # 测试 UpdateHeatFlux (implicit Update_ice_ratio)
   UpdateHeatFlux(soil, 20.0, 3600.0)

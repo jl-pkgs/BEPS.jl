@@ -19,26 +19,20 @@ function solve_imp(T_old, T_bnd, T_bot, ΔE, ra, z, G, ρCp, κ_bot; z_rad=z, c_
 end
 
 
-function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
-  Cv_soil1::FT, Cv_soil0::FT, Gheat_g::FT,
-  z_soil1::FT, ρ_snow::FT, tempL_u::FT, Rn_g::FT,
-  E_soil::FT, E_water_g::FT, E_snow_g::FT, κ_soil1::FT,
-  perc_snow_g::FT, G_soil1::FT,
-  T_soil1_last::FT, T_soil0_last::FT,
-  last::SnowLand{FT},
+function surface_temperature_jl!(
+  Rn_g::FT, T_air::FT, Tc_u::FT, RH::FT, 
+  z_snow::FT, z_water::FT, ρ_snow::FT, perc_snow_g::FT,
+  z_soil1::FT, κ_soil1::FT, Cv_soil1::FT, Cv_soil0::FT, Gheat_g::FT,
+  E_soil::FT, E_water_g::FT, E_snow_g::FT,
+  G_soil1::FT, T_soil1_last::FT, T_soil0_last::FT,
+  last::SnowLand{FT}, current::SnowLand{FT}
 ) where {FT<:AbstractFloat}
-
+  # 从 last_in 读取上一步的温度
   T_surf_last = last.T_surf
   T_mix0_last = last.T_mix0
   T_snow0_last = last.T_snow0
   T_snow1_last = last.T_snow1
   T_snow2_last = last.T_snow2
-
-  T_surf::FT = 0.0
-  T_mix0::FT = 0.0
-  T_snow0::FT = 0.0
-  T_snow1::FT = 0.0
-  T_snow2::FT = 0.0
 
   Δt::FT = kstep
   cp_ice::FT = 2228.261
@@ -57,7 +51,6 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
   Gg::FT = Rn_g - E_snow_g * λ_snow - (E_water_g + E_soil) * λ_water # 地表可用能量
 
   T_soil0::FT = 0.0
-
   G::FT = 0.0
 
   ΔM_soil1 = Cv_soil1 * 0.02 / Δt # soil heat capacity per unit area, Cv = ρ cp
@@ -86,7 +79,7 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
       Gg, ρCp, κ_soil1; c_s=2.0, μ=T_air)                                       # 裸土地表温度
 
     ΔM_snow = cp_ice * ρ_snow * z_snow / Δt
-    T_snow0 = solve_imp(T_snow0_last, tempL_u, T_mix0_last, ΔM_snow, ra_g, z_snow,
+    T_snow0 = solve_imp(T_snow0_last, Tc_u, T_mix0_last, ΔM_snow, ra_g, z_snow,
       Gg, ρCp, κ_dry_snow; μ=T_air)                                             # 雪表温度
 
     T_interface = (κ_soil1 * T_soil1_last / Δz_soil1 + κ_dry_snow * T_snow0 / Δz_snow + ΔM_soil1 * T_mix0_last) /
@@ -134,50 +127,34 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
 
     T_surf = T_snow0
   end
-  @pack! last = T_surf, T_mix0, T_snow0, T_snow1, T_snow2
+  @pack! current = T_surf, T_mix0, T_snow0, T_snow1, T_snow2
   return G, T_soil0
 end
 
 
 function surface_temperature!(
-  soil::AbstractSoil, cache::TransientCache, k::Int,
-  T_air::FT, RH::FT, z_snow::FT, z_water::FT,
-  Gheat_g::FT, ρ_snow::FT, Tc_u::FT,
-  radiation_g::FT, Evap_soil::FT, Evap_SW::FT, Evap_SS::FT,
-  f_snow_g::FT, dz::Vector{FT}, κ::Vector{FT}) where {FT<:AbstractFloat}
+  soil::AbstractSoil, cache::TransientCache,
+  radiation_g::FT, Tc_u::FT, T_air::FT, RH::FT, z_snow::FT, z_water::FT, ρ_snow::FT, f_snow_g::FT, Gheat_g::FT,
+  Evap_soil::FT, Evap_SW::FT, Evap_SS::FT,
+  dz::Vector{FT}, κ::Vector{FT}) where {FT<:AbstractFloat}
 
   # 1. 准备土壤热力学参数
-  cache.Cs[1:2] .= soil.Cs[1]      # 体积热容 [J m-3 K-1]
+  cache.Cv[1:2] .= soil.Cv[1]      # 体积热容 [J m-3 K-1]
   κ[2] = soil.κ[1]                    # 热导率 [W m-1 K-1]; 表皮为1, 第一层为2
   dz[2] = soil.dz[1]                  # 层厚度 [m]
   cache.G[2] = soil.G[1]           # 第1层土壤热通量 [W m-2]
 
-  last = SnowLand(
-    T_surf = cache.T_surf[k-1],
-    T_snow0 = cache.T_snow0[k-1],
-    T_snow1 = cache.T_snow1[k-1],
-    T_snow2 = cache.T_snow2[k-1],
-    T_mix0 = cache.T_mix0[k-1]
-  )
-
   # 2. 调用 surface_temperature_jl 计算
-  G, T_soil0 = surface_temperature_jl(T_air, RH, z_snow, z_water,
-      cache.Cs[2], cache.Cs[1], Gheat_g, dz[2], ρ_snow, Tc_u,
-      radiation_g, Evap_soil, Evap_SW, Evap_SS,
-      κ[2], f_snow_g, cache.G[2],
-      soil.Tsoil_p[2],      # T_soil1: 第一层土壤温度 [°C]
-      soil.Tsoil_p[1],      # T_soil0: 
-      last)
+  G, T_soil0 = surface_temperature_jl!(radiation_g, T_air, Tc_u, RH,
+    z_snow, z_water, ρ_snow, f_snow_g, 
+    dz[2], κ[2], cache.Cv[2], cache.Cv[1], Gheat_g, 
+    Evap_soil, Evap_SW, Evap_SS,
+    cache.G[2],
+    soil.Tsoil_p[2],      # T_soil1: 第一层土壤温度 [°C]
+    soil.Tsoil_p[1],      # T_soil0:
+    cache.T_snowland_prev, cache.T_snowland)
 
-  # 3. 保存结果到 cache（用于子时间步循环）
   cache.G[1] = G
-  cache.T_surf[k] = last.T_surf
-  cache.T_mix0[k] = last.T_mix0 # T_soil0
-  cache.T_snow0[k] = last.T_snow0
-  cache.T_snow1[k] = last.T_snow1
-  cache.T_snow2[k] = last.T_snow2
-
-  # 4. 更新 soil 的当前温度状态
-  soil.Tsoil_c[1] = T_soil0 # T_mix0 # 地表
+  soil.Tsoil_c[1] = T_soil0 # 更新 soil 的当前温度状态
   return nothing
 end

@@ -3,15 +3,9 @@ The inter-module function between main program and modules
 
 # Arguments
 
-- `jday`      : day of year
-- `hour`      : hour of day
-- `lai`       : leaf area index
 - `clumping`  : clumping index
 - `param`     : parameter array according to land cover types
-- `meteo`     : meteorological data
 - `CosZs`     : cosine of solar zenith angle
-- `var_o`     : temporary variables array of last time step
-- `var_n`     : temporary variables array of this time step
 - `soilp`     : soil coefficients according to land cover types and soil textures
 - `mid_res`   : results struct
 """
@@ -49,12 +43,7 @@ function inter_prg_jl(
   # ===== 3. 表面状态初始化 =====
   init_leaf_dbl(Tc_old, T_air - 0.5)
 
-  # 表面温度 [°C]
-  var_fields = [:T_surf, :T_snow0, :T_snow1, :T_snow2, :T_mix0]
-  for i in 1:5
-    var_field = var_fields[i]
-    getfield(cache, var_field)[1] = clamp(state.Ts[i], T_air - 2.0, T_air + 2.0)
-  end
+  # 表面温度 [°C] - 初始化 snowland 结构体
   clamp!(cache.T_snowland_prev, state.Ts, T_air)
   clamp!(cache.T_snowland, state.Ts, T_air)
 
@@ -88,15 +77,16 @@ function inter_prg_jl(
 
   # ===== 4. 亚小时循环 (10步/小时, 360秒/步) =====
   @inbounds for k = 2:kloop+1
+    # 更新 prev 为上一子时间步的值（k≥3时）
+    k > 2 && (cache.T_snowland_prev .= cache.T_snowland)
+
     !fix_snowpack && (ρ_snow[] = 0.0) # TODO: exact as C
     α_v_sw[], α_n_sw[] = 0.0, 0.0
 
     # /*****  Snowpack stage 1 by X. Luo  *****/
-    z_snow = snowpack_stage1_jl(T_air, precip,
-      lai_o, lai_u, Ω,
+    z_snow = snowpack_stage1_jl(T_air, precip, lai_o, lai_u, Ω,
       m_snow_pre, m_snow, f_snow, A_snow,
-      z_snow, ρ_snow,
-      α_v_sw, α_n_sw)
+      z_snow, ρ_snow, α_v_sw, α_n_sw)
 
     # /*****  Rainfall stage 1 by X. Luo  *****/
     r_rain_g = rainfall_stage1_jl(T_air, precip, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
@@ -210,49 +200,42 @@ function inter_prg_jl(
     end  # end of energy balance iteration
     multiply!(GPP, Ac, LAI)
 
-    # /*****  Transpiration by X. Luo  *****/
-    Trans_o, Trans_u = transpiration_jl(Tc_new, T_air, RH, Gw, LAI)
+    Trans_o, Trans_u = transpiration_jl(Tc_new, T_air, RH, Gw, LAI) # X. Luo
 
     # /*****  Evaporation and sublimation from canopy by X. Luo  *****/
-    Eil_o, Eil_u, EiS_o, EiS_u = evaporation_canopy_jl(
-      Tc_new, T_air, RH,
+    Eil_o, Eil_u, EiS_o, EiS_u = evaporation_canopy_jl(Tc_new, T_air, RH,
       Gww, PAI, f_water, f_snow)
 
-    # /*****  Rainfall stage 2 by X. Luo  *****/
-    rainfall_stage2_jl(Eil_o, Eil_u, m_water)
+    rainfall_stage2_jl(Eil_o, Eil_u, m_water) # X. Luo
     set!(m_water_pre, m_water)
 
-    # /*****  Snowpack stage 2 by X. Luo  *****/
-    snowpack_stage2_jl(EiS_o, EiS_u, m_snow)
+    snowpack_stage2_jl(EiS_o, EiS_u, m_snow) # X. Luo
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     Gheat_g = 1 / ra_g  # 地表传热导度 [mol/m²/s]
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
     Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
-      evaporation_soil_jl(T_air, cache.T_surf[k-1], RH, radiation_g, Gheat_g,
-        f_snow,
-        z_water, z_snow, mass_water_g, m_snow,
+      evaporation_soil_jl(T_air, cache.T_snowland_prev.T_surf, RH, radiation_g, Gheat_g,
+        f_snow, z_water, z_snow, mass_water_g, m_snow,
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
     UpdateThermal_κ(soil)
-    UpdateThermal_Cs(soil)
+    UpdateThermal_Cv(soil)
 
     # /*****  Surface temperature by X. Luo  *****/
-    surface_temperature!(
-      soil, cache, k, T_air, RH, z_snow, z_water,
-      Gheat_g, ρ_snow[], Tc.u, radiation_g,
-      Evap_soil, Evap_SW, Evap_SS, f_snow.g, dz, κ)
+    surface_temperature!(soil, cache, radiation_g, Tc.u, T_air, RH, 
+      z_snow, z_water, ρ_snow[], f_snow.g, Gheat_g,
+      Evap_soil, Evap_SW, Evap_SS, dz, κ)
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
-    z_snow, z_water = snowpack_stage3_jl(T_air, cache.T_snow0[k], cache.T_snow0[k-1],
+    z_snow, z_water = snowpack_stage3_jl(T_air, cache.T_snowland.T_snow0, cache.T_snowland_prev.T_snow0,
       ρ_snow[], z_snow, z_water, m_snow)
     set!(m_snow_pre, m_snow)
 
     # /*****  Sensible heat flux by X. Luo  *****/
-    Qhc_o, Qhc_u, Qhg =
-      sensible_heat_jl(Tc_new, cache.T_surf[k], T_air, RH, Gh, Gheat_g, PAI)
+    Qhc_o, Qhc_u, Qhg = sensible_heat_jl(Tc_new, cache.T_snowland.T_surf, T_air, RH, Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
     soil.z_snow = z_snow
@@ -268,30 +251,18 @@ function inter_prg_jl(
   end  # end of sub-hourly loop
 
   # ===== 5. 时间步结束：状态更新 =====
-  k_step = kloop + 1
-  # cache.T_snow1[k_step] = clamp(cache.T_snow1[k_step], -40.0, 40.0)
-  # cache.T_snow2[k_step] = clamp(cache.T_snow2[k_step], -40.0, 40.0)
-
-  # 更新表面温度状态
-  state.Ts.T_surf = cache.T_surf[k_step]
-  state.Ts.T_snow0 = cache.T_snow0[k_step]
-  state.Ts.T_snow1 = cache.T_snow1[k_step]
-  state.Ts.T_snow2 = cache.T_snow2[k_step]
-  state.Ts.T_mix0 = cache.T_mix0[k_step]
-
-  # 更新其他状态变量
+  state.Ts = cache.T_snowland # 更新表面温度
   state.Qhc_o = Qhc_o
   set!(state.m_water, m_water)
   set!(state.m_snow, m_snow)
   state.ρ_snow = ρ_snow[]
 
   # ===== 6. 输出结果汇总 =====
-  mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
-
   @pack! mid_ET = Trans_o, Trans_u, Eil_o, Eil_u, EiS_o, EiS_u,
                   Evap_soil, Evap_SW, Evap_SS, Qhc_o, Qhc_u, Qhg
   update_ET!(mid_ET, mid_res, T_air)
 
+  mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
   mid_res.gpp_o_sunlit = GPP.o_sunlit
   mid_res.gpp_u_sunlit = GPP.u_sunlit
   mid_res.gpp_o_shaded = GPP.o_shaded
