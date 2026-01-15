@@ -17,7 +17,7 @@ function Sync_Param_to_Soil!(soil::Soil, model::BEPSmodel{FT}; BF=false) where {
   soil.θ_vfc[1:N] .= Cdouble.(hydraulic.θ_vfc)
   soil.θ_vwp[1:N] .= Cdouble.(hydraulic.θ_vwp)
   soil.θ_sat[1:N] .= Cdouble.(hydraulic.θ_sat)
-  soil.Ksat[1:N] .= Cdouble.(hydraulic.K_sat)
+  soil.K_sat[1:N] .= Cdouble.(hydraulic.K_sat)
   soil.ψ_sat[1:N] .= Cdouble.(hydraulic.ψ_sat)
   soil.b[1:N] .= Cdouble.(hydraulic.b)
 

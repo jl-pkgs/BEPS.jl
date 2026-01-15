@@ -3,7 +3,7 @@
 
 Initialize soil parameters
 
-- `Ksat`         : saturated hydraulic conductivity
+- `K_sat`         : saturated hydraulic conductivity
 - `porosity`     : porosity
 - `θ_vfc`        : field capacity
 - `θ_vwp`        : wilt point
@@ -37,7 +37,7 @@ function Init_Soil_Parameters(soil::Soil, VegType::Integer, SoilType::Integer, r
   soil.V_SOM[1:5] .= [5, 2, 1, 1, 0.3] # volume fraction, 0-1; bug 20260113, unit error
 
   soil.b[1:5] .= par.b
-  soil.Ksat[1:5] .= par.K_sat
+  soil.K_sat[1:5] .= par.K_sat
   soil.θ_sat[1:5] .= fill(par.θ_sat, 5)
   soil.θ_vfc[1:5] .= fill(par.θ_vfc, 5)
   soil.θ_vwp[1:5] .= fill(par.θ_vwp, 5)

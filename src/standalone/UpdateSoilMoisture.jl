@@ -3,14 +3,14 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
   Δt, total_t, max_Fb = 0.0, 0.0, 0.0
 
   n = soil.n_layer
-  @unpack dz, f_water, Ksat, KK, km, b,
+  @unpack dz, f_water, K_sat, KK, km, b,
   ψ_sat, ψ,
   θ_sat, θ, θ_prev = soil
   θ_prev .= θ # assign current soil moisture to prev
 
   # Max infiltration calculation
-  # Ksat * (1 + (θ_sat - θ_prev) / dz * ψ_sat / θ_sat * b )
-  inf_max = Ksat[1] * (1 + (θ_sat[1] - θ_prev[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
+  # K_sat * (1 + (θ_sat - θ_prev) / dz * ψ_sat / θ_sat * b )
+  inf_max = K_sat[1] * (1 + (θ_sat[1] - θ_prev[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
   inf = max((soil.z_water / kstep + soil.r_rain_g), 0)
   inf = clamp(inf, 0, inf_max)
 
@@ -23,7 +23,7 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
     # Hydraulic conductivity: Bonan, Table 8.2, Campbell 1974, K = K_sat*(θ/θ_sat)^(2b+3)
     for i in 1:n
       ψ[i] = cal_ψ(θ[i], θ_sat[i], ψ_sat[i], b[i])
-      km[i] = cal_K(θ[i], θ_sat[i], Ksat[i], b[i]) # Hydraulic conductivity, [m/s]
+      km[i] = cal_K(θ[i], θ_sat[i], K_sat[i], b[i]) # Hydraulic conductivity, [m/s]
     end
 
     # Fb, flow speed. Dancy's law. LHE.

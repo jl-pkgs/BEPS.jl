@@ -164,13 +164,13 @@ using BEPS
         @testset "Sand (SoilType=1)" begin
             results, soil = soil_sm(meteo; SoilType=1, Tsoil0=20.0, θ0=0.20)
             @test all(results.θ_1 .>= 0.0)
-            @test soil.Ksat[1] > 1e-5  # 沙土高渗透性
+            @test soil.K_sat[1] > 1e-5  # 沙土高渗透性
         end
 
         @testset "Clay (SoilType=11)" begin
             results, soil = soil_sm(meteo; SoilType=11, Tsoil0=20.0, θ0=0.35)
             @test all(results.θ_1 .>= 0.0)
-            @test soil.Ksat[1] < 1e-5  # 粘土低渗透性
+            @test soil.K_sat[1] < 1e-5  # 粘土低渗透性
         end
     end
 

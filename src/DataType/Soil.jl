@@ -28,7 +28,7 @@ abstract type AbstractSoil end
   θ_vfc       ::Vector{Float64} = zeros(10) # ? volumetric field capacity
   θ_vwp       ::Vector{Float64} = zeros(10) # ? volumetric wilting point
   θ_sat       ::Vector{Float64} = zeros(10) # ? volumetric saturation
-  Ksat        ::Vector{Float64} = zeros(10) # ? saturated hydraulic conductivity
+  K_sat        ::Vector{Float64} = zeros(10) # ? saturated hydraulic conductivity
   ψ_sat       ::Vector{Float64} = zeros(10) # ? soil matric potential at saturation
   b           ::Vector{Float64} = zeros(10) # ? Cambell parameter b
   ρ_soil      ::Vector{Float64} = zeros(10) # ? 土壤容重，soil density, for volume heat capacity

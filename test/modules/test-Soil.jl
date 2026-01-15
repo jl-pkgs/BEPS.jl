@@ -37,7 +37,7 @@ end
   p_jl = Soil()
   p_c = Soil_c()
   # stxt = 7: fix const κ_dry
-  # stxt = 6: fix Ksat
+  # stxt = 6: fix K_sat
   for stxt = [1, 2, 3, 4, 5, 8, 9, 10, 11] # skip 6, 7
     Init_Soil_Parameters(p_jl, 1, stxt, 0.1)
     clang.Init_Soil_Parameters(p_c, 1, stxt, 0.1)
@@ -188,7 +188,7 @@ end
 
   # 测试 Root_Water_Uptake
   Root_Water_Uptake(soil, 1.0, 2.0, 0.5)
-  Root_Water_Uptake(st, ps, 1.0, 2.0, 0.5)
+  Root_Water_Uptake(st, 1.0, 2.0, 0.5)
   @test st.Ett[1:5] ≈ soil.Ett[1:5]
 end
 
