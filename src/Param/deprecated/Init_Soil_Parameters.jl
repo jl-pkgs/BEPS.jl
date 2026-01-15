@@ -47,9 +47,6 @@ function Init_Soil_Parameters(soil::Soil, VegType::Integer, SoilType::Integer, r
 end
 
 
-# landcover::Int, soil_type::Int, Tsoil, soilwater, snowdepth
-# initialize soil conditions, read soil parameters and set depth
-# 旧版本：兼容 Soil 结构体
 function Init_Soil_var(soil::AbstractSoil, state::Union{State,Vector}, Ta::FT;
   VegType::Int=25, SoilType::Int=8,
   r_drainage::FT, r_root_decay::FT,
@@ -61,25 +58,53 @@ function Init_Soil_var(soil::AbstractSoil, state::Union{State,Vector}, Ta::FT;
   soil.r_drainage = r_drainage
   Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
-  Sync_Soil_to_State!(soil, state, Ta)
+  soil2state!(soil, state, Ta)
 end
 
-# 新版本：JAX 风格 (st, ps) 签名
-function Init_Soil_var(st::SoilState, ps::BEPSmodel, state::Union{State,Vector}, Ta::FT;
-  r_drainage::FT, r_root_decay::FT,
-  Tsoil0::FT=Ta, θ0::FT=0.2, z_snow0::FT=0.0,
-  ignored...
-) where {FT<:Real}
-  
-  # 更新参数
-  ps.r_drainage = r_drainage
-  ps.veg.r_root_decay = r_root_decay
-  
-  # 初始化状态
-  UpdateRootFraction!(st, ps)
-  Init_Soil_T_θ!(st, Tsoil0, Ta, θ0, z_snow0)
-  Sync_Soil_to_State!(st, state, Ta)
+
+function Init_Soil_T_θ!(st::S, Tsoil::Float64, Tair::Float64, θ0::Float64, snowdepth::Float64) where {
+  S<:Union{SoilState,Soil}}
+
+  dT = clamp(Tsoil - Tair, -5.0, 5.0)
+  st.z_snow = snowdepth
+  # st.z_water = 0.0
+  # st.r_rain_g = 0.0
+  T_scale_factors = [0.4, 0.5, 1.0, 1.2, 1.4]
+  θ_scale_factors = [0.8, 1.0, 1.05, 1.10, 1.15]
+
+  for i in 1:st.n_layer
+    st.Tsoil_c[i] = Tair + T_scale_factors[i] * dT
+    st.Tsoil_p[i] = Tair + T_scale_factors[i] * dT
+    st.θ[i] = θ_scale_factors[i] * θ0
+    st.θ_prev[i] = θ_scale_factors[i] * θ0
+    st.ice_ratio[i] = get_ice_ratio(st.Tsoil_c[i])
+  end
 end
+
+
+# for (i=3;i<=8;i++)   var_o[i] = tem;
+# for(i=9;i<=14;i++) var_o[i] = soil->Tsoil_p[i-9];
+# for(i=21;i<=26;i++) var_o[i] = soil->θ_prev[i-21];
+# for(i=27;i<=32;i++) var_o[i] = soil->ice_ratio[i-27];
+function soil2state!(soil::AbstractSoil, state::Vector, Ta)
+  state .= 0
+  for i = 1:6
+    state[i+3] = Ta
+    state[i+9] = soil.Tsoil_p[i]
+    state[i+21] = soil.θ_prev[i]
+    state[i+27] = soil.ice_ratio[i]
+  end
+  return nothing
+end
+
+function soil2state!(soil::AbstractSoil, state::State, Ta)
+  state.Tsnow_c .= Ta
+  # state.Ts_prev .= soil.Tsoil_p[1:5]
+  state.θ_prev .= soil.θ_prev[1:5]
+  state.ice_ratio .= soil.ice_ratio[1:5]
+  return nothing
+end
+
 
 
 export Init_Soil_var

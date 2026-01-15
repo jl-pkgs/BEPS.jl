@@ -93,9 +93,18 @@ end
   n_layer    ::Cint = Cint(5) # 土壤层数
   dz         ::Vector{Float64} = zeros(10) # 土壤厚度（从 ps 复制，方便计算）
 
+  Tsnow_c::SnowLand{FT} = SnowLand{FT}() # [inter_prg], 4:8
+  Tsnow_p::SnowLand{FT} = SnowLand{FT}() # [inter_prg], 10:15
+
+  Qhc_o::FT = 0.0                    # [inter_prg], [11] sensible heat flux
+
   z_water    ::Cdouble = Cdouble(0) # [state]
   z_snow     ::Cdouble = Cdouble(0) # [state]
 
+  m_water::Layer2 = Layer2{FT}()     # [inter_prg], [15, 18] + 1
+  m_snow::Layer3 = Layer3{FT}()      # [inter_prg], [16, 19, 20] + 1
+  ρ_snow::FT = 250.0                 # [inter_prg], [kg m-3] snow density
+  
   # the rainfall rate, un--on understory on ground surface  m/s
   r_rain_g   ::Cdouble = Cdouble(0)        # [state], 达到地地表降水, PE, [m/s]
   f_soilwater::Cdouble = Cdouble(0)        # [state], 总体的土壤水限制因子
@@ -125,12 +134,13 @@ end
   fpsisr     ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3
 end
 
+
 @with_kw mutable struct State{FT}
   "Surface Temperature: [T_ground, T_snow0, T_snow1, T_snow2, T_mix0]"
   Tsnow_c::SnowLand{FT} = SnowLand{FT}() # 4:8
   Tsnow_p::SnowLand{FT} = SnowLand{FT}() # 10:15
 
-  # Ts::Vector{FT} = zeros(FT, 5)          # 4:8
+  Ts::Vector{FT} = zeros(FT, 5)          # 4:8
   # Ts_prev::Vector{FT} = zeros(FT, 5)   # 10:15
   θ_prev::Vector{FT} = zeros(FT, 5)      # 22:27
   ice_ratio::Vector{FT} = zeros(FT, 5)   # 28:33

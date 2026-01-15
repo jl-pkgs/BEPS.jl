@@ -22,9 +22,9 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
   Ta = d.tem[1] # 第时刻的温度
   state = State()
   soil = Soil()
-  Sync_Param_to_Soil!(soil, model)
+  Params2Soil!(soil, model)
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
-  Sync_Soil_to_State!(soil, state, Ta)
+  soil2state!(soil, state, Ta)
 
   ps_veg = model.veg
 

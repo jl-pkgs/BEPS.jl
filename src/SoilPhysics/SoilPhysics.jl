@@ -1,4 +1,4 @@
-export Init_Soil_Parameters, Init_Soil_T_θ!, Sync_Soil_to_State!, UpdateRootFraction, Update_Tsoil_c, Update_G
+export Init_Soil_Parameters, Init_Soil_T_θ!, soil2state!, UpdateRootFraction, Update_Tsoil_c, Update_G
 export UpdateHeatFlux, UpdateThermal_Cv,
   Update_ice_ratio,
   UpdateThermal_κ,
@@ -51,30 +51,6 @@ function UpdateRootFraction!(st::S, ps::P) where {
 end
 UpdateRootFraction!(soil::Soil) = UpdateRootFraction!(soil, soil)
 
-
-"""
-    Init_Soil_T_θ!(p::Soil, Tsoil, Tair, θ0, snowdepth)
-
-初始化土壤剖面的温度(T)和含水量(θ)。
-"""
-function Init_Soil_T_θ!(st::S, Tsoil::Float64, Tair::Float64, θ0::Float64, snowdepth::Float64) where {
-  S<:Union{SoilState,Soil}}
-
-  dT = clamp(Tsoil - Tair, -5.0, 5.0)
-  st.z_snow = snowdepth
-  # p.z_water = 0.0
-  # p.r_rain_g = 0.0
-  T_scale_factors = [0.4, 0.5, 1.0, 1.2, 1.4]
-  θ_scale_factors = [0.8, 1.0, 1.05, 1.10, 1.15]
-
-  for i in 1:st.n_layer
-    st.Tsoil_c[i] = Tair + T_scale_factors[i] * dT
-    st.Tsoil_p[i] = Tair + T_scale_factors[i] * dT
-    st.θ[i] = θ_scale_factors[i] * θ0
-    st.θ_prev[i] = θ_scale_factors[i] * θ0
-    st.ice_ratio[i] = get_ice_ratio(st.Tsoil_c[i])
-  end
-end
 
 
 # function update_state!(state::State, var_n::Vector{Float64})
