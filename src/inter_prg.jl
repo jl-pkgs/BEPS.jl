@@ -9,12 +9,9 @@ The inter-module function between main program and modules
 - `soilp`     : soil coefficients according to land cover types and soil textures
 - `mid_res`   : results struct
 """
-function inter_prg_jl(
-  jday::Int, hour::Int,
-  lai::T, Ω::T, veg::ParamVeg{T}, met::Met, CosZs::T,
-  state::State{T}, soil::AbstractSoil,
-  Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET, cache::LeafCache; 
+function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω::T,
+  ps_veg::ParamVeg{T}, met::Met, state::State{T}, soil::AbstractSoil,
+  mid_res::Results, mid_ET::OutputET, cache::LeafCache;
   fix_snowpack::Bool=true, kw...) where {T}
 
   @unpack Cc_new, Cs_old, Cs_new, Ci_old,
@@ -24,11 +21,11 @@ function inter_prg_jl(
 
   # ===== 1. 参数提取和计算 =====
   (; α_canopy_vis, α_canopy_nir,
-     α_soil_sat, α_soil_dry, z_canopy_o, z_canopy_u, z_wind,
-     g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = veg
+    α_soil_sat, α_soil_dry, z_canopy_o, z_canopy_u, z_wind,
+    g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = ps_veg
 
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
-  lai_o, lai_u, stem_o, stem_u = lai2!(veg, Ω, CosZs, lai, LAI, PAI)
+  lai_o, lai_u, stem_o, stem_u = lai2!(ps_veg, Ω, CosZs, lai, LAI, PAI)
 
   # ===== 2. 气象变量初始化 =====
   Srad = met.Srad
@@ -41,11 +38,12 @@ function inter_prg_jl(
 
   # ===== 3. 表面状态初始化 =====
   init_leaf_dbl(Tc_old, T_air - 0.5)
-  
+
   # 对雪面温度进行限制
-  (; Tsnow_p, Tsnow_c) = state
-  clamp!(Tsnow_p, state.Tsnow_c, T_air)
-  clamp!(Tsnow_c, state.Tsnow_c, T_air)
+  prev = state.Tsnow_p # 基于地址的修改
+  curr = state.Tsnow_c
+  clamp!(prev, curr, T_air)
+  clamp!(curr, curr, T_air)
 
   # 雪水状态 [kg/m² or m]
   m_snow_pre, m_water_pre = state.m_snow, state.m_water
@@ -54,7 +52,7 @@ function inter_prg_jl(
   z_water = soil.z_water < 0.001 ? 0.0 : soil.z_water
 
   # 雪覆盖和反照率 [-]
-  f_snow, A_snow, f_water = Layer3(0.0), Layer2(), Layer2()
+  frac_snow, A_snow, f_water = Layer3(0.0), Layer2(), Layer2()
   α_v = Srad <= 0 ? Layer3() : Layer3(α_canopy_vis)
   α_n = Srad <= 0 ? Layer3() : Layer3(α_canopy_nir)
   ρ_snow, α_v_sw, α_n_sw = init_dbl(state.ρ_snow), init_dbl(), init_dbl()
@@ -77,14 +75,14 @@ function inter_prg_jl(
   # ===== 4. 亚小时循环 (10步/小时, 360秒/步) =====
   @inbounds for k = 2:kloop+1
     # 更新 prev 为上一子时间步的值（k≥3时）
-    k > 2 && (Tsnow_p .= Tsnow_c)
+    k > 2 && (prev .= curr)
 
     !fix_snowpack && (ρ_snow[] = 0.0) # TODO: exact as C
     α_v_sw[], α_n_sw[] = 0.0, 0.0
 
     # /*****  Snowpack stage 1 by X. Luo  *****/
     z_snow = snowpack_stage1_jl(T_air, precip, lai_o, lai_u, Ω,
-      m_snow_pre, m_snow, f_snow, A_snow,
+      m_snow_pre, m_snow, frac_snow, A_snow,
       z_snow, ρ_snow, α_v_sw, α_n_sw)
 
     # /*****  Rainfall stage 1 by X. Luo  *****/
@@ -145,7 +143,7 @@ function inter_prg_jl(
         lai_o, lai_u, pai_o, pai_u, PAI,
         Ω, T_air, RH,
         α_v_sw[], α_n_sw[], α_v, α_n,
-        perc_snow_o, perc_snow_u, f_snow.g,
+        perc_snow_o, perc_snow_u, frac_snow.g,
         Rn, Rns, Rnl, Ra)
 
       # /*****  Photosynthesis module by B. Chen  *****/
@@ -175,7 +173,7 @@ function inter_prg_jl(
 
       # /***** Leaf temperatures module by L. He  *****/
       Leaf_Temperatures_jl(T_air, Δ, γ, VPD, cp,
-        Gw, Gww, Gh, f_water, f_snow, Rn, Tc_new)
+        Gw, Gww, Gh, f_water, frac_snow, Rn, Tc_new)
 
       # 计算上层冠层感热通量用于下次迭代 [W/m²]
       H_o_sunlit = (Tc_new.o_sunlit - T_air) * ρₐ * cp * Gh.o_sunlit
@@ -203,7 +201,7 @@ function inter_prg_jl(
 
     # /*****  Evaporation and sublimation from canopy by X. Luo  *****/
     Eil_o, Eil_u, EiS_o, EiS_u = evaporation_canopy_jl(Tc_new, T_air, RH,
-      Gww, PAI, f_water, f_snow)
+      Gww, PAI, f_water, frac_snow)
 
     rainfall_stage2_jl(Eil_o, Eil_u, m_water) # X. Luo
     set!(m_water_pre, m_water)
@@ -215,8 +213,8 @@ function inter_prg_jl(
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
     Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
-      evaporation_soil_jl(T_air, Tsnow_p.T_surf, RH, radiation_g, Gheat_g,
-        f_snow, z_water, z_snow, mass_water_g, m_snow,
+      evaporation_soil_jl(T_air, prev.T_surf, RH, radiation_g, Gheat_g,
+        frac_snow, z_water, z_snow, mass_water_g, m_snow,
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
@@ -224,19 +222,19 @@ function inter_prg_jl(
     UpdateThermal_Cv(soil)
 
     # /*****  Surface temperature by X. Luo  *****/
-    soil.G[1] = surface_temperature!(soil, Tsnow_p, Tsnow_c,
-      radiation_g, Tc.u, T_air, RH, z_snow, z_water, 
-      ρ_snow[], f_snow.g, Gheat_g,
+    soil.G[1] = surface_temperature!(soil, prev, curr,
+      radiation_g, Tc.u, T_air, RH, z_snow, z_water,
+      ρ_snow[], frac_snow.g, Gheat_g,
       Evap_soil, Evap_SW, Evap_SS)
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
-    z_snow, z_water = snowpack_stage3_jl(T_air, Tsnow_c.T_snow0, Tsnow_p.T_snow0,
+    z_snow, z_water = snowpack_stage3_jl(T_air, curr.T_snow0, prev.T_snow0,
       ρ_snow[], z_snow, z_water, m_snow)
     set!(m_snow_pre, m_snow)
     soil.z_snow = z_snow
 
     # /*****  Sensible heat flux by X. Luo  *****/
-    Qhc_o, Qhc_u, Qhg = sensible_heat_jl(Tc_new, Tsnow_c.T_surf, T_air, RH, Gh, Gheat_g, PAI)
+    Qhc_o, Qhc_u, Qhg = sensible_heat_jl(Tc_new, curr.T_surf, T_air, RH, Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
     UpdateHeatFlux(soil, T_air, kstep)
@@ -250,7 +248,6 @@ function inter_prg_jl(
   end  # end of sub-hourly loop
 
   # ===== 5. 时间步结束：状态更新 =====
-  state.Tsnow_c = Tsnow_c # 更新表面温度
   state.Qhc_o = Qhc_o
   set!(state.m_water, m_water)
   set!(state.m_snow, m_snow)
@@ -258,7 +255,7 @@ function inter_prg_jl(
 
   # ===== 6. 输出结果汇总 =====
   @pack! mid_ET = Trans_o, Trans_u, Eil_o, Eil_u, EiS_o, EiS_u,
-                  Evap_soil, Evap_SW, Evap_SS, Qhc_o, Qhc_u, Qhg
+  Evap_soil, Evap_SW, Evap_SS, Qhc_o, Qhc_u, Qhg
   update_ET!(mid_ET, mid_res, T_air)
 
   mid_res.Net_Rad = radiation_o + radiation_u + radiation_g

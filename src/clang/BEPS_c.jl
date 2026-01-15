@@ -24,10 +24,10 @@ include("module.jl")
 #         LC, Ref(mid_res), lai_yr, lai, Tair, temp_soil, CosZs)
 # end
 
-function inter_prg_c(jday, rstep,
-  lai::T, Ω::T, parameter::Vector{T}, meteo::Met, CosZs::T,
+function inter_prg_c(jday, rstep, CosZs::T,
+  Ra::Radiation, lai::T, Ω::T, 
+  parameter::Vector{T}, meteo::Met,
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
-  Ra::Radiation,
   mid_res::Results, mid_ET::OutputET, cache::LeafCache; debug=false, kw...) where {T<:Real}
 
   ccall((:inter_prg_c, libbeps), Cvoid,

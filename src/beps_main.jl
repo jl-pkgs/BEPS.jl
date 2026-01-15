@@ -5,7 +5,7 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
   r_drainage::FT=0.5, r_root_decay::FT=0.95,
   version="julia", fix_snowpack=true, kw...) where {FT<:AbstractFloat}
 
-  meteo = Met()
+  met = Met()
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
@@ -13,11 +13,11 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
 
   if isnothing(model)
     theta = ReadParamVeg(VegType)  # n = 48
-    vegpar = theta2par(theta)
-    theta = par2theta(vegpar; clumping, VegType) # 为移除ReadParamVeg铺垫
+    ps_veg = theta2par(theta)
+    theta = par2theta(ps_veg; clumping, VegType) # 为移除ReadParamVeg铺垫
   else
-    vegpar = model.veg
-    theta = par2theta(vegpar; clumping, VegType)
+    ps_veg = model.veg
+    theta = par2theta(ps_veg; clumping, VegType)
     (; r_drainage, r_root_decay) = model
   end
 
@@ -56,19 +56,17 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
     mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
     _lai = lai[_day] * theta[3] / clumping # re-calculate LAI & renew clump index
-    fill_meteo!(meteo, d, i) # 驱动数据
+    fill_meteo!(met, d, i) # 驱动数据
 
     CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
 
     # /***** start simulation modules *****/
     if version == "julia"
-      inter_prg_jl(jday, hour, _lai, clumping, vegpar, meteo, CosZs,
-        state, soil,
-        Ra, mid_res, mid_ET, cache; VegType, fix_snowpack)
+      inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping, ps_veg,
+        met, state, soil, mid_res, mid_ET, cache; fix_snowpack)
     elseif version == "c"
-      inter_prg_c(jday, hour, _lai, clumping, theta, meteo, CosZs,
-        state, state_n, soil,
-        Ra, mid_res, mid_ET, cache;)
+      inter_prg_c(jday, hour, CosZs, Ra, _lai, clumping, theta,
+        met, state, state_n, soil, mid_res, mid_ET, cache;)
       state .= state_n # state variables
     end
 

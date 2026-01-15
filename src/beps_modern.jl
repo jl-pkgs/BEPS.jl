@@ -26,7 +26,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
   Sync_Soil_to_State!(soil, state, Ta)
 
-  vegpar = model.veg
+  ps_veg = model.veg
 
   for i = 1:ntime
     jday = d.day[i]
@@ -39,9 +39,8 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
     _lai = lai[_day]
     fill_meteo!(met, d, i) # 驱动数据
 
-    inter_prg_jl(jday, hour, _lai, clumping, vegpar, met, CosZs,
-      state, soil,
-      Ra, mid_res, mid_ET, cache; fix_snowpack)
+    inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping, ps_veg, met,
+      state, soil, mid_res, mid_ET, cache; fix_snowpack)
 
     output_Tsoil[i, :] .= soil.Tsoil_c[1:layer]
     output_θ[i, :] .= soil.θ[1:layer]
