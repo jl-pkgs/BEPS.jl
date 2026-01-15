@@ -97,14 +97,14 @@ function InitState!(soil::AbstractSoil, state::Vector, Ta)
   return nothing
 end
 
-function InitState!(soil::AbstractSoil, state::State, Ta)
+function InitState!(soil::AbstractSoil, state::S, Ta) where {S<:Union{State,SoilState}}
+  n = 5
   state.Tsnow_c .= Ta
   # state.Ts_prev .= soil.Tsoil_p[1:5]
-  state.θ_prev .= soil.θ_prev[1:5]
-  state.ice_ratio .= soil.ice_ratio[1:5]
+  state.θ_prev[1:n] .= soil.θ_prev[1:n]
+  state.ice_ratio[1:n] .= soil.ice_ratio[1:n]
   return nothing
 end
-
 
 
 export Init_Soil_var

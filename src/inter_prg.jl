@@ -10,7 +10,7 @@ The inter-module function between main program and modules
 - `mid_res`   : results struct
 """
 function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω::T,
-  ps_veg::ParamVeg{T}, forcing::Met, state::State{T}, soil::AbstractSoil,
+  ps_veg::ParamVeg{T}, forcing::Met, state::SoilState, soil::AbstractSoil,
   mid_res::Results, mid_ET::OutputET, cache::LeafCache;
   fix_snowpack::Bool=true, kw...) where {T}
 

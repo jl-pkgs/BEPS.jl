@@ -185,4 +185,4 @@ function sync_state_to_soil!(soil::Soil, st::SoilState)
   return soil
 end
 
-export State, Soil, SoilState, sync_state_to_soil!
+export Soil, SoilState, sync_state_to_soil!
