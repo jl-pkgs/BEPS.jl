@@ -25,7 +25,7 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
   E_soil::FT, E_water_g::FT, E_snow_g::FT, κ_soil1::FT,
   perc_snow_g::FT, G_soil1::FT,
   T_soil1_last::FT, T_soil0_last::FT,
-  last::SnowLand{FT}, 
+  last::SnowLand{FT},
 ) where {FT<:AbstractFloat}
 
   T_surf_last = last.T_surf
@@ -47,7 +47,7 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
   cp::FT = cal_cp(T_air, RH)
   ra_g::FT = 1.0 / Gheat_g
   ρCp::FT = ρₐ * cp
-  
+
   # Parameters for Case 3 (Deep Snow)
   dz_snow_s1::FT = 0.02
   dz_snow_s2::FT = 0.02
@@ -57,14 +57,14 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
   Gg::FT = Rn_g - E_snow_g * λ_snow - (E_water_g + E_soil) * λ_water # 地表可用能量
 
   T_soil0::FT = 0.0
-  
+
   G::FT = 0.0
 
   ΔM_soil1 = Cv_soil1 * 0.02 / Δt # soil heat capacity per unit area, Cv = ρ cp
 
   if z_snow <= 0.02
     # Case 1: 无雪或极浅雪 (≤2cm)
-    T_surf = solve_imp(T_surf_last, T_air, T_soil1_last, ΔM_soil1, 
+    T_surf = solve_imp(T_surf_last, T_air, T_soil1_last, ΔM_soil1,
       ra_g, z_soil1, Gg, ρCp, κ_soil1; μ=T_surf_last)
 
     T_mix0 = T_surf
@@ -82,11 +82,11 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
     Δz_snow = z_snow      # 雪层厚度, bottom to top
 
     # Case 2: 中等雪深 (2-5cm) - 雪土混合
-    T_soil0 = solve_imp(T_soil0_last, T_air, T_soil1_last, ΔM_soil1, ra_g, z_soil1, 
+    T_soil0 = solve_imp(T_soil0_last, T_air, T_soil1_last, ΔM_soil1, ra_g, z_soil1,
       Gg, ρCp, κ_soil1; c_s=2.0, μ=T_air)                                       # 裸土地表温度
 
     ΔM_snow = cp_ice * ρ_snow * z_snow / Δt
-    T_snow0 = solve_imp(T_snow0_last, tempL_u, T_mix0_last, ΔM_snow, ra_g, z_snow, 
+    T_snow0 = solve_imp(T_snow0_last, tempL_u, T_mix0_last, ΔM_snow, ra_g, z_snow,
       Gg, ρCp, κ_dry_snow; μ=T_air)                                             # 雪表温度
 
     T_interface = (κ_soil1 * T_soil1_last / Δz_soil1 + κ_dry_snow * T_snow0 / Δz_snow + ΔM_soil1 * T_mix0_last) /
@@ -112,7 +112,7 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
   else  # z_snow > 0.05
     # Case 3: 深雪 (>5cm) - 3层雪模型
     dz_snow_s12 = dz_snow_s1 + dz_snow_s2
-    
+
     ΔM_snow = cp_ice * ρ_snow * dz_snow_s1 / Δt
     T_snow0 = solve_imp(T_snow0_last, T_air, T_snow1_last, ΔM_snow, ra_g, dz_snow_s12, Gg, ρCp, κ_dry_snow; z_rad=dz_snow_s1, μ=T_air)
 
@@ -138,6 +138,7 @@ function surface_temperature_jl(T_air::FT, RH::FT, z_snow::FT, z_water::FT,
   return G, T_soil0
 end
 
+
 function surface_temperature!(
   soil::AbstractSoil, cache::TransientCache, k::Int,
   T_air::FT, RH::FT, z_snow::FT, z_water::FT,
@@ -147,21 +148,21 @@ function surface_temperature!(
 
   # 1. 准备土壤热力学参数
   cache.Cs[1:2] .= soil.Cs[1]      # 体积热容 [J m-3 K-1]
-  cache.Tc_u[k] = Tc_u                # 下层冠层温度 [°C]
   κ[2] = soil.κ[1]                    # 热导率 [W m-1 K-1]; 表皮为1, 第一层为2
   dz[2] = soil.dz[1]                  # 层厚度 [m]
   cache.G[2] = soil.G[1]           # 第1层土壤热通量 [W m-2]
 
   last = SnowLand(
-    cache.T_surf[k-1], 
-    cache.T_snow0[k-1], cache.T_snow1[k-1], cache.T_snow2[k-1], 
-    cache.T_mix0[k-1]
+    T_surf = cache.T_surf[k-1],
+    T_snow0 = cache.T_snow0[k-1],
+    T_snow1 = cache.T_snow1[k-1],
+    T_snow2 = cache.T_snow2[k-1],
+    T_mix0 = cache.T_mix0[k-1]
   )
-  
+
   # 2. 调用 surface_temperature_jl 计算
-  G, T_soil0 =
-    surface_temperature_jl(T_air, RH, z_snow, z_water,
-      cache.Cs[2], cache.Cs[1], Gheat_g, dz[2], ρ_snow, cache.Tc_u[k],
+  G, T_soil0 = surface_temperature_jl(T_air, RH, z_snow, z_water,
+      cache.Cs[2], cache.Cs[1], Gheat_g, dz[2], ρ_snow, Tc_u,
       radiation_g, Evap_soil, Evap_SW, Evap_SS,
       κ[2], f_snow_g, cache.G[2],
       soil.Tsoil_p[2],      # T_soil1: 第一层土壤温度 [°C]

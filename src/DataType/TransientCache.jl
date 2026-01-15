@@ -41,10 +41,12 @@ LeafCache(x0) = LeafCache(; x0)
 # end
 
 
-@with_kw mutable struct TransientCache
+@with_kw mutable struct TransientCache{FT<:AbstractFloat}
   # 温度状态变量（需要历史访问 k-1）
-  Tc_u::Vector{FT} = zeros(MAX_Loop)          # 下层冠层温度
-  T_surf::Vector{FT} = zeros(MAX_Loop)      # 地表温度
+  T_snowland::SnowLand{FT} = SnowLand{FT}()       # 当前时间步
+  T_snowland_prev::SnowLand{FT} = SnowLand{FT}()  # 上一时间步
+  
+  T_surf::Vector{FT} = zeros(MAX_Loop)    # 地表温度
   T_mix0::Vector{FT} = zeros(MAX_Loop)    # 混合表面温度
   T_snow0::Vector{FT} = zeros(MAX_Loop)   # 雪表面温度
   T_snow1::Vector{FT} = zeros(MAX_Loop)     # 雪层1温度

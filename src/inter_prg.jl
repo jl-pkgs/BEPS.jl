@@ -50,11 +50,13 @@ function inter_prg_jl(
   init_leaf_dbl(Tc_old, T_air - 0.5)
 
   # 表面温度 [°C]
-  var_fields = [:T_surf, :T_snow0, :T_mix0, :T_snow1, :T_snow2]
+  var_fields = [:T_surf, :T_snow0, :T_snow1, :T_snow2, :T_mix0]
   for i in 1:5
     var_field = var_fields[i]
     getfield(cache, var_field)[1] = clamp(state.Ts[i], T_air - 2.0, T_air + 2.0)
   end
+  clamp!(cache.T_snowland_prev, state.Ts, T_air)
+  clamp!(cache.T_snowland, state.Ts, T_air)
 
   # 雪水状态 [kg/m² or m]
   m_snow_pre, m_water_pre = state.m_snow, state.m_water
@@ -267,12 +269,15 @@ function inter_prg_jl(
 
   # ===== 5. 时间步结束：状态更新 =====
   k_step = kloop + 1
-  cache.T_snow1[k_step] = clamp(cache.T_snow1[k_step], -40.0, 40.0)
-  cache.T_snow2[k_step] = clamp(cache.T_snow2[k_step], -40.0, 40.0)
+  # cache.T_snow1[k_step] = clamp(cache.T_snow1[k_step], -40.0, 40.0)
+  # cache.T_snow2[k_step] = clamp(cache.T_snow2[k_step], -40.0, 40.0)
 
   # 更新表面温度状态
-  state.Ts .= [cache.T_surf[k_step], cache.T_snow0[k_step], cache.T_mix0[k_step],
-               cache.T_snow1[k_step], cache.T_snow2[k_step]]
+  state.Ts.T_surf = cache.T_surf[k_step]
+  state.Ts.T_snow0 = cache.T_snow0[k_step]
+  state.Ts.T_snow1 = cache.T_snow1[k_step]
+  state.Ts.T_snow2 = cache.T_snow2[k_step]
+  state.Ts.T_mix0 = cache.T_mix0[k_step]
 
   # 更新其他状态变量
   state.Qhc_o = Qhc_o

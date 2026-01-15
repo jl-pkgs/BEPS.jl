@@ -103,62 +103,35 @@ end
 
 # 从 Soil 构造 SoilState（兼容旧代码）
 function SoilState(soil::Soil)
-  SoilState(
-    n_layer     = soil.n_layer,
-    dz          = copy(soil.dz),
-    z_water     = soil.z_water,
-    z_snow      = soil.z_snow,
-    r_rain_g    = soil.r_rain_g,
-    f_soilwater = soil.f_soilwater,
-    f_root      = copy(soil.f_root),
-    dt          = copy(soil.dt),
-    ice_ratio   = copy(soil.ice_ratio),
-    θ           = copy(soil.θ),
-    θ_prev      = copy(soil.θ_prev),
-    Tsoil_p     = copy(soil.Tsoil_p),
-    Tsoil_c     = copy(soil.Tsoil_c),
-    f_water     = copy(soil.f_water),
-    ψ           = copy(soil.ψ),
-    r_waterflow = copy(soil.r_waterflow),
-    km          = copy(soil.km),
-    KK          = copy(soil.KK),
-    Cs          = copy(soil.Cs),
-    κ           = copy(soil.κ),
-    Ett         = copy(soil.Ett),
-    G           = copy(soil.G),
-    ft          = copy(soil.ft),
-    dtt         = copy(soil.dtt),
-    fpsisr      = copy(soil.fpsisr),
+  @unpack n_layer, dz, z_water, z_snow, r_rain_g, f_soilwater,
+          f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
+          f_water, ψ, r_waterflow, km, KK, Cs, κ, Ett, G,
+          ft, dtt, fpsisr = soil
+
+  SoilState(; 
+    n_layer, dz, z_water, z_snow, 
+    r_rain_g, f_soilwater,
+    f_root, dt, ice_ratio, θ, θ_prev,
+    Tsoil_p, Tsoil_c, f_water, ψ,
+    r_waterflow, km, KK, Cs, κ,
+    Ett, G, ft, dtt, fpsisr
   )
 end
 
 # 将 SoilState 同步回 Soil（兼容旧代码）
-function sync_state!(soil::Soil, st::SoilState)
-  soil.z_water     = st.z_water
-  soil.z_snow      = st.z_snow
-  soil.r_rain_g    = st.r_rain_g
-  soil.f_soilwater = st.f_soilwater
-  soil.f_root     .= st.f_root
-  soil.dt         .= st.dt
-  soil.ice_ratio  .= st.ice_ratio
-  soil.θ          .= st.θ
-  soil.θ_prev     .= st.θ_prev
-  soil.Tsoil_p    .= st.Tsoil_p
-  soil.Tsoil_c    .= st.Tsoil_c
-  soil.f_water    .= st.f_water
-  soil.ψ          .= st.ψ
-  soil.r_waterflow.= st.r_waterflow
-  soil.km         .= st.km
-  soil.KK         .= st.KK
-  soil.Cs         .= st.Cs
-  soil.κ          .= st.κ
-  soil.Ett        .= st.Ett
-  soil.G          .= st.G
-  soil.ft         .= st.ft
-  soil.dtt        .= st.dtt
-  soil.fpsisr     .= st.fpsisr
+function sync_state_to_soil!(soil::Soil, st::SoilState)
+  @unpack z_water, z_snow, r_rain_g, f_soilwater,
+          f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
+          f_water, ψ, r_waterflow, km, KK, Cs, κ, Ett, G,
+          ft, dtt, fpsisr = st
+
+  @pack! soil = z_water, z_snow, r_rain_g, f_soilwater,
+                f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
+                f_water, ψ, r_waterflow, km, KK, Cs, κ, Ett, G,
+                ft, dtt, fpsisr
   return soil
 end
+
 
 export SnowLand
 
@@ -171,23 +144,24 @@ export SnowLand
   # T_soil0::FT = 0.0     # !裸土部分
 end
 
-
-function clamp!(land::SnowLand{FT}, Tair::FT) where {FT<:AbstractFloat}
+function clamp!(des::SnowLand{FT}, src::SnowLand{FT}, Tair::FT) where {FT<:AbstractFloat}
   lower = Tair - FT(2.0)
   upper = Tair + FT(2.0)
 
-  land.T_surf = clamp(land.T_surf, lower, upper)
-  land.T_snow0 = clamp(land.T_snow0, lower, upper)
-  land.T_snow1 = clamp(land.T_snow1, lower, upper)
-  land.T_snow2 = clamp(land.T_snow2, lower, upper)
-  land.T_mix0 = clamp(land.T_mix0, lower, upper)
+  des.T_surf = clamp(src.T_surf, lower, upper)
+  des.T_snow0 = clamp(src.T_snow0, lower, upper)
+  des.T_snow1 = clamp(src.T_snow1, lower, upper)
+  des.T_snow2 = clamp(src.T_snow2, lower, upper)
+  des.T_mix0 = clamp(src.T_mix0, lower, upper)
 end
+clamp!(land::SnowLand{FT}, Tair::FT) where {FT<:AbstractFloat} = clamp!(land, land, Tair)
 
 
 @with_kw mutable struct State{FT}
   "Surface Temperature: [T_ground, T_snow0, T_mix0, T_snow1, T_snow2]"
-  Ts::Vector{FT} = zeros(FT, 5)         # 4:8
-  Ts_prev::Vector{FT} = zeros(FT, 5) # 10:15
+  Ts::SnowLand{FT} = SnowLand{FT}()      # 4:8
+  # Ts::Vector{FT} = zeros(FT, 5)          # 4:8
+  # Ts_prev::Vector{FT} = zeros(FT, 5)   # 10:15
   θ_prev::Vector{FT} = zeros(FT, 5)      # 22:27
   ice_ratio::Vector{FT} = zeros(FT, 5)   # 28:33
 
@@ -199,4 +173,4 @@ end
 # 拖着`ρ_snow`，`ρ_snow`也是一个状态连续的变量
 # https://www.eoas.ubc.ca/courses/atsc113/snow/met_concepts/07-met_concepts/07b-newly-fallen-snow-density/
 
-export State, Soil, SoilState, sync_state!
+export State, Soil, SoilState, sync_state_to_soil!
