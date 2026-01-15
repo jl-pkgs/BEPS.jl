@@ -1,7 +1,7 @@
 using JSON
 
-const PATH_VEG = joinpath(@__DIR__, "params", "ParamVeg.json")
-const PATH_GEN = joinpath(@__DIR__, "params", "ParamGeneral.json")
+const PATH_VEG = joinpath(@__DIR__, "data", "ParamVeg.json")
+const PATH_GEN = joinpath(@__DIR__, "data", "ParamGeneral.json")
 
 _types = ["ENF", "DNF", "DBF", "EBF", "Shrub-SH", "C4", "default"]
 _codes = [1, 2, 6, 9, 13, 40, -1]

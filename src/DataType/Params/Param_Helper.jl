@@ -25,10 +25,9 @@ function Params2Soil!(soil::Soil, params::ParamBEPS{FT}; BF=false) where {FT}
   soil.ρ_soil[1:N] .= Cdouble.(thermal.ρ_soil)
   soil.V_SOM[1:N] .= Cdouble.(thermal.V_SOM)
 end
-
 Params2Soil!(soil::AbstractSoil, params::Nothing) = nothing
 
-## 添加一个逆函数
+
 function Soil2Params!(params::ParamBEPS{FT}, soil::Soil) where {FT}
   N = Int(soil.n_layer)
   params.N = N
@@ -38,7 +37,9 @@ function Soil2Params!(params::ParamBEPS{FT}, soil::Soil) where {FT}
   params.ψ_min = FT(soil.ψ_min)
   params.alpha = FT(soil.alpha)
 
-  if length(params.dz) != N; resize!(params.dz, N); end
+  if length(params.dz) != N
+    resize!(params.dz, N)
+  end
   params.dz .= FT.(soil.dz[1:N])
 
   (; hydraulic, thermal) = params
@@ -46,14 +47,18 @@ function Soil2Params!(params::ParamBEPS{FT}, soil::Soil) where {FT}
   for field in (:θ_vfc, :θ_vwp, :θ_sat, :K_sat, :ψ_sat, :b)
     dest = getfield(hydraulic, field)
     src = getfield(soil, field)
-    if length(dest) != N; resize!(dest, N); end
+    if length(dest) != N
+      resize!(dest, N)
+    end
     dest .= FT.(src[1:N])
   end
 
   for field in (:κ_dry, :ρ_soil, :V_SOM)
     dest = getfield(thermal, field)
     src = getfield(soil, field)
-    if length(dest) != N; resize!(dest, N); end
+    if length(dest) != N
+      resize!(dest, N)
+    end
     dest .= FT.(src[1:N])
   end
   return params

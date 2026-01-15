@@ -11,11 +11,10 @@ nzero(n) = tuple(zeros(n)...) # n double zero
 
 
 include("Constant.jl")
-include("LeafCache.jl")
 # include("Leaf.jl")
 include("CanopyLayer.jl")
 include("BEPS_State.jl")
-include("BEPS_Param.jl")
+include("Params/Params.jl")
 
 include("Met.jl")
 include("OUTPUT.jl")
