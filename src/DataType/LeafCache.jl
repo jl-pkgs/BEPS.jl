@@ -39,22 +39,3 @@ LeafCache(x0) = LeafCache(; x0)
 #     reset!(x)
 #   end
 # end
-
-
-@with_kw mutable struct TransientCache{FT<:AbstractFloat}
-  # 温度状态变量（需要历史访问 k-1）
-  T_snowland::SnowLand{FT} = SnowLand{FT}()       # 当前时间步
-  T_snowland_prev::SnowLand{FT} = SnowLand{FT}()  # 上一时间步
-
-  # 土壤温度和热通量（多层×时间步）
-  Cv::Vector{FT} = zeros(layer + 2)      # 土壤体积热容
-  G::Vector{FT} = zeros(layer + 2)       # 土壤层热通量
-
-  # 叶片缓存（能量平衡迭代状态）
-  leaf_cache::LeafCache = LeafCache(0.0)
-end
-
-function init_cache!(x::TransientCache)
-  # 所有向量字段在创建时已经初始化为0，无需额外清零
-  nothing
-end

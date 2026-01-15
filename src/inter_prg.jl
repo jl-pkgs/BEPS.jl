@@ -14,14 +14,13 @@ function inter_prg_jl(
   lai::T, Ω::T, veg::ParamVeg{T}, met::Met, CosZs::T,
   state::State{T}, soil::AbstractSoil,
   Ra::Radiation,
-  mid_res::Results, mid_ET::OutputET, cache::TransientCache; 
+  mid_res::Results, mid_ET::OutputET, cache::LeafCache; 
   fix_snowpack::Bool=true, kw...) where {T}
 
-  init_cache!(cache)
   @unpack Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
-  leleaf, GPP, LAI, PAI = cache.leaf_cache
+  leleaf, GPP, LAI, PAI = cache
 
   # ===== 1. 参数提取和计算 =====
   (; α_canopy_vis, α_canopy_nir,
@@ -42,10 +41,11 @@ function inter_prg_jl(
 
   # ===== 3. 表面状态初始化 =====
   init_leaf_dbl(Tc_old, T_air - 0.5)
-
-  # 表面温度 [°C] - 初始化 snowland 结构体
-  clamp!(cache.T_snowland_prev, state.Ts, T_air)
-  clamp!(cache.T_snowland, state.Ts, T_air)
+  
+  # 对雪面温度进行限制
+  (; Tsnow_p, Tsnow_c) = state
+  clamp!(Tsnow_p, state.Tsnow_c, T_air)
+  clamp!(Tsnow_c, state.Tsnow_c, T_air)
 
   # 雪水状态 [kg/m² or m]
   m_snow_pre, m_water_pre = state.m_snow, state.m_water
@@ -61,10 +61,9 @@ function inter_prg_jl(
   Tc = Layer3()
 
   # 土壤临时变量和中间变量
-  dz, κ = zeros(layer + 1), zeros(layer + 2)
   radiation_o = radiation_u = radiation_g = ra_g = 0.0
 
-  # ET 相关局部变量（替代 cache 中的标量）
+  # ET 相关局部变量
   Trans_o, Trans_u = 0.0, 0.0
   Eil_o, Eil_u = 0.0, 0.0
   EiS_o, EiS_u = 0.0, 0.0
@@ -78,7 +77,7 @@ function inter_prg_jl(
   # ===== 4. 亚小时循环 (10步/小时, 360秒/步) =====
   @inbounds for k = 2:kloop+1
     # 更新 prev 为上一子时间步的值（k≥3时）
-    k > 2 && (cache.T_snowland_prev .= cache.T_snowland)
+    k > 2 && (Tsnow_p .= Tsnow_c)
 
     !fix_snowpack && (ρ_snow[] = 0.0) # TODO: exact as C
     α_v_sw[], α_n_sw[] = 0.0, 0.0
@@ -216,7 +215,7 @@ function inter_prg_jl(
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
     Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
-      evaporation_soil_jl(T_air, cache.T_snowland_prev.T_surf, RH, radiation_g, Gheat_g,
+      evaporation_soil_jl(T_air, Tsnow_p.T_surf, RH, radiation_g, Gheat_g,
         f_snow, z_water, z_snow, mass_water_g, m_snow,
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
 
@@ -225,21 +224,21 @@ function inter_prg_jl(
     UpdateThermal_Cv(soil)
 
     # /*****  Surface temperature by X. Luo  *****/
-    surface_temperature!(soil, cache, radiation_g, Tc.u, T_air, RH, 
-      z_snow, z_water, ρ_snow[], f_snow.g, Gheat_g,
-      Evap_soil, Evap_SW, Evap_SS, dz, κ)
+    soil.G[1] = surface_temperature!(soil, Tsnow_p, Tsnow_c,
+      radiation_g, Tc.u, T_air, RH, z_snow, z_water, 
+      ρ_snow[], f_snow.g, Gheat_g,
+      Evap_soil, Evap_SW, Evap_SS)
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
-    z_snow, z_water = snowpack_stage3_jl(T_air, cache.T_snowland.T_snow0, cache.T_snowland_prev.T_snow0,
+    z_snow, z_water = snowpack_stage3_jl(T_air, Tsnow_c.T_snow0, Tsnow_p.T_snow0,
       ρ_snow[], z_snow, z_water, m_snow)
     set!(m_snow_pre, m_snow)
+    soil.z_snow = z_snow
 
     # /*****  Sensible heat flux by X. Luo  *****/
-    Qhc_o, Qhc_u, Qhg = sensible_heat_jl(Tc_new, cache.T_snowland.T_surf, T_air, RH, Gh, Gheat_g, PAI)
+    Qhc_o, Qhc_u, Qhg = sensible_heat_jl(Tc_new, Tsnow_c.T_surf, T_air, RH, Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
-    soil.z_snow = z_snow
-    soil.G[1] = cache.G[1]
     UpdateHeatFlux(soil, T_air, kstep)
     Root_Water_Uptake(soil, Trans_o, Trans_u, Evap_soil)
 
@@ -251,7 +250,7 @@ function inter_prg_jl(
   end  # end of sub-hourly loop
 
   # ===== 5. 时间步结束：状态更新 =====
-  state.Ts = cache.T_snowland # 更新表面温度
+  state.Tsnow_c = Tsnow_c # 更新表面温度
   state.Qhc_o = Qhc_o
   set!(state.m_water, m_water)
   set!(state.m_snow, m_snow)

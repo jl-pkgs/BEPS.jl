@@ -1,3 +1,27 @@
+export SnowLand
+
+@with_kw mutable struct SnowLand{FT<:AbstractFloat} <: FieldVector{5,FT}
+  T_surf::FT = 0.0      # 雪表面温度, 裸土地表温度
+  T_snow0::FT = 0.0     # 雪表温度, !注意是雪表, 不是地表
+  T_snow1::FT = 0.0     # 雪层1温度
+  T_snow2::FT = 0.0     # 雪层2温度
+  T_mix0::FT = 0.0      # !mixed
+  # T_soil0::FT = 0.0     # !裸土部分
+end
+
+function clamp!(des::SnowLand{FT}, src::SnowLand{FT}, Tair::FT) where {FT<:AbstractFloat}
+  lower = Tair - FT(2.0)
+  upper = Tair + FT(2.0)
+
+  des.T_surf = clamp(src.T_surf, lower, upper)
+  des.T_snow0 = clamp(src.T_snow0, lower, upper)
+  des.T_snow1 = clamp(src.T_snow1, lower, upper)
+  des.T_snow2 = clamp(src.T_snow2, lower, upper)
+  des.T_mix0 = clamp(src.T_mix0, lower, upper)
+end
+clamp!(land::SnowLand{FT}, Tair::FT) where {FT<:AbstractFloat} = clamp!(land, land, Tair)
+
+
 abstract type AbstractSoil end
 
 # ?     : 需要优化的参数
@@ -101,6 +125,25 @@ end
   fpsisr     ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3
 end
 
+@with_kw mutable struct State{FT}
+  "Surface Temperature: [T_ground, T_snow0, T_snow1, T_snow2, T_mix0]"
+  Tsnow_c::SnowLand{FT} = SnowLand{FT}() # 4:8
+  Tsnow_p::SnowLand{FT} = SnowLand{FT}() # 10:15
+
+  # Ts::Vector{FT} = zeros(FT, 5)          # 4:8
+  # Ts_prev::Vector{FT} = zeros(FT, 5)   # 10:15
+  θ_prev::Vector{FT} = zeros(FT, 5)      # 22:27
+  ice_ratio::Vector{FT} = zeros(FT, 5)   # 28:33
+
+  Qhc_o::FT = 0.0                    # [11] sensible heat flux
+  m_water::Layer2 = Layer2{FT}()     # [15, 18] + 1
+  m_snow::Layer3 = Layer3{FT}()      # [16, 19, 20] + 1
+  ρ_snow::FT = 250.0                 # [kg m-3] snow density
+end
+# 拖着`ρ_snow`，`ρ_snow`也是一个状态连续的变量
+# https://www.eoas.ubc.ca/courses/atsc113/snow/met_concepts/07-met_concepts/07b-newly-fallen-snow-density/
+
+
 # 从 Soil 构造 SoilState（兼容旧代码）
 function SoilState(soil::Soil)
   @unpack n_layer, dz, z_water, z_snow, r_rain_g, f_soilwater,
@@ -131,46 +174,5 @@ function sync_state_to_soil!(soil::Soil, st::SoilState)
                 ft, dtt, fpsisr
   return soil
 end
-
-
-export SnowLand
-
-@with_kw mutable struct SnowLand{FT<:AbstractFloat} <: FieldVector{5,FT}
-  T_surf::FT = 0.0      # 雪表面温度, 裸土地表温度
-  T_snow0::FT = 0.0     # 雪表温度, !注意是雪表, 不是地表
-  T_snow1::FT = 0.0     # 雪层1温度
-  T_snow2::FT = 0.0     # 雪层2温度
-  T_mix0::FT = 0.0      # !mixed
-  # T_soil0::FT = 0.0     # !裸土部分
-end
-
-function clamp!(des::SnowLand{FT}, src::SnowLand{FT}, Tair::FT) where {FT<:AbstractFloat}
-  lower = Tair - FT(2.0)
-  upper = Tair + FT(2.0)
-
-  des.T_surf = clamp(src.T_surf, lower, upper)
-  des.T_snow0 = clamp(src.T_snow0, lower, upper)
-  des.T_snow1 = clamp(src.T_snow1, lower, upper)
-  des.T_snow2 = clamp(src.T_snow2, lower, upper)
-  des.T_mix0 = clamp(src.T_mix0, lower, upper)
-end
-clamp!(land::SnowLand{FT}, Tair::FT) where {FT<:AbstractFloat} = clamp!(land, land, Tair)
-
-
-@with_kw mutable struct State{FT}
-  "Surface Temperature: [T_ground, T_snow0, T_mix0, T_snow1, T_snow2]"
-  Ts::SnowLand{FT} = SnowLand{FT}()      # 4:8
-  # Ts::Vector{FT} = zeros(FT, 5)          # 4:8
-  # Ts_prev::Vector{FT} = zeros(FT, 5)   # 10:15
-  θ_prev::Vector{FT} = zeros(FT, 5)      # 22:27
-  ice_ratio::Vector{FT} = zeros(FT, 5)   # 28:33
-
-  Qhc_o::FT = 0.0                    # [11] sensible heat flux
-  m_water::Layer2 = Layer2{FT}()     # [15, 18] + 1
-  m_snow::Layer3 = Layer3{FT}()      # [16, 19, 20] + 1
-  ρ_snow::FT = 250.0                 # [kg m-3] snow density
-end
-# 拖着`ρ_snow`，`ρ_snow`也是一个状态连续的变量
-# https://www.eoas.ubc.ca/courses/atsc113/snow/met_concepts/07-met_concepts/07b-newly-fallen-snow-density/
 
 export State, Soil, SoilState, sync_state_to_soil!

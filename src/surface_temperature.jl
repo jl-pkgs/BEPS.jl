@@ -133,28 +133,25 @@ end
 
 
 function surface_temperature!(
-  soil::AbstractSoil, cache::TransientCache,
+  soil::AbstractSoil, Tsnow_p::SnowLand{FT}, Tsnow_c::SnowLand{FT}, 
   radiation_g::FT, Tc_u::FT, T_air::FT, RH::FT, z_snow::FT, z_water::FT, ρ_snow::FT, f_snow_g::FT, Gheat_g::FT,
-  Evap_soil::FT, Evap_SW::FT, Evap_SS::FT,
-  dz::Vector{FT}, κ::Vector{FT}) where {FT<:AbstractFloat}
+  Evap_soil::FT, Evap_SW::FT, Evap_SS::FT) where {FT<:AbstractFloat}
 
   # 1. 准备土壤热力学参数
-  cache.Cv[1:2] .= soil.Cv[1]      # 体积热容 [J m-3 K-1]
-  κ[2] = soil.κ[1]                    # 热导率 [W m-1 K-1]; 表皮为1, 第一层为2
-  dz[2] = soil.dz[1]                  # 层厚度 [m]
-  cache.G[2] = soil.G[1]           # 第1层土壤热通量 [W m-2]
+  Cv1 = Cv0 = soil.Cv[1]           # 体积热容 [J m-3 K-1]
+  κ_soil1 = soil.κ[1]                 # 热导率 [W m-1 K-1]; 表皮为1, 第一层为2
+  z_soil1 = soil.dz[1]               # 层厚度 [m]
 
   # 2. 调用 surface_temperature_jl 计算
   G, T_soil0 = surface_temperature_jl!(radiation_g, T_air, Tc_u, RH,
     z_snow, z_water, ρ_snow, f_snow_g, 
-    dz[2], κ[2], cache.Cv[2], cache.Cv[1], Gheat_g, 
+    z_soil1, κ_soil1, Cv1, Cv0, Gheat_g,
     Evap_soil, Evap_SW, Evap_SS,
-    cache.G[2],
+    soil.G[1],
     soil.Tsoil_p[2],      # T_soil1: 第一层土壤温度 [°C]
     soil.Tsoil_p[1],      # T_soil0:
-    cache.T_snowland_prev, cache.T_snowland)
+    Tsnow_p, Tsnow_c)
 
-  cache.G[1] = G
   soil.Tsoil_c[1] = T_soil0 # 更新 soil 的当前温度状态
-  return nothing
+  return G
 end

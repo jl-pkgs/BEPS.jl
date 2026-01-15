@@ -9,7 +9,7 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
-  cache = TransientCache()
+  cache = LeafCache()
 
   if isnothing(model)
     theta = ReadParamVeg(VegType)  # n = 48

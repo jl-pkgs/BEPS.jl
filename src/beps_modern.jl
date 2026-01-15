@@ -7,7 +7,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
-  cache = TransientCache()
+  cache = LeafCache()
 
   ntime = size(d, 1)
   vars = fieldnames(Results) |> collect
