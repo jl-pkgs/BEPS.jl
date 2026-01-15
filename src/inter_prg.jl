@@ -10,7 +10,7 @@ The inter-module function between main program and modules
 - `mid_res`   : results struct
 """
 function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω::T,
-  ps_veg::ParamVeg{T}, forcing::Met, state::StateBEPS, ps::ParamBEPS{T},
+  forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
   mid_res::Results, mid_ET::OutputET, cache::LeafCache;
   fix_snowpack::Bool=true, kw...) where {T}
 
@@ -22,10 +22,12 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
   # ===== 1. 参数提取和计算 =====
   (; α_canopy_vis, α_canopy_nir,
     α_soil_sat, α_soil_dry, z_canopy_o, z_canopy_u, z_wind,
-    g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = ps_veg
+    g0_w, g1_w, VCmax25, N_leaf, slope_Vc) = ps.veg
+  θ_vwp = ps.hydraulic.θ_vwp
+  θ_sat = ps.hydraulic.θ_sat
 
   Vcmax_sunlit, Vcmax_shaded = VCmax(lai, Ω, CosZs, VCmax25, N_leaf, slope_Vc)
-  lai_o, lai_u, stem_o, stem_u = lai2!(ps_veg, Ω, CosZs, lai, LAI, PAI)
+  lai_o, lai_u, stem_o, stem_u = lai2!(ps.veg, Ω, CosZs, lai, LAI, PAI)
 
   # ===== 2. 气象变量初始化 =====
   (; Srad, Tair, RH, wind) = forcing
@@ -86,10 +88,10 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
     r_rain_g = rainfall_stage1_jl(Tair, precip, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
 
     # 土壤反照率计算 [-]
-    α_g = if state.θ_prev[2] < ps.hydraulic.θ_vwp[2] * 0.5
+    α_g = if state.θ_prev[2] < θ_vwp[2] * 0.5
       α_soil_dry
     else
-      (state.θ_prev[2] - ps.hydraulic.θ_vwp[2] * 0.5) / (ps.hydraulic.θ_sat[2] - ps.hydraulic.θ_vwp[2] * 0.5) *
+      (state.θ_prev[2] - θ_vwp[2] * 0.5) / (θ_sat[2] - θ_vwp[2] * 0.5) *
       (α_soil_sat - α_soil_dry) + α_soil_dry
     end
     α_v.g = 2.0 / 3.0 * α_g
@@ -212,7 +214,7 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
     Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
       evaporation_soil_jl(Tair, prev.T_surf, RH, radiation_g, Gheat_g,
         frac_snow, z_water, z_snow, mass_water_g, m_snow,
-        ρ_snow[], state.θ_prev[1], ps.hydraulic.θ_sat[1])
+        ρ_snow[], state.θ_prev[1], θ_sat[1])
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
     UpdateThermal_κ(state, ps)

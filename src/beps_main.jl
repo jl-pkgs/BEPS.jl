@@ -11,9 +11,6 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=n
   Ra = Radiation()
   cache = LeafCache()
 
-  ps_veg = isnothing(params) ? InitParam_Veg(VegType; FT) : params.veg  
-  theta = par2theta(ps_veg; clumping, VegType)
-
   n = size(d, 1)
   vars = fieldnames(Results) |> collect
   vars_ET = fieldnames(OutputET) |> collect
@@ -24,7 +21,11 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=n
   output_Tsoil = zeros(n, layer) ## 返回变量
   output_θ = zeros(n, layer)
 
+  ## 初始化参数和状态变量
   Ta = d.tem[1]
+  ps_veg = isnothing(params) ? InitParam_Veg(VegType; FT) : params.veg
+  theta = par2theta(ps_veg; clumping, VegType)
+
   soil = version == "julia" ? Soil() : Soil_c()
   soil.r_drainage = r_drainage
   Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
@@ -33,7 +34,6 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=n
   state = version == "julia" ? StateBEPS(soil) : zeros(41)
   state_n = deepcopy(state)
   InitState!(soil, state, Ta) # initialize state variables, for C version
-  
   Params2Soil!(soil, params)  # put params into soil struct
 
   if isnothing(params)
@@ -54,11 +54,11 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=n
 
     # /***** start simulation modules *****/
     if version == "julia"
-      inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping, ps_veg,
-        met, state, params, mid_res, mid_ET, cache; fix_snowpack)
+      inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping, 
+        met, params, state, mid_res, mid_ET, cache; fix_snowpack)
     elseif version == "c"
-      inter_prg_c(jday, hour, CosZs, Ra, _lai, clumping, theta,
-        met, state, state_n, soil, mid_res, mid_ET, cache;)
+      inter_prg_c(jday, hour, CosZs, Ra, _lai, clumping, 
+        met, theta, state, state_n, soil, mid_res, mid_ET, cache;)
       state .= state_n # state variables
     end
 

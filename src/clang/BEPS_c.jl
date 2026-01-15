@@ -26,7 +26,7 @@ include("module.jl")
 
 function inter_prg_c(jday, rstep, CosZs::T,
   Ra::Radiation, lai::T, Ω::T, 
-  parameter::Vector{T}, meteo::Met,
+  meteo::Met, parameter::Vector{T},
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
   mid_res::Results, mid_ET::OutputET, cache::LeafCache; debug=false, kw...) where {T<:Real}
 
