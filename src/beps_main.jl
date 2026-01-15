@@ -30,11 +30,16 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=n
   Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
 
-  state = version == "julia" ? StateBEPS() : zeros(41)
+  state = version == "julia" ? StateBEPS(soil) : zeros(41)
   state_n = deepcopy(state)
   InitState!(soil, state, Ta) # initialize state variables, for C version
-  # TODO: add Soil2Params
+  
   Params2Soil!(soil, params)  # put params into soil struct
+
+  if isnothing(params)
+    params = ParamBEPS(VegType, SoilType; FT=FT)
+    version == "julia" && Soil2Params!(params, soil)
+  end
 
   for i = 1:n
     jday = d.day[i]
@@ -50,7 +55,7 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=n
     # /***** start simulation modules *****/
     if version == "julia"
       inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping, ps_veg,
-        met, state, soil, mid_res, mid_ET, cache; fix_snowpack)
+        met, state, params, mid_res, mid_ET, cache; fix_snowpack)
     elseif version == "c"
       inter_prg_c(jday, hour, CosZs, Ra, _lai, clumping, theta,
         met, state, state_n, soil, mid_res, mid_ET, cache;)

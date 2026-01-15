@@ -18,6 +18,7 @@ include("Params/Params.jl")
 
 include("Met.jl")
 include("OUTPUT.jl")
+include("setup.jl")
 
 
 @with_kw mutable struct Radiation

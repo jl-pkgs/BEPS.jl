@@ -10,7 +10,7 @@ The inter-module function between main program and modules
 - `mid_res`   : results struct
 """
 function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω::T,
-  ps_veg::ParamVeg{T}, forcing::Met, state::StateBEPS, soil::AbstractSoil,
+  ps_veg::ParamVeg{T}, forcing::Met, state::StateBEPS, ps::ParamBEPS{T},
   mid_res::Results, mid_ET::OutputET, cache::LeafCache;
   fix_snowpack::Bool=true, kw...) where {T}
 
@@ -45,8 +45,8 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
   # 雪水状态 [kg/m² or m]
   m_snow_pre, m_water_pre = state.m_snow, state.m_water
   m_snow, m_water = Layer3(0.0), Layer2()
-  z_snow = soil.z_snow
-  z_water = soil.z_water < 0.001 ? 0.0 : soil.z_water
+  z_snow = state.z_snow
+  z_water = state.z_water < 0.001 ? 0.0 : state.z_water
 
   # 雪覆盖和反照率 [-]
   frac_snow, A_snow, f_water = Layer3(0.0), Layer2(), Layer2()
@@ -86,18 +86,18 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
     r_rain_g = rainfall_stage1_jl(Tair, precip, f_water, m_water, m_water_pre, lai_o, lai_u, Ω)
 
     # 土壤反照率计算 [-]
-    α_g = if soil.θ_prev[2] < soil.θ_vwp[2] * 0.5
+    α_g = if state.θ_prev[2] < ps.hydraulic.θ_vwp[2] * 0.5
       α_soil_dry
     else
-      (soil.θ_prev[2] - soil.θ_vwp[2] * 0.5) / (soil.θ_sat[2] - soil.θ_vwp[2] * 0.5) *
+      (state.θ_prev[2] - ps.hydraulic.θ_vwp[2] * 0.5) / (ps.hydraulic.θ_sat[2] - ps.hydraulic.θ_vwp[2] * 0.5) *
       (α_soil_sat - α_soil_dry) + α_soil_dry
     end
     α_v.g = 2.0 / 3.0 * α_g
     α_n.g = 4.0 / 3.0 * α_g
 
     # /*****  Soil water factor module by L. He  *****/
-    soil_water_factor_v2(soil)
-    f_soilwater = min(soil.f_soilwater, 1.0) # used in `photosynthesis`
+    soil_water_factor_v2(state, ps)
+    f_soilwater = min(state.f_soilwater, 1.0) # used in `photosynthesis`
 
     # 感热通量初值用于空气动力学导度计算 [W/m²]
     H_canopy_o = Qhc_o  # 使用上一步的值
@@ -212,14 +212,14 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
     Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
       evaporation_soil_jl(Tair, prev.T_surf, RH, radiation_g, Gheat_g,
         frac_snow, z_water, z_snow, mass_water_g, m_snow,
-        ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
+        ρ_snow[], state.θ_prev[1], ps.hydraulic.θ_sat[1])
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
-    UpdateThermal_κ(soil)
-    UpdateThermal_Cv(soil)
+    UpdateThermal_κ(state, ps)
+    UpdateThermal_Cv(state, ps)
 
     # /*****  Surface temperature by X. Luo  *****/
-    soil.G[1] = surface_temperature!(soil, prev, curr,
+    state.G[1] = surface_temperature!(state, prev, curr,
       radiation_g, Tc.u, Tair, RH, z_snow, z_water,
       ρ_snow[], frac_snow.g, Gheat_g,
       Evap_soil, Evap_SW, Evap_SS)
@@ -228,20 +228,20 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
     z_snow, z_water = snowpack_stage3_jl(Tair, curr.T_snow0, prev.T_snow0,
       ρ_snow[], z_snow, z_water, m_snow)
     set!(m_snow_pre, m_snow)
-    soil.z_snow = z_snow
+    state.z_snow = z_snow
 
     # /*****  Sensible heat flux by X. Luo  *****/
     Qhc_o, Qhc_u, Qhg = sensible_heat_jl(Tc_new, curr.T_surf, Tair, RH, Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
-    UpdateHeatFlux(soil, Tair, kstep)
-    Root_Water_Uptake(soil, Trans_o, Trans_u, Evap_soil)
+    UpdateHeatFlux(state, Tair, kstep)
+    Root_Water_Uptake(state, Trans_o, Trans_u, Evap_soil)
 
-    soil.r_rain_g = r_rain_g
-    soil.z_water = z_water
+    state.r_rain_g = r_rain_g
+    state.z_water = z_water
 
-    UpdateSoilMoisture(soil, kstep)
-    z_water = soil.z_water
+    UpdateSoilMoisture(state, ps, kstep)
+    z_water = state.z_water
   end  # end of sub-hourly loop
 
   # ===== 5. 时间步结束：状态更新 =====
