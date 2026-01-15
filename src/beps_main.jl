@@ -1,4 +1,4 @@
-function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=nothing,
+function besp_main(d::DataFrame, lai::Vector;
   lon::FT=120.0, lat::FT=20.0,
   VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
@@ -23,19 +23,13 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=n
 
   ## 初始化参数和状态变量
   Ta = d.tem[1]
-  ps_veg = isnothing(params) ? InitParam_Veg(VegType; FT) : params.veg
-  theta = par2theta(ps_veg; clumping, VegType)
 
   # 使用统一的 setup 函数初始化
-  if version == "julia"
-    soil, state, params = setup_jl(VegType, SoilType;
-      Ta, Tsoil=Tsoil0, θ0, z_snow=z_snow0, r_drainage, r_root_decay, params, FT)
-    state_n = deepcopy(state)
-  else
-    soil, state, params = setup_c(VegType, SoilType;
-      Ta, Tsoil=Tsoil0, θ0, z_snow=z_snow0, r_drainage, r_root_decay, params, FT)
-    state_n = deepcopy(state)
-  end
+  soil, state, params = setup_model(VegType, SoilType;
+    version, Ta, Tsoil=Tsoil0, θ0, z_snow=z_snow0, r_drainage, r_root_decay, FT)
+  state_n = deepcopy(state)
+
+  theta = par2theta(params.veg; clumping, VegType)
 
   for i = 1:n
     jday = d.day[i]

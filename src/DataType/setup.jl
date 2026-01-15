@@ -1,251 +1,69 @@
-# JAX 风格的 setup 函数：将模型拆分为状态(st)和参数(ps)
-#
-# 设计哲学:
-#   st, ps = setup(model)      # JAX/Flax 惯例
-#   st = 状态变量，模拟过程中会改变
-#   ps = 模型参数，模拟过程中保持不变
-#
-# 用法:
-#   st, ps = setup(soil)                              # 从旧 Soil 转换
-#   st, ps = setup(VegType, SoilType; Ta, θ0, ...)    # 直接构造
-#   st, ps = setup(; VegType, SoilType, Ta, θ0, ...)  # 关键字参数版本
-
+# JAX 风格 setup：st, ps = setup(model)
+# st = 状态变量(会变), ps = 模型参数(不变)
 export setup
 
 
-"""
-    setup(soil::Soil; FT=Float64) -> (StateBEPS, ParamBEPS)
+## Internal Helpers ============================================================
+# 从 ParamBEPS 初始化 StateBEPS
+function _init_state(ps::ParamBEPS, Tsoil, Ta, θ0, z_snow)
+  st = StateBEPS(; n_layer=Cint(ps.N))
+  st.dz[1:ps.N] .= ps.dz
+  UpdateRootFraction!(st, ps)
+  Init_Soil_T_θ!(st, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
+  st
+end
 
-从传统 Soil 结构体拆分为 JAX 风格的 (state, params) 元组。
-
-# Arguments
-- `soil::Soil`: 传统的 Soil 结构体（包含状态和参数）
-- `FT=Float64`: 浮点类型
-
-# Returns
-- `st::StateBEPS`: 状态变量（模拟过程中会改变）
-- `ps::ParamBEPS`: 模型参数（模拟过程中保持不变）
-
-# Example
-```julia
-soil = Soil()
-Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
-Init_Soil_T_θ!(soil, Tsoil, Tair, θ0, z_snow)
-
-st, ps = setup(soil)
-UpdateSoilMoisture(st, ps, kstep)
-```
-"""
-function setup(soil::Soil; FT=Float64)
-  # 提取状态变量
-  st = StateBEPS(soil)
-
-  # 提取模型参数
-  ps = ParamBEPS{FT}()
-  Soil2Params!(ps, soil)
-
-  return st, ps
+# 初始化 Soil (Julia/C 版本)
+function _init_soil(version::String, VegType::Int, SoilType::Int,
+    r_drainage, r_root_decay, Tsoil, Ta, θ0, z_snow)
+  soil = version == "julia" ? Soil() : Soil_c()
+  soil.r_drainage = r_drainage
+  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
+  Init_Soil_T_θ!(soil, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
+  soil
 end
 
 
-"""
-    setup(VegType::Int, SoilType::Int; kwargs...) -> (StateBEPS, ParamBEPS)
+## Setup Functions (JAX Style) =================================================
+"从 Soil 拆分为 (StateBEPS, ParamBEPS)"
+function setup(soil::Soil; FT=Float64)
+  st = StateBEPS(soil)
+  ps = ParamBEPS{FT}(); Soil2Params!(ps, soil)
+  st, ps
+end
 
-直接构造 JAX 风格的 (state, params) 元组，无需先创建 Soil。
-
-# Arguments
-- `VegType::Int`: 植被类型 (6=DBF, 9=EBF, 25=cropland, 40=barren, etc.)
-- `SoilType::Int`: 土壤类型 (1=sand, ..., 8=silty clay loam, ..., 11=clay)
-
-# Keyword Arguments
-- `Ta::Real=20.0`: 气温 [°C]，用于初始化土壤温度
-- `Tsoil::Real=Ta`: 初始土壤温度 [°C]
-- `θ0::Real=0.3`: 初始土壤湿度 [m³/m³]
-- `z_snow::Real=0.0`: 初始积雪深度 [m]
-- `r_drainage::Real=0.5`: 地表排水速率
-- `r_root_decay::Real=0.95`: 根系分布衰减率
-- `N::Int=5`: 土壤层数
-- `FT::Type=Float64`: 浮点类型
-
-# Returns
-- `st::StateBEPS`: 状态变量
-- `ps::ParamBEPS`: 模型参数
-
-# Example
-```julia
-st, ps = setup(25, 8; Ta=20.0, θ0=0.3, z_snow=0.0)
-UpdateSoilMoisture(st, ps, 360.0)
-```
-"""
+"直接构造 (StateBEPS, ParamBEPS)，无需先创建 Soil"
 function setup(VegType::Int, SoilType::Int;
-  Ta::Real=20.0,
-  Tsoil::Real=Ta,
-  θ0::Real=0.3,
-  z_snow::Real=0.0,
-  r_drainage::Real=0.5,
-  r_root_decay::Real=0.95,
-  N::Int=5,
-  FT::Type=Float64)
-
-  # 构造参数
+    Ta::Real=20.0, Tsoil::Real=Ta, θ0::Real=0.3, z_snow::Real=0.0,
+    r_drainage::Real=0.5, r_root_decay::Real=0.95, N::Int=5, FT::Type=Float64)
   ps = ParamBEPS(VegType, SoilType; N, FT, r_drainage)
   ps.veg.r_root_decay = FT(r_root_decay)
+  _init_state(ps, Tsoil, Ta, θ0, z_snow), ps
+end
 
-  # 构造状态
-  st = StateBEPS(; n_layer=Cint(N))
+"纯关键字参数版本"
+setup(; VegType::Int, SoilType::Int, kw...) = setup(VegType, SoilType; kw...)
 
-  # 复制 dz 到状态（方便计算）
-  st.dz[1:N] .= ps.dz
-
-  # 初始化根系分布
-  UpdateRootFraction!(st, ps)
-
-  # 初始化温湿度
-  Init_Soil_T_θ!(st, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
-
-  return st, ps
+"从已有 ParamBEPS 构造状态"
+function setup(ps::ParamBEPS; Ta::Real=20.0, Tsoil::Real=Ta, θ0::Real=0.3, z_snow::Real=0.0)
+  _init_state(ps, Tsoil, Ta, θ0, z_snow), ps
 end
 
 
-"""
-    setup(; VegType::Int, SoilType::Int, kwargs...) -> (StateBEPS, ParamBEPS)
-
-纯关键字参数版本，适合从 NamedTuple 或 Dict 传参。
-
-# Example
-```julia
-params = (VegType=25, SoilType=8, Ta=20.0, θ0=0.3)
-st, ps = setup(; params...)
-```
-"""
-function setup(; VegType::Int, SoilType::Int, kwargs...)
-  setup(VegType, SoilType; kwargs...)
-end
-
-
-# 泛型版本：支持传入已有的 ParamBEPS
-"""
-    setup(ps::ParamBEPS; kwargs...) -> (StateBEPS, ParamBEPS)
-
-从已有参数构造状态，返回 (state, params) 元组。
-
-# Example
-```julia
-ps = ParamBEPS(25, 8)
-st, ps = setup(ps; Ta=20.0, θ0=0.3)
-```
-"""
-function setup(ps::ParamBEPS;
-  Ta::Real=20.0,
-  Tsoil::Real=Ta,
-  θ0::Real=0.3,
-  z_snow::Real=0.0)
-
-  N = ps.N
-  st = StateBEPS(; n_layer=Cint(N))
-
-  # 复制 dz 到状态
-  st.dz[1:N] .= ps.dz
-
-  # 初始化根系分布
-  UpdateRootFraction!(st, ps)
-
-  # 初始化温湿度
-  Init_Soil_T_θ!(st, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
-
-  return st, ps
-end
-
-
-"""
-    setup_c(VegType::Int, SoilType::Int; kwargs...) -> (Soil_c, Vector{Float64}, ParamBEPS)
-
-C 版本的 setup 函数，返回 (soil, state, params) 三元组。
-
-# Returns
-- `soil::Soil_c`: C 版本的 Soil 结构体
-- `state::Vector{Float64}`: 状态向量 (长度41)
-- `ps::ParamBEPS`: 模型参数
-
-# Example
-```julia
-soil, state, ps = setup_c(25, 8; Ta=20.0, θ0=0.3)
-```
-"""
-function setup_c(VegType::Int, SoilType::Int;
-  Ta::Real=20.0,
-  Tsoil::Real=Ta,
-  θ0::Real=0.3,
-  z_snow::Real=0.0,
-  r_drainage::Real=0.5,
-  r_root_decay::Real=0.95,
-  params::Union{Nothing,ParamBEPS}=nothing,
-  FT::Type=Float64)
-
-  soil = Soil_c()
-  soil.r_drainage = r_drainage
-  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
-  Init_Soil_T_θ!(soil, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
-
-  state = zeros(41)
+## Legacy Setup (setup_model) ==================================================
+"统一 setup，通过 version 区分 Julia/C 版本，返回 (Soil, State, Params)"
+function setup_model(VegType::Int, SoilType::Int;
+    version::String="julia", Ta::Real=20.0, Tsoil::Real=Ta, θ0::Real=0.3, z_snow::Real=0.0,
+    r_drainage::Real=0.5, r_root_decay::Real=0.95, FT::Type=Float64)
+  soil = _init_soil(version, VegType, SoilType, r_drainage, r_root_decay, Tsoil, Ta, θ0, z_snow)
+  state = version == "julia" ? StateBEPS(soil) : zeros(41)
   InitState!(soil, state, Float64(Ta))
-
-  # 构造或使用已有参数
-  ps = if isnothing(params)
-    ParamBEPS(VegType, SoilType; FT)
-  else
-    Params2Soil!(soil, params)
-    params
-  end
-
-  return soil, state, ps
+  ps = ParamBEPS(VegType, SoilType; FT)
+  version == "julia" && Soil2Params!(ps, soil)
+  soil, state, ps
 end
 
+setup_jl(args...; kw...) = setup_model(args...; version="julia", kw...)
+setup_c(args...; kw...) = setup_model(args...; version="c", kw...)
 
-"""
-    setup_jl(VegType::Int, SoilType::Int; kwargs...) -> (Soil, StateBEPS, ParamBEPS)
-
-Julia 版本的 setup 函数，返回 (soil, state, params) 三元组。
-
-# Returns
-- `soil::Soil`: Julia 版本的 Soil 结构体
-- `st::StateBEPS`: 状态变量
-- `ps::ParamBEPS`: 模型参数
-
-# Example
-```julia
-soil, st, ps = setup_jl(25, 8; Ta=20.0, θ0=0.3)
-```
-"""
-function setup_jl(VegType::Int, SoilType::Int;
-  Ta::Real=20.0,
-  Tsoil::Real=Ta,
-  θ0::Real=0.3,
-  z_snow::Real=0.0,
-  r_drainage::Real=0.5,
-  r_root_decay::Real=0.95,
-  params::Union{Nothing,ParamBEPS}=nothing,
-  FT::Type=Float64)
-
-  soil = Soil()
-  soil.r_drainage = r_drainage
-  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
-  Init_Soil_T_θ!(soil, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
-
-  st = StateBEPS(soil)
-  InitState!(soil, st, Float64(Ta))
-
-  # 构造或使用已有参数
-  ps = if isnothing(params)
-    _ps = ParamBEPS(VegType, SoilType; FT)
-    Soil2Params!(_ps, soil)
-    _ps
-  else
-    Params2Soil!(soil, params)
-    params
-  end
-
-  return soil, st, ps
-end
-
-export setup_c, setup_jl
+export setup_model, setup_c, setup_jl
