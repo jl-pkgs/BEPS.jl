@@ -13,7 +13,7 @@ UpdateSoilMoisture(soil::Soil, kstep::Float64) = UpdateSoilMoisture(soil, soil, 
 
 # 新版本：JAX 风格 (st, ps) 签名
 function UpdateSoilMoisture(st::S, ps::P, kstep::Float64) where {
-  S<:Union{SoilState,Soil},P<:Union{BEPSmodel,Soil}}
+  S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
 
   n = st.n_layer
   dz = st.dz
@@ -131,7 +131,7 @@ end
 - `植被蒸腾`：根据根系分布，耗水可能来自于土壤的每一层
 """
 function Root_Water_Uptake(st::S, Trans_o::Float64, Trans_u::Float64, Evap_soil::Float64) where {
-  S<:Union{SoilState,Soil}}
+  S<:Union{StateBEPS,Soil}}
 
   Trans = Trans_o + Trans_u
   st.Ett[1] = Trans / ρ_w * st.dt[1] + Evap_soil / ρ_w

@@ -30,7 +30,7 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,BEPSmodel}=n
   Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
 
-  state = version == "julia" ? SoilState() : zeros(41)
+  state = version == "julia" ? StateBEPS() : zeros(41)
   state_n = deepcopy(state)
   InitState!(soil, state, Ta) # initialize state variables, for C version
   Params2Soil!(soil, params)  # put params into soil struct

@@ -127,7 +127,7 @@ end
 
 
 # 测试新旧 API 兼容性：SoilState + BEPSmodel vs Soil
-@testset "SoilState + BEPSmodel API 兼容性" begin
+@testset "StateBEPS + BEPSmodel API 兼容性" begin
   # 创建 BEPSmodel 参数
   ps = BEPSmodel(25, 8)  # VegType=25, SoilType=8
 
@@ -137,8 +137,8 @@ end
   Init_Soil_T_θ!(soil, 2.2, 10.0, 0.4, 0.0)
   UpdateRootFraction!(soil)
 
-  # 创建新版 SoilState
-  st = SoilState()
+  # 创建新版 StateBEPS
+  st = StateBEPS()
   st.n_layer = Cint(ps.N)
   st.dz[1:ps.N] .= ps.dz
   Init_Soil_T_θ!(st, 2.2, 10.0, 0.4, 0.0)
@@ -202,11 +202,11 @@ end
 #   Init_Soil_var(soil, state_old, 20.0; r_drainage=0.5, r_root_decay=0.95, Tsoil0=10.0, θ0=0.3, z_snow0=0.0)
 
 #   # 新版本初始化
-#   st = SoilState()
+#   st = StateBEPS()
 #   state_new = State()
 #   # 设置 n_layer 和 dz，因为 Init_Soil_var (新) 假设 st.n_layer 已正确设置，或者它不负责这个
 #   # 查看 Init_Soil_var 实现：UpdateRootFraction! 使用 st.n_layer。
-#   # 所以构造 SoilState 时需要设置好层数。
+#   # 所以构造 StateBEPS 时需要设置好层数。
 #   st.n_layer = Cint(ps.N)
 #   st.dz[1:ps.N] .= ps.dz
 #   Init_Soil_var(st, ps, state_new, 20.0; r_drainage=0.5, r_root_decay=0.95, Tsoil0=10.0, θ0=0.3, z_snow0=0.0)
@@ -218,7 +218,7 @@ end
 # end
 
 
-@testset "Soil → SoilState 转换" begin
+@testset "Soil → StateBEPS 转换" begin
   # 创建并初始化 Soil
   ps = BEPSmodel(25, 8)
   soil = Soil()
@@ -227,8 +227,8 @@ end
   UpdateRootFraction!(soil)
   soil_water_factor_v2(soil)
 
-  # 从 Soil 构造 SoilState
-  st = SoilState(soil)
+  # 从 Soil 构造 StateBEPS
+  st = StateBEPS(soil)
 
   # 验证所有状态变量一致
   @test st.n_layer == soil.n_layer

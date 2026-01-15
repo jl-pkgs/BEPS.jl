@@ -1,5 +1,5 @@
 # Function to compute soil water stress factor
-function soil_water_factor_v2(st::S, ps::P) where {S<:Union{SoilState,Soil},P<:Union{BEPSmodel,Soil}}
+function soil_water_factor_v2(st::S, ps::P) where {S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
   (; ψ_min, alpha) = ps
   (; θ_sat, ψ_sat, b) = get_hydraulic(ps)
 

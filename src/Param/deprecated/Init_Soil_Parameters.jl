@@ -63,7 +63,7 @@ end
 
 
 function Init_Soil_T_θ!(st::S, Tsoil::Float64, Tair::Float64, θ0::Float64, snowdepth::Float64) where {
-  S<:Union{SoilState,Soil}}
+  S<:Union{StateBEPS,Soil}}
 
   dT = clamp(Tsoil - Tair, -5.0, 5.0)
   st.z_snow = snowdepth
@@ -97,7 +97,7 @@ function InitState!(soil::AbstractSoil, state::Vector, Ta)
   return nothing
 end
 
-function InitState!(soil::AbstractSoil, state::S, Ta) where {S<:Union{State,SoilState}}
+function InitState!(soil::AbstractSoil, state::S, Ta) where {S<:Union{State,StateBEPS}}
   n = 5
   state.Tsnow_c .= Ta
   # state.Ts_prev .= soil.Tsoil_p[1:5]

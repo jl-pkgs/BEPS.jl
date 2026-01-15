@@ -88,8 +88,8 @@ end
 # state, params = setup(model)
 
 # 只保留状态变量，其他的丢到模型参数中去
-# JAX 风格：st = SoilState, ps = BEPSmodel
-@with_kw mutable struct SoilState <: AbstractSoil
+# JAX 风格：st = StateBEPS, ps = BEPSmodel
+@with_kw mutable struct StateBEPS <: AbstractSoil
   n_layer    ::Cint = Cint(5) # 土壤层数
   dz         ::Vector{Float64} = zeros(10) # 土壤厚度（从 ps 复制，方便计算）
 
@@ -155,13 +155,13 @@ end
 
 
 # 从 Soil 构造 SoilState（兼容旧代码）
-function SoilState(soil::Soil)
+function StateBEPS(soil::Soil)
   @unpack n_layer, dz, z_water, z_snow, r_rain_g, f_soilwater,
           f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
           f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
           ft, dtt, fpsisr = soil
 
-  SoilState(; 
+  StateBEPS(; 
     n_layer, dz, z_water, z_snow, 
     r_rain_g, f_soilwater,
     f_root, dt, ice_ratio, θ, θ_prev,
@@ -171,8 +171,8 @@ function SoilState(soil::Soil)
   )
 end
 
-# 将 SoilState 同步回 Soil（兼容旧代码）
-function sync_state_to_soil!(soil::Soil, st::SoilState)
+# 将 StateBEPS 同步回 Soil（兼容旧代码）
+function sync_state_to_soil!(soil::Soil, st::StateBEPS)
   @unpack z_water, z_snow, r_rain_g, f_soilwater,
           f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
           f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
@@ -185,4 +185,4 @@ function sync_state_to_soil!(soil::Soil, st::SoilState)
   return soil
 end
 
-export Soil, SoilState, sync_state_to_soil!
+export Soil, State, StateBEPS, sync_state_to_soil!

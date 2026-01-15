@@ -20,11 +20,11 @@ include("UpdateSoilMoisture.jl")
 include("soil_water_factor_v2.jl")
 
 
-function Update_Tsoil_c(st::S, value::Cdouble) where {S<:Union{SoilState,Soil}}
+function Update_Tsoil_c(st::S, value::Cdouble) where {S<:Union{StateBEPS,Soil}}
   st.Tsoil_c[1] = value
 end
 
-function Update_G(st::S, value::Cdouble) where {S<:Union{SoilState,Soil}}
+function Update_G(st::S, value::Cdouble) where {S<:Union{StateBEPS,Soil}}
   st.G[1] = value
 end
 
@@ -33,7 +33,7 @@ get_ice_ratio(Tsoil::FT) where {FT} = clamp(-Tsoil, FT(0), FT(1))
 
 # 新版本：JAX 风格 (st, ps) 签名
 function UpdateRootFraction!(st::S, ps::P) where {
-  S<:Union{SoilState,Soil},P<:Union{BEPSmodel,Soil}}
+  S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
 
   n = st.n_layer
   (; f_root, dz) = st

@@ -20,7 +20,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
   output_θ = zeros(ntime, layer)
 
   Ta = d.tem[1] # 第时刻的温度
-  state = SoilState()
+  state = StateBEPS()
   soil = Soil()
   Params2Soil!(soil, model)
   Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)

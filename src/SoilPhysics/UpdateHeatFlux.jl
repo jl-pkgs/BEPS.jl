@@ -1,6 +1,6 @@
 # Function to update soil heat flux
 function UpdateHeatFlux(st::S, Tair_annual_mean::Float64, period_in_seconds::Float64) where {
-  S<:Union{SoilState,Soil}}
+  S<:Union{StateBEPS,Soil}}
 
   (; G, Tsoil_c, Tsoil_p, κ, dz) = st
   n = st.n_layer
@@ -27,7 +27,7 @@ end
 
 # Function to update volume heat capacity
 # Bonan 2019, Table 5.2
-function UpdateThermal_Cv(st::S, ps::P) where {S<:Union{SoilState,Soil},P<:Union{BEPSmodel,Soil}}
+function UpdateThermal_Cv(st::S, ps::P) where {S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
   (; θ, ice_ratio) = st
   (; ρ_soil, V_SOM) = get_thermal(ps)
 
@@ -44,7 +44,7 @@ UpdateThermal_Cv(p::Soil) = UpdateThermal_Cv(p, p)
 
 # Function to update the frozen status of each soil
 # 旧版本：兼容 Soil 结构体
-function Update_ice_ratio(st::S) where {S<:Union{SoilState,Soil}}
+function Update_ice_ratio(st::S) where {S<:Union{StateBEPS,Soil}}
   (; dz, θ, θ_prev, Tsoil_c, Tsoil_p, ice_ratio, Cv) = st
   Lf0 = 3.34 * 100000  # latent heat of fusion (liquid: solid) at 0C
   # 会不会这里出错了
@@ -73,7 +73,7 @@ end
 
 # Function to update soil thermal conductivity
 @fastmath function UpdateThermal_κ(st::S, ps::P) where {
-  S<:Union{SoilState,Soil},P<:Union{BEPSmodel,Soil}}
+  S<:Union{StateBEPS,Soil},P<:Union{BEPSmodel,Soil}}
   (; θ, ice_ratio, κ) = st
   (; θ_sat) = get_hydraulic(ps)
   (; κ_dry) = get_thermal(ps)
