@@ -1,7 +1,7 @@
 """
     aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
         z_wind::FT, clumping::FT,
-        temp_air::FT, wind_sp::FT, SH_o_p::FT, lai_o::FT, lai_u::FT=0.0)
+        Tair::FT, wind_sp::FT, SH_o_p::FT, lai_o::FT, lai_u::FT=0.0)
 
 # Examples
 ```julia
@@ -23,7 +23,7 @@ r1 = (; ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u)
 """
 function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
   z_wind::FT, clumping::FT,
-  temp_air::FT, wind_sp::FT, SH_o_p::FT, lai_o::FT, lai_u::FT=0.0)
+  Tair::FT, wind_sp::FT, SH_o_p::FT, lai_o::FT, lai_u::FT=0.0)
 
   # beta::FT = 0.5 # Bowen's ratio
   k::FT = 0.4   # von Karman's constant
@@ -31,8 +31,8 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
   density_air::FT = 1.225 # density of air at 15 C (kg/m3)
   gg::FT = 9.8 # gravitational acceleration (m/s2)
   n::FT = 5.0
-  nu_lower::FT = (13.3 + temp_air * 0.07) / 1000000  # viscosity (cm2/s)
-  alfaw::FT = (18.9 + temp_air * 0.07) / 1000000
+  nu_lower::FT = (13.3 + Tair * 0.07) / 1000000  # viscosity (cm2/s)
+  alfaw::FT = (18.9 + Tair * 0.07) / 1000000
 
   @fastmath if wind_sp == 0
     G_o_a = 1 / 200.0
@@ -47,7 +47,7 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
     z0::FT = 0.08 * canopy_height_o # roughness length (m)
 
     ustar::FT = wind_sp * k / log((z_wind - d) / z0) # friction velocity (m/s)
-    L::FT = -(k * gg * SH_o_p) / (density_air * cp * (temp_air + 273.3) * ustar^3)
+    L::FT = -(k * gg * SH_o_p) / (density_air * cp * (Tair + 273.3) * ustar^3)
     L = max(-2.0, L)
 
     ra_o::FT = 1 / (k * ustar) * (log((z_wind - d) / z0) + (n * (z_wind - d) * L))

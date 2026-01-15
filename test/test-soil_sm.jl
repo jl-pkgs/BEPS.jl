@@ -48,8 +48,8 @@ using BEPS
         meteo = DataFrame(
             day = repeat(1:10, inner=24),
             hour = repeat(0:23, outer=10),
-            temp = 15.0 .+ 10.0 * sin.(2π * (1:n) / 24),  # 昼夜温度变化
-            rh = fill(60.0, n),
+            Tair = 15.0 .+ 10.0 * sin.(2π * (1:n) / 24),  # 昼夜温度变化
+            RH = fill(60.0, n),
             rain = [i % 48 == 0 ? 5.0 : 0.0 for i in 1:n],  # 每两天降雨一次
             Srad = [max(0, 500 * sin(π * (h-6) / 12)) for h in repeat(0:23, outer=10)],
             wind = fill(2.0, n)
@@ -97,8 +97,8 @@ using BEPS
         meteo = DataFrame(
             day = repeat(1:5, inner=24),
             hour = repeat(0:23, outer=5),
-            temp = 15.0 .+ 8.0 * sin.(2π * (1:n) / 24),
-            rh = fill(65.0, n),
+            Tair = 15.0 .+ 8.0 * sin.(2π * (1:n) / 24),
+            RH = fill(65.0, n),
             rain = zeros(n),
             Srad = [max(0, 600 * sin(π * (h-6) / 12)) for h in repeat(0:23, outer=5)],
             wind = fill(2.5, n)
@@ -154,8 +154,8 @@ using BEPS
         meteo = DataFrame(
             day = repeat(1:3, inner=24),
             hour = repeat(0:23, outer=3),
-            temp = fill(20.0, n),
-            rh = fill(60.0, n),
+            Tair = fill(20.0, n),
+            RH = fill(60.0, n),
             rain = zeros(n),
             Srad = [max(0, 500 * sin(π * (h-6) / 12)) for h in repeat(0:23, outer=3)],
             wind = fill(2.0, n)
@@ -181,8 +181,8 @@ using BEPS
             meteo = DataFrame(
                 day = repeat(1:2, inner=24),
                 hour = repeat(0:23, outer=2),
-                temp = fill(-5.0, n),  # 持续低温
-                rh = fill(70.0, n),
+                Tair = fill(-5.0, n),  # 持续低温
+                RH = fill(70.0, n),
                 rain = [i == 25 ? 10.0 : 0.0 for i in 1:n],  # 一次降雪
                 Srad = [max(0, 300 * sin(π * (h-6) / 12)) for h in repeat(0:23, outer=2)],
                 wind = fill(3.0, n)
@@ -201,8 +201,8 @@ using BEPS
             meteo = DataFrame(
                 day = repeat(1:2, inner=24),
                 hour = repeat(0:23, outer=2),
-                temp = 35.0 .+ 5.0 * sin.(2π * (1:n) / 24),
-                rh = fill(30.0, n),  # 低湿度
+                Tair = 35.0 .+ 5.0 * sin.(2π * (1:n) / 24),
+                RH = fill(30.0, n),  # 低湿度
                 rain = zeros(n),
                 Srad = [max(0, 800 * sin(π * (h-6) / 12)) for h in repeat(0:23, outer=2)],
                 wind = fill(4.0, n)

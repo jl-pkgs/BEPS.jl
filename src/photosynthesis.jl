@@ -184,7 +184,7 @@ Rank roots #1, #2 and #3 according to the minimum, intermediate and maximum valu
 ```math
 c_s = c_a - A * 1/ g_b
 c_i = c_a - A * (1/g_b + 1/g_s)
-g_s = g_0 + g_1 rh A / c_s
+g_s = g_0 + g_1 RH A / c_s
 Ag = a(c_i - Gamma) / (e c_i + b})
 A = Ag - Rd
 ```

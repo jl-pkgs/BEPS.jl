@@ -37,7 +37,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=
     mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
     _lai = lai[_day]
-    fill_meteo!(met, d, i) # 驱动数据
+    fill_met!(met, d, i) # 驱动数据
 
     inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping, ps_veg, met,
       state, soil, mid_res, mid_ET, cache; fix_snowpack)

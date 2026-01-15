@@ -80,11 +80,11 @@ end
 
 
 
-function snowpack_stage3(Tair::FT, temp_snow::FT, temp_snow_last::FT, density_snow::FT,
+function snowpack_stage3(Tair::FT, T_snow::FT, T_snow_last::FT, density_snow::FT,
   z_snow::TypeRef, z_water::TypeRef, mass_snow_g::TypeRef)
   ccall((:snowpack_stage3, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}),
-    Tair, temp_snow, temp_snow_last, density_snow, z_snow, z_water, mass_snow_g)
+    Tair, T_snow, T_snow_last, density_snow, z_snow, z_water, mass_snow_g)
 end
 
 function snowpack_stage3(Tair::Float64, Tsnow::Float64, Tsnow_last::Float64, ρ_snow::Float64,

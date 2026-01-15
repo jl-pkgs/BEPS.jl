@@ -12,10 +12,10 @@ $(TYPEDFIELDS)
   LR::Cdouble = 0.0
 
   "2m air temperature, `[°C]`"
-  temp::Cdouble = 0.0
+  Tair::Cdouble = 0.0
   
   "Relative Humidity, `[%]`"
-  rh::Cdouble = 0.0
+  RH::Cdouble = 0.0
   
   "precipitation, `[mm/h]`"
   rain::Cdouble = 0.0
@@ -24,30 +24,30 @@ $(TYPEDFIELDS)
   wind::Cdouble = 0.0  
 end
 
-# Met(Srad, LR, temp, rh, rain, wind) = 
-#   Met(; Srad, LR, temp, rh, rain, wind)
+# Met(Srad, LR, Tair, RH, rain, wind) = 
+#   Met(; Srad, LR, Tair, RH, rain, wind)
 
 """
 # Arguments
 - `Srad`: W m-2
-- `temp`: degC
+- `Tair`: degC
 - `rain`: mm
 - `wind`: m/s
 - `hum`: specific humidity, q
 """
-function fill_meteo!(met::Met,
+function fill_met!(met::Met,
   rad::FT, tem::FT, pre::FT, wind::FT, hum::FT)
 
   met.Srad = rad
-  met.temp = tem
+  met.Tair = tem
   met.rain = pre / 1000 # mm to m
   met.wind = wind
   met.LR = -200.0 # 入射长波辐射Rl_air，模型可自行计算，输入更佳
-  met.rh = q2RH(hum, tem)
+  met.RH = q2RH(hum, tem)
 end
 
-function fill_meteo!(met::Met, d::DataFrame, k::Int=1)
-  fill_meteo!(met, d.rad[k], d.tem[k], d.pre[k], d.wind[k], d.hum[k])
+function fill_met!(met::Met, d::DataFrame, k::Int=1)
+  fill_met!(met, d.rad[k], d.tem[k], d.pre[k], d.wind[k], d.hum[k])
 end
 
 

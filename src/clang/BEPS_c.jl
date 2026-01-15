@@ -19,9 +19,9 @@ include("module.jl")
 # include("beps_main.jl")
 # include("debug_Rln.jl")
 
-# function plantresp(LC, mid_res::Results, lai_yr, lai, Tair, temp_soil, CosZs)
+# function plantresp(LC, mid_res::Results, lai_yr, lai, Tair, T_soil, CosZs)
 #     ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Results}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
-#         LC, Ref(mid_res), lai_yr, lai, Tair, temp_soil, CosZs)
+#         LC, Ref(mid_res), lai_yr, lai, Tair, T_soil, CosZs)
 # end
 
 function inter_prg_c(jday, rstep, CosZs::T,
@@ -95,8 +95,8 @@ function lai2!(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI::Leaf, PAI::Leaf)
     Ω, CosZs, stem_o, stem_u, lai_o, lai_u, Ref(LAI), Ref(PAI))
 end
 
-function meteo_pack(temp, rh, meteo_pack_output)
-  ccall((:meteo_pack, libbeps), Cvoid, (Cdouble, Cdouble, Ptr{Cdouble}), temp, rh, meteo_pack_output)
+function meteo_pack(Tair, RH, meteo_pack_output)
+  ccall((:meteo_pack, libbeps), Cvoid, (Cdouble, Cdouble, Ptr{Cdouble}), Tair, RH, meteo_pack_output)
 end
 
 function rainfall_stage1(Tair, prcp, m_water_o_last, m_water_u_last, lai_o, lai_u, Ω)

@@ -28,7 +28,7 @@ end
 function debug_Rln(
   To::FT=25.0, Tu::FT=30.0, Tg::FT=35.0,
   lai_o::FT=2.0, lai_u::FT=1.0, clumping::FT=0.5,
-  Tair::FT=20.0, rh::FT=80.0)
+  Tair::FT=20.0, RH::FT=80.0)
   # Rnl_Leaf::Leaf = Leaf()
   # indicators to describe leaf distribution angles in canopy. slightly related with LAI
   cosQ_o::FT = 0.537 + 0.025 * lai_o  # Luo2018, A10, a representative zenith angle for diffuse radiation transmission
@@ -38,7 +38,7 @@ function debug_Rln(
   τ_u::FT = exp(-0.5 * clumping * lai_u / cosQ_u)
   τ_g = 1
   
-  ea = cal_ea(Tair, rh)
+  ea = cal_ea(Tair, RH)
   ϵ_air = 1.0 - exp(-(pow(ea * 10.0, (Tair + 273.15) / 1200.0)))
   ϵ_air = clamp(ϵ_air, 0.7, 1.0)
 

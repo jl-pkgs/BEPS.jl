@@ -56,7 +56,7 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
     mod(_day, 50) == 0 && (hour == 1) && println("Day = $_day")
 
     _lai = lai[_day] * theta[3] / clumping # re-calculate LAI & renew clump index
-    fill_meteo!(met, d, i) # 驱动数据
+    fill_met!(met, d, i) # 驱动数据
 
     CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
 

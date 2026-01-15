@@ -54,11 +54,11 @@ function init_soil()
   param = ReadParamVeg(kw.VegType)      # n = 48
 
   rad = 100.0
-  temp = -4.0
+  Tair = -4.0
   hum = 7.0
   pre = 0.0
   wind = 2.0
-  meteo = Met(rad, 0.0, temp, hum, pre, wind)
+  meteo = Met(rad, 0.0, Tair, hum, pre, wind)
 
   Tsoil_p = collect(4.0:-1:-5.0)
   Tsoil_c = collect(-5.0:1:4.0)
@@ -73,7 +73,7 @@ function init_soil()
   # var_jl = zeros(41)
   state_jl = State()
   state_c = zeros(41)
-  Ta = meteo.temp
+  Ta = meteo.Tair
 
   r_drainage = param[27]
   r_root_decay = param[28]

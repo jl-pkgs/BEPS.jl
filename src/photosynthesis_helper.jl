@@ -103,8 +103,8 @@ end
   ρᵥ = (LE / λ) * rᵥ + ρₐ    # kg m-3
   e = ρᵥ * T_leaf_K / 0.2165 # mb
   vpd = es - e               # mb
-  rh = 1.0 - vpd / es        # 0 to 1.0
-  return rh
+  RH = 1.0 - vpd / es        # 0 to 1.0
+  return RH
 end
 
 # Function to calculate saturation vapor pressure function in mb

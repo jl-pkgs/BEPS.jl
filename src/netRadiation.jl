@@ -134,7 +134,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
 end
 
 
-function cal_Rln_Longwave(temp_air::FT, rh::FT, T::Layer3{FT}, 
+function cal_Rln_Longwave(Tair::FT, RH::FT, T::Layer3{FT}, 
   lai_o::FT, lai_u::FT, Ω::FT) where {FT<:Real}
 
   # indicators to describe leaf distribution angles in canopy. slightly related with LAI
@@ -145,8 +145,8 @@ function cal_Rln_Longwave(temp_air::FT, rh::FT, T::Layer3{FT},
   τ_u_df::FT = exp(-0.5 * Ω * lai_u / cosQ_u)
 
   # ϵ of each part
-  ea = cal_ea(temp_air, rh)
-  ϵ_air = 1.0 - exp(-(pow(ea * 10.0, (temp_air + 273.15) / 1200.0)))
+  ea = cal_ea(Tair, RH)
+  ϵ_air = 1.0 - exp(-(pow(ea * 10.0, (Tair + 273.15) / 1200.0)))
   ϵ_air = clamp(ϵ_air, 0.7, 1.0)
 
   ϵ_o = 0.98
@@ -154,7 +154,7 @@ function cal_Rln_Longwave(temp_air::FT, rh::FT, T::Layer3{FT},
   ϵ_g = 0.96
 
   # 计算植被和地面的净长波辐射
-  Rl_air = cal_Rln(ϵ_air, temp_air)
+  Rl_air = cal_Rln(ϵ_air, Tair)
   Rl_o = cal_Rln(ϵ_o, T.o)
   Rl_u = cal_Rln(ϵ_u, T.u)
   Rl_g = cal_Rln(ϵ_g, T.g)
