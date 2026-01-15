@@ -134,8 +134,8 @@ function Base.show(io::IO, model::M) where {M<:ParamBEPS}
 end
 
 
-include("InitParam.jl")
-include("Sync.jl")
+include("ParamInit.jl")
+include("ParamHelper.jl")
 include("deprecated/VegHelper.jl")
 include("deprecated/ReadParamVeg.jl")
 include("deprecated/Init_Soil_Parameters.jl")
