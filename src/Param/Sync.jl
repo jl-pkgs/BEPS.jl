@@ -45,7 +45,7 @@ end
 
 function Sync_Soil_to_State!(soil::AbstractSoil, state::State, Ta)
   state.Ts .= Ta
-  state.Ts_prev .= soil.Tsoil_p[1:5]
+  # state.Ts_prev .= soil.Tsoil_p[1:5]
   state.θ_prev .= soil.θ_prev[1:5]
   state.ice_ratio .= soil.ice_ratio[1:5]
   return nothing

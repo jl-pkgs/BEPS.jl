@@ -8,6 +8,7 @@ using Printf
 using Reexport
 using DataFrames: DataFrame
 
+using StaticArrays
 using Statistics
 using ModelParams
 using ModelParams: of_RMSE

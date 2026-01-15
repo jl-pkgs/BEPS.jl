@@ -50,7 +50,7 @@ function inter_prg_jl(
   init_leaf_dbl(Tc_old, T_air - 0.5)
 
   # 表面温度 [°C]
-  var_fields = [:T_ground, :T_surf_snow, :T_surf_mix, :T_snow_L1, :T_snow_L2]
+  var_fields = [:T_surf, :T_snow0, :T_mix0, :T_snow1, :T_snow2]
   for i in 1:5
     var_field = var_fields[i]
     getfield(cache, var_field)[1] = clamp(state.Ts[i], T_air - 2.0, T_air + 2.0)
@@ -228,7 +228,7 @@ function inter_prg_jl(
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
     Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
-      evaporation_soil_jl(T_air, cache.T_ground[k-1], RH, radiation_g, Gheat_g,
+      evaporation_soil_jl(T_air, cache.T_surf[k-1], RH, radiation_g, Gheat_g,
         f_snow,
         z_water, z_snow, mass_water_g, m_snow,
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
@@ -244,13 +244,13 @@ function inter_prg_jl(
       Evap_soil, Evap_SW, Evap_SS, f_snow.g, dz, κ)
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
-    z_snow, z_water = snowpack_stage3_jl(T_air, cache.T_surf_snow[k], cache.T_surf_snow[k-1],
+    z_snow, z_water = snowpack_stage3_jl(T_air, cache.T_snow0[k], cache.T_snow0[k-1],
       ρ_snow[], z_snow, z_water, m_snow)
     set!(m_snow_pre, m_snow)
 
     # /*****  Sensible heat flux by X. Luo  *****/
     Qhc_o, Qhc_u, Qhg =
-      sensible_heat_jl(Tc_new, cache.T_ground[k], T_air, RH, Gh, Gheat_g, PAI)
+      sensible_heat_jl(Tc_new, cache.T_surf[k], T_air, RH, Gh, Gheat_g, PAI)
 
     # /*****  Soil water module by L. He  *****/
     soil.z_snow = z_snow
@@ -267,12 +267,12 @@ function inter_prg_jl(
 
   # ===== 5. 时间步结束：状态更新 =====
   k_step = kloop + 1
-  cache.T_snow_L1[k_step] = clamp(cache.T_snow_L1[k_step], -40.0, 40.0)
-  cache.T_snow_L2[k_step] = clamp(cache.T_snow_L2[k_step], -40.0, 40.0)
+  cache.T_snow1[k_step] = clamp(cache.T_snow1[k_step], -40.0, 40.0)
+  cache.T_snow2[k_step] = clamp(cache.T_snow2[k_step], -40.0, 40.0)
 
   # 更新表面温度状态
-  state.Ts .= [cache.T_ground[k_step], cache.T_surf_snow[k_step], cache.T_surf_mix[k_step],
-               cache.T_snow_L1[k_step], cache.T_snow_L2[k_step]]
+  state.Ts .= [cache.T_surf[k_step], cache.T_snow0[k_step], cache.T_mix0[k_step],
+               cache.T_snow1[k_step], cache.T_snow2[k_step]]
 
   # 更新其他状态变量
   state.Qhc_o = Qhc_o

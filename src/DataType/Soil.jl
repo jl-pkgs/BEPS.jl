@@ -160,9 +160,32 @@ function sync_state!(soil::Soil, st::SoilState)
   return soil
 end
 
+export SnowLand
+
+@with_kw mutable struct SnowLand{FT<:AbstractFloat} <: FieldVector{5,FT}
+  T_surf::FT = 0.0      # 雪表面温度, 裸土地表温度
+  T_snow0::FT = 0.0     # 雪表温度, !注意是雪表, 不是地表
+  T_snow1::FT = 0.0     # 雪层1温度
+  T_snow2::FT = 0.0     # 雪层2温度
+  T_mix0::FT = 0.0      # !mixed
+  # T_soil0::FT = 0.0     # !裸土部分
+end
+
+
+function clamp!(land::SnowLand{FT}, Tair::FT) where {FT<:AbstractFloat}
+  lower = Tair - FT(2.0)
+  upper = Tair + FT(2.0)
+
+  land.T_surf = clamp(land.T_surf, lower, upper)
+  land.T_snow0 = clamp(land.T_snow0, lower, upper)
+  land.T_snow1 = clamp(land.T_snow1, lower, upper)
+  land.T_snow2 = clamp(land.T_snow2, lower, upper)
+  land.T_mix0 = clamp(land.T_mix0, lower, upper)
+end
+
 
 @with_kw mutable struct State{FT}
-  "Surface Temperature: [T_ground, T_surf_snow, T_surf_mix, T_snow_L1, T_snow_L2]"
+  "Surface Temperature: [T_ground, T_snow0, T_mix0, T_snow1, T_snow2]"
   Ts::Vector{FT} = zeros(FT, 5)         # 4:8
   Ts_prev::Vector{FT} = zeros(FT, 5) # 10:15
   θ_prev::Vector{FT} = zeros(FT, 5)      # 22:27

@@ -9,7 +9,7 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
-  var = TransientCache()
+  cache = TransientCache()
 
   if isnothing(model)
     theta = ReadParamVeg(VegType)  # n = 48
@@ -64,11 +64,11 @@ function besp_main(d::DataFrame, lai::Vector; model::Union{Nothing,BEPSmodel}=no
     if version == "julia"
       inter_prg_jl(jday, hour, _lai, clumping, vegpar, meteo, CosZs,
         state, soil,
-        Ra, mid_res, mid_ET, var; VegType, fix_snowpack)
+        Ra, mid_res, mid_ET, cache; VegType, fix_snowpack)
     elseif version == "c"
       inter_prg_c(jday, hour, _lai, clumping, theta, meteo, CosZs,
         state, state_n, soil,
-        Ra, mid_res, mid_ET, var;)
+        Ra, mid_res, mid_ET, cache;)
       state .= state_n # state variables
     end
 
