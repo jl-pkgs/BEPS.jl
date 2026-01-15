@@ -1,6 +1,6 @@
 using Test
 using BEPS
-import BEPS: kstep, Params2Soil!, sync_state_to_soil!, UpdateRootFraction!, Init_Soil_T_θ!
+import BEPS: kstep, Params2Soil!, Soil2Params!, State2Soil!, UpdateRootFraction!, Init_Soil_T_θ!
 import BEPS: UpdateThermal_κ, UpdateThermal_Cv, Update_ice_ratio, UpdateHeatFlux, UpdateSoilMoisture, Root_Water_Uptake, Init_Soil_var
 
 
@@ -71,7 +71,7 @@ function init_soil()
     ice_ratio=Tuple(ice_ratio))
 
   # var_jl = zeros(41)
-  state_jl = State()
+  state_jl = StateBEPS()
   state_c = zeros(41)
   Ta = meteo.Tair
 
@@ -192,31 +192,6 @@ end
   @test st.Ett[1:5] ≈ soil.Ett[1:5]
 end
 
-# @testset "Init_Soil_var API 兼容性" begin
-#   ps = BEPSmodel(25, 8)
-#   # 旧版本初始化
-#   soil = Soil()
-#   state_old = State()
-#   # 注意：Init_Soil_var 内部调用了 Init_Soil_Parameters，所以需要先设置好
-#   # 但我们的 Init_Soil_var 会处理它
-#   Init_Soil_var(soil, state_old, 20.0; r_drainage=0.5, r_root_decay=0.95, Tsoil0=10.0, θ0=0.3, z_snow0=0.0)
-
-#   # 新版本初始化
-#   st = StateBEPS()
-#   state_new = State()
-#   # 设置 n_layer 和 dz，因为 Init_Soil_var (新) 假设 st.n_layer 已正确设置，或者它不负责这个
-#   # 查看 Init_Soil_var 实现：UpdateRootFraction! 使用 st.n_layer。
-#   # 所以构造 StateBEPS 时需要设置好层数。
-#   st.n_layer = Cint(ps.N)
-#   st.dz[1:ps.N] .= ps.dz
-#   Init_Soil_var(st, ps, state_new, 20.0; r_drainage=0.5, r_root_decay=0.95, Tsoil0=10.0, θ0=0.3, z_snow0=0.0)
-
-#   @test st.Tsoil_c[1:5] ≈ soil.Tsoil_c[1:5]
-#   @test st.θ[1:5] ≈ soil.θ[1:5]
-#   @test st.f_root[1:5] ≈ soil.f_root[1:5]
-#   # @test state_new.Ts_prev ≈ state_old.Ts_prev
-# end
-
 
 @testset "Soil → StateBEPS 转换" begin
   # 创建并初始化 Soil
@@ -240,10 +215,34 @@ end
   @test st.ice_ratio[1:5] ≈ soil.ice_ratio[1:5]
   @test st.f_root[1:5] ≈ soil.f_root[1:5]
 
-  # 测试 sync_state_to_soil! 回写
+  # 测试 State2Soil! 回写
   st.θ[1] = 0.5
   st.Tsoil_c[1] = 15.0
-  sync_state_to_soil!(soil, st)
+  State2Soil!(soil, st)
   @test soil.θ[1] ≈ 0.5
   @test soil.Tsoil_c[1] ≈ 15.0
+end
+
+
+@testset "Soil2Params! 逆函数测试" begin
+  # Initialize with default
+  ps = BEPSmodel(25, 8)
+  soil = Soil()
+  Params2Soil!(soil, ps)
+  
+  # Modify soil parameters
+  soil.r_drainage = 0.99
+  soil.ψ_min = 99.0
+  soil.alpha = 9.9
+  soil.θ_vfc[1] = 0.88
+  soil.K_sat[1] = 0.77
+  
+  # Sync back to params
+  Soil2Params!(ps, soil)
+  
+  @test ps.r_drainage ≈ 0.99
+  @test ps.ψ_min ≈ 99.0
+  @test ps.alpha ≈ 9.9
+  @test ps.hydraulic.θ_vfc[1] ≈ 0.88
+  @test ps.hydraulic.K_sat[1] ≈ 0.77
 end

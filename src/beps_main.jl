@@ -33,6 +33,7 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,BEPSmodel}=n
   state = version == "julia" ? StateBEPS() : zeros(41)
   state_n = deepcopy(state)
   InitState!(soil, state, Ta) # initialize state variables, for C version
+  # TODO: add Soil2Params
   Params2Soil!(soil, params)  # put params into soil struct
 
   for i = 1:n

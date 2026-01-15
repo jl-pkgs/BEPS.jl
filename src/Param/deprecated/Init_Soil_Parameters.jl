@@ -47,7 +47,7 @@ function Init_Soil_Parameters(soil::Soil, VegType::Integer, SoilType::Integer, r
 end
 
 
-function Init_Soil_var(soil::AbstractSoil, state::Union{State,Vector}, Ta::FT;
+function Init_Soil_var(soil::AbstractSoil, state::Union{StateBEPS,Vector}, Ta::FT;
   VegType::Int=25, SoilType::Int=8,
   r_drainage::FT, r_root_decay::FT,
   Tsoil0::FT=Ta, θ0::FT=0.2, z_snow0::FT=0.0,
@@ -97,7 +97,7 @@ function InitState!(soil::AbstractSoil, state::Vector, Ta)
   return nothing
 end
 
-function InitState!(soil::AbstractSoil, state::S, Ta) where {S<:Union{State,StateBEPS}}
+function InitState!(soil::AbstractSoil, state::StateBEPS, Ta)
   n = 5
   state.Tsnow_c .= Ta
   # state.Ts_prev .= soil.Tsoil_p[1:5]
