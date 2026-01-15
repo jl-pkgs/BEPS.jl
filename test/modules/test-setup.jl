@@ -1,6 +1,7 @@
 using Test
 using BEPS
-import BEPS: setup, Init_Soil_Parameters, Init_Soil_T_θ!, UpdateSoilMoisture, UpdateRootFraction!
+import BEPS: setup, setup_jl, setup_c,
+  Init_Soil_Parameters, Init_Soil_T_θ!, UpdateSoilMoisture, UpdateRootFraction!
 
 
 @testset "setup" begin
@@ -86,6 +87,31 @@ import BEPS: setup, Init_Soil_Parameters, Init_Soil_T_θ!, UpdateSoilMoisture, U
     @test ps_dbf.alpha isa Real
     @test ps_crop.ψ_min isa Real
     @test ps_crop.alpha isa Real
+  end
+
+
+  @testset "setup_jl" begin
+    soil, st, ps = setup_jl(25, 8; Ta=20.0, θ0=0.3)
+
+    @test soil isa Soil
+    @test st isa StateBEPS
+    @test ps isa ParamBEPS
+
+    @test soil.n_layer == 5
+    @test st.n_layer == 5
+    @test ps.N == 5
+  end
+
+
+  @testset "setup_c" begin
+    soil, state, ps = setup_c(25, 8; Ta=20.0, θ0=0.3)
+
+    @test soil isa Soil_c
+    @test state isa Vector{Float64}
+    @test length(state) == 41
+    @test ps isa ParamBEPS
+
+    @test soil.n_layer == 5
   end
 
 end

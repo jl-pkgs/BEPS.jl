@@ -155,3 +155,97 @@ function setup(ps::ParamBEPS;
 
   return st, ps
 end
+
+
+"""
+    setup_c(VegType::Int, SoilType::Int; kwargs...) -> (Soil_c, Vector{Float64}, ParamBEPS)
+
+C 版本的 setup 函数，返回 (soil, state, params) 三元组。
+
+# Returns
+- `soil::Soil_c`: C 版本的 Soil 结构体
+- `state::Vector{Float64}`: 状态向量 (长度41)
+- `ps::ParamBEPS`: 模型参数
+
+# Example
+```julia
+soil, state, ps = setup_c(25, 8; Ta=20.0, θ0=0.3)
+```
+"""
+function setup_c(VegType::Int, SoilType::Int;
+  Ta::Real=20.0,
+  Tsoil::Real=Ta,
+  θ0::Real=0.3,
+  z_snow::Real=0.0,
+  r_drainage::Real=0.5,
+  r_root_decay::Real=0.95,
+  params::Union{Nothing,ParamBEPS}=nothing,
+  FT::Type=Float64)
+
+  soil = Soil_c()
+  soil.r_drainage = r_drainage
+  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
+  Init_Soil_T_θ!(soil, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
+
+  state = zeros(41)
+  InitState!(soil, state, Float64(Ta))
+
+  # 构造或使用已有参数
+  ps = if isnothing(params)
+    ParamBEPS(VegType, SoilType; FT)
+  else
+    Params2Soil!(soil, params)
+    params
+  end
+
+  return soil, state, ps
+end
+
+
+"""
+    setup_jl(VegType::Int, SoilType::Int; kwargs...) -> (Soil, StateBEPS, ParamBEPS)
+
+Julia 版本的 setup 函数，返回 (soil, state, params) 三元组。
+
+# Returns
+- `soil::Soil`: Julia 版本的 Soil 结构体
+- `st::StateBEPS`: 状态变量
+- `ps::ParamBEPS`: 模型参数
+
+# Example
+```julia
+soil, st, ps = setup_jl(25, 8; Ta=20.0, θ0=0.3)
+```
+"""
+function setup_jl(VegType::Int, SoilType::Int;
+  Ta::Real=20.0,
+  Tsoil::Real=Ta,
+  θ0::Real=0.3,
+  z_snow::Real=0.0,
+  r_drainage::Real=0.5,
+  r_root_decay::Real=0.95,
+  params::Union{Nothing,ParamBEPS}=nothing,
+  FT::Type=Float64)
+
+  soil = Soil()
+  soil.r_drainage = r_drainage
+  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
+  Init_Soil_T_θ!(soil, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
+
+  st = StateBEPS(soil)
+  InitState!(soil, st, Float64(Ta))
+
+  # 构造或使用已有参数
+  ps = if isnothing(params)
+    _ps = ParamBEPS(VegType, SoilType; FT)
+    Soil2Params!(_ps, soil)
+    _ps
+  else
+    Params2Soil!(soil, params)
+    params
+  end
+
+  return soil, st, ps
+end
+
+export setup_c, setup_jl

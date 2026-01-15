@@ -26,19 +26,15 @@ function besp_main(d::DataFrame, lai::Vector; params::Union{Nothing,ParamBEPS}=n
   ps_veg = isnothing(params) ? InitParam_Veg(VegType; FT) : params.veg
   theta = par2theta(ps_veg; clumping, VegType)
 
-  soil = version == "julia" ? Soil() : Soil_c()
-  soil.r_drainage = r_drainage
-  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
-  Init_Soil_T_θ!(soil, Tsoil0, Ta, θ0, z_snow0)
-
-  state = version == "julia" ? StateBEPS(soil) : zeros(41)
-  state_n = deepcopy(state)
-  InitState!(soil, state, Ta) # initialize state variables, for C version
-  Params2Soil!(soil, params)  # put params into soil struct
-
-  if isnothing(params)
-    params = ParamBEPS(VegType, SoilType; FT=FT)
-    version == "julia" && Soil2Params!(params, soil)
+  # 使用统一的 setup 函数初始化
+  if version == "julia"
+    soil, state, params = setup_jl(VegType, SoilType;
+      Ta, Tsoil=Tsoil0, θ0, z_snow=z_snow0, r_drainage, r_root_decay, params, FT)
+    state_n = deepcopy(state)
+  else
+    soil, state, params = setup_c(VegType, SoilType;
+      Ta, Tsoil=Tsoil0, θ0, z_snow=z_snow0, r_drainage, r_root_decay, params, FT)
+    state_n = deepcopy(state)
   end
 
   for i = 1:n
