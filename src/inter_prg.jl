@@ -234,8 +234,8 @@ function inter_prg_jl(
         ρ_snow[], soil.θ_prev[1], soil.θ_sat[1])
 
     # /*****  Soil Thermal Conductivity module by L. He  *****/
-    UpdateSoilThermalConductivity(soil)
-    Update_Cs(soil)
+    UpdateThermal_κ(soil)
+    UpdateThermal_Cs(soil)
 
     # /*****  Surface temperature by X. Luo  *****/
     surface_temperature!(

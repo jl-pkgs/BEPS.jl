@@ -7,9 +7,6 @@
 # surface layer is the snowmelt plus precipitation plus the throughfall
 # of canopy dew minus surface runoff and evaporation.
 # CLM3.5 uses a zero-flow bottom boundary condition.
-get_hydraulic(ps::BEPSmodel) = ps.hydraulic
-
-get_hydraulic(ps::Soil) = ps
 
 # 旧版本：兼容 Soil 结构体
 UpdateSoilMoisture(soil::Soil, kstep::Float64) = UpdateSoilMoisture(soil, soil, kstep)

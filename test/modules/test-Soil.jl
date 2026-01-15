@@ -1,7 +1,7 @@
 using Test
 using BEPS
 import BEPS: kstep, Sync_Param_to_Soil!, sync_state!, UpdateRootFraction!, Init_Soil_T_θ!
-import BEPS: UpdateSoilThermalConductivity, Update_Cs, Update_ice_ratio, UpdateHeatFlux, UpdateSoilMoisture, Root_Water_Uptake, Init_Soil_var
+import BEPS: UpdateThermal_κ, UpdateThermal_Cs, Update_ice_ratio, UpdateHeatFlux, UpdateSoilMoisture, Root_Water_Uptake, Init_Soil_var
 
 
 function Base.getindex(x::Union{Soil,Soil_c}, i::Integer)
@@ -88,9 +88,9 @@ end
   p_jl, p_c = init_soil()
 
   funs = [
-    # Update_Cs,
+    # UpdateThermal_Cs,
     # Update_ice_ratio,
-    UpdateSoilThermalConductivity,
+    UpdateThermal_κ,
     soil_water_factor_v2]
 
   for fun in funs
@@ -107,9 +107,9 @@ end
 @testset "Init_Soil_var" begin
   p_jl, p_c = init_soil()
   funs = [
-    Update_Cs,
+    UpdateThermal_Cs,
     Update_ice_ratio,
-    UpdateSoilThermalConductivity,
+    UpdateThermal_κ,
     soil_water_factor_v2]
 
   for fun in funs
@@ -160,19 +160,19 @@ end
   @test st.fpsisr[1:5] ≈ soil.fpsisr[1:5]
   @test st.dt[1:5] ≈ soil.dt[1:5]
 
-  # 测试 UpdateSoilThermalConductivity
-  UpdateSoilThermalConductivity(soil)
-  UpdateSoilThermalConductivity(st, ps)
+  # 测试 UpdateThermal_κ
+  UpdateThermal_κ(soil)
+  UpdateThermal_κ(st, ps)
   @test st.κ[1:5] ≈ soil.κ[1:5]
 
-  # 测试 Update_Cs
-  Update_Cs(soil)
-  Update_Cs(st, ps)
+  # 测试 UpdateThermal_Cs
+  UpdateThermal_Cs(soil)
+  UpdateThermal_Cs(st, ps)
   @test st.Cs[1:5] ≈ soil.Cs[1:5]
 
   # 测试 UpdateHeatFlux (implicit Update_ice_ratio)
   UpdateHeatFlux(soil, 20.0, 3600.0)
-  UpdateHeatFlux(st, ps, 20.0, 3600.0)
+  UpdateHeatFlux(st, 20.0, 3600.0)
   @test st.Tsoil_c[1:5] ≈ soil.Tsoil_c[1:5]
   @test st.Tsoil_p[1:5] ≈ soil.Tsoil_p[1:5]
   @test st.G[1:5] ≈ soil.G[1:5]
