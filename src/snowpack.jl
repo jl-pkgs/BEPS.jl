@@ -42,7 +42,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   lai_o::Float64, lai_u::Float64, Ω::Float64,
   m_snow_pre::Layer3{Float64},
   m_snow::Layer3{Float64},
-  perc_snow::Layer3{Float64},
+  frac_snow::Layer3{Float64},
   area_snow::Layer2{Float64},
   z_snow::Float64,
   ρ_snow::Ref{Float64},
@@ -67,11 +67,11 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   # kg2m 
   if Tair < 0
     snowrate_o = snowrate
-    m_snow.o, perc_snow.o, area_snow.o, Δm_snow_o =
+    m_snow.o, frac_snow.o, area_snow.o, Δm_snow_o =
       snow_change(m_snow_pre.o, snowrate_o, kstep, ρ_new, lai_o, Ω)
 
     snowrate_u = max(0, snowrate_o - mass2rate(Δm_snow_o))
-    m_snow.u, perc_snow.u, area_snow.u, Δm_snow_u =
+    m_snow.u, frac_snow.u, area_snow.u, Δm_snow_u =
       snow_change(m_snow_pre.u, snowrate_u, kstep, ρ_new, lai_u, Ω)
 
     snowrate_g = max(0.0, snowrate_u - mass2rate(Δm_snow_u))
@@ -79,10 +79,10 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   else
     snowrate_o = 0.0
     m_snow.o = m_snow_pre.o
-    perc_snow.o = clamp(m_snow.o / massMax_snow_o, 0.0, 1.0)
+    frac_snow.o = clamp(m_snow.o / massMax_snow_o, 0.0, 1.0)
 
     m_snow.u = m_snow_pre.u
-    perc_snow.u = clamp(m_snow.u / massMax_snow_u, 0.0, 1.0)
+    frac_snow.u = clamp(m_snow.u / massMax_snow_u, 0.0, 1.0)
     # area_snow.o = area_snow.o # area 不变
     # area_snow.u = area_snow.u
     δ_zs = 0.0
@@ -98,7 +98,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   end
 
   z_snow = m_snow.g > 0 ? m_snow.g / ρ_snow[] : 0.0
-  perc_snow.g = min(m_snow.g / (0.05 * ρ_snow[]), 1.0) # [m]，认为雪深50cm时，perc_snow=1
+  frac_snow.g = min(m_snow.g / (0.05 * ρ_snow[]), 1.0) # [m]，认为雪深50cm时，perc_snow=1
 
   if snowrate_o > 0
     albedo_v_snow[] = (albedo_v_snow[] - 0.70) * exp(-0.005 * kstep / 3600) + 0.7

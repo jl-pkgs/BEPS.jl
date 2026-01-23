@@ -7,8 +7,8 @@ function water_change(m_water_pre, prcp, lai, Ω)
   m_water_o = clamp(m_water_o, 0, mMax_water)
 
   Δm_water_o = max(m_water_o - m_water_pre, 0.0)
-  perc_water_o = min(m_water_o / mMax_water, 1.0)
-  m_water_o, perc_water_o, Δm_water_o
+  frac_water_o = min(m_water_o / mMax_water, 1.0)
+  m_water_o, frac_water_o, Δm_water_o
 end
 
 # [kg m-2] -> [m s-1]
@@ -17,17 +17,17 @@ m2kg(m) = m * kstep * ρ_w
 
 # - m_water: change
 function rainfall_stage1_jl(Tair::Float64, prcp::Float64,
-  perc_water::Layer2{Float64}, m_water::Layer2{Float64}, m_water_pre::Layer2{Float64},
+  frac_water::Layer2{Float64}, m_water::Layer2{Float64}, m_water_pre::Layer2{Float64},
   lai_o::Float64, lai_u::Float64, Ω::Float64)
   # Ta > 0, otherwise it is snow fall
   Tair <= 0.0 && (prcp = 0.0)
   prcp_o = prcp
 
   # overstorey
-  m_water.o, perc_water.o, Δm_water_o = water_change(m_water_pre.o, prcp_o, lai_o, Ω)
+  m_water.o, frac_water.o, Δm_water_o = water_change(m_water_pre.o, prcp_o, lai_o, Ω)
   # understorey
   prcp_u = prcp_o - Δm_water_o / ρ_w / kstep
-  m_water.u, perc_water.u, Δm_water_u = water_change(m_water_pre.u, prcp_u, lai_u, Ω)
+  m_water.u, frac_water.u, Δm_water_u = water_change(m_water_pre.u, prcp_u, lai_u, Ω)
 
   prcp_g = prcp_u - Δm_water_u / ρ_w / kstep
   return prcp_g
