@@ -133,25 +133,29 @@ end
 
 
 function surface_temperature!(
-  soil::AbstractSoil, Tsnow_p::SnowLand{FT}, Tsnow_c::SnowLand{FT}, 
+  state::AbstractSoil, ps::ParamBEPS{FT}, 
+  Tsnow_p::SnowLand{FT}, Tsnow_c::SnowLand{FT},
   radiation_g::FT, Tc_u::FT, T_air::FT, RH::FT, z_snow::FT, z_water::FT, ρ_snow::FT, f_snow_g::FT, Gheat_g::FT,
   Evap_soil::FT, Evap_SW::FT, Evap_SS::FT) where {FT<:AbstractFloat}
 
+  UpdateThermal_κ(state, ps)  # Soil Thermal Conductivity module by L. He 
+  UpdateThermal_Cv(state, ps)
+
   # 1. 准备土壤热力学参数
-  Cv1 = Cv0 = soil.Cv[1]           # 体积热容 [J m-3 K-1]
-  κ_soil1 = soil.κ[1]                 # 热导率 [W m-1 K-1]; 表皮为1, 第一层为2
-  z_soil1 = soil.dz[1]               # 层厚度 [m]
+  Cv1 = Cv0 = state.Cv[1]           # 体积热容 [J m-3 K-1]
+  κ_soil1 = state.κ[1]                 # 热导率 [W m-1 K-1]; 表皮为1, 第一层为2
+  z_soil1 = state.dz[1]               # 层厚度 [m]
 
   # 2. 调用 surface_temperature_jl 计算
   G, T_soil0 = surface_temperature_jl!(radiation_g, T_air, Tc_u, RH,
     z_snow, z_water, ρ_snow, f_snow_g, 
     z_soil1, κ_soil1, Cv1, Cv0, Gheat_g,
     Evap_soil, Evap_SW, Evap_SS,
-    soil.G[1],
-    soil.Tsoil_p[2],      # T_soil1: 第一层土壤温度 [°C]
-    soil.Tsoil_p[1],      # T_soil0:
+    state.G[1],
+    state.Tsoil_p[2],      # T_soil1: 第一层土壤温度 [°C]
+    state.Tsoil_p[1],      # T_soil0:
     Tsnow_p, Tsnow_c)
 
-  soil.Tsoil_c[1] = T_soil0 # 更新 soil 的当前温度状态
+  state.Tsoil_c[1] = T_soil0 # 更新 soil 的当前温度状态
   return G
 end

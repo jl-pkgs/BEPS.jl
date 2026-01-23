@@ -19,6 +19,7 @@ kw = (lon=120.5, lat=30.5,
   d = deserialize(path_proj("data/p1_meteo"))
   d.tem = d.tem .- 5.0
 
+  df_jl, df_ET_jl = besp_main(d, lai; kw..., version="julia", verbose=false, fix_snowpack=false)
   @time df_jl, df_ET_jl = besp_main(d, lai; kw..., version="julia", fix_snowpack=false);
   @time df_c, df_ET_c = besp_main(d, lai; kw..., version="c")
   r = sum(df_jl)
