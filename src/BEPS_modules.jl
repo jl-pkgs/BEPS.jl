@@ -13,6 +13,11 @@ export aerodynamic_conductance_jl,
   netRadiation_jl,
   photosynthesis_jl
 
+# 独立光合作用模块导出
+export ParamPhoto_Farquhar, InitParam_Photo_Farquhar
+export LeafPhoto, PhotoResult
+export photosynthesis
+
 
 # include("Base/Base.jl")
 # include("Param/Parameters.jl")
@@ -36,6 +41,9 @@ include("snowpack.jl")
 
 include("netRadiation.jl")
 include("photosynthesis.jl")
+
+# 独立光合作用模块
+include("Photosynthesis/Photosynthesis.jl")
 
 include("inter_prg.jl")
 

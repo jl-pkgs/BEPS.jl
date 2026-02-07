@@ -77,3 +77,5 @@ include("BEPS_Param.jl")
 include("deprecated/VegHelper.jl")
 include("deprecated/ReadParamVeg.jl")
 include("deprecated/Init_Soil_Parameters.jl")
+
+include("ParamPhoto.jl")
