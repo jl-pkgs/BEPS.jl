@@ -42,12 +42,13 @@ function fill_met!(met::Met,
   met.Tair = tem
   met.rain = pre / 1000 # mm to m
   met.wind = wind
-  met.LR = -200.0 # 入射长波辐射Rl_air，模型可自行计算，输入更佳
+  met.LR = NaN # use model longwave estimation unless overridden
   met.RH = q2RH(hum, tem)
 end
 
-function fill_met!(met::Met, d::DataFrame, k::Int=1)
+function fill_met!(met::Met, d::DataFrame, k::Int=1; use_lrad::Bool=false)
   fill_met!(met, d.rad[k], d.tem[k], d.pre[k], d.wind[k], d.hum[k])
+  use_lrad && hasproperty(d, :lrad) && isfinite(d.lrad[k]) && (met.LR = d.lrad[k])
 end
 
 

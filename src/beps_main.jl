@@ -3,6 +3,7 @@ function besp_main(d::DataFrame, lai::Vector;
   VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
   r_drainage::FT=0.5, r_root_decay::FT=0.95,
+  use_lrad::Bool=false,
   version="julia", fix_snowpack=true, 
   verbose=true, kw...) where {FT<:AbstractFloat}
 
@@ -41,7 +42,7 @@ function besp_main(d::DataFrame, lai::Vector;
     (mod(_day, 50) == 0 && (hour == 1) && verbose) && println("Day = $_day")
 
     _lai = lai[_day] * theta[3] / clumping # re-calculate LAI & renew clump index
-    fill_met!(met, d, i) # 驱动数据
+    fill_met!(met, d, i; use_lrad) # 驱动数据
 
     # /***** start simulation modules *****/
     if version == "julia"

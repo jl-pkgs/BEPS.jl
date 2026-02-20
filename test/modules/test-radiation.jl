@@ -19,6 +19,7 @@ using Test, BEPS
   α_n = Layer3(0.3, 0.35, 0.25)
 
   Tair = 298.0  # Air temperature in Kelvin
+  LR = NaN
   T = Layer3(300.0, 295.0, 290.0)  # Temperature
   
   Rn_Leaf = Leaf(0.0)  # Net radiation for leaf
@@ -29,7 +30,7 @@ using Test, BEPS
   # Call the function with the test inputs
   r_jl = netRadiation_jl(Rs_global, CosZs, T, 
     lai_o, lai_u, lai_os, lai_us, lai, Ω, 
-    Tair, RH, 
+    Tair, RH, LR,
     α_snow_v, α_snow_n, α_v, α_n,
     perc_snow_o, perc_snow_u, perc_snow_g, 
     

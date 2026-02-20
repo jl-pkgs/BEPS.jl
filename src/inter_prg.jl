@@ -30,7 +30,7 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
   lai_o, lai_u, stem_o, stem_u = lai2!(ps.veg, Ω, CosZs, lai, LAI, PAI)
 
   # ===== 2. 气象变量初始化 =====
-  (; Srad, Tair, RH, wind) = forcing
+  (; Srad, LR, Tair, RH, wind) = forcing
   precip = forcing.rain / step
   met = meteo_pack_jl(Tair, RH) # 变量类型转换
 
@@ -135,7 +135,8 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
     snowpack_stage2_jl(EiS_o, EiS_u, m_snow) # X. Luo
 
     # /*****  Evaporation from soil module by X. Luo  *****/
-    Gheat_g = 1 / ra_g  # 地表传热导度 [mol/m²/s]
+    # ra_g 是地表到参考高度的总阻抗 (地表→下层冠层→上层冠层→参考高度)
+    Gheat_g = 1 / ra_g  # 地表空气动力学传热导度 [m/s]
     mass_water_g = ρ_w * z_water  # 地表水质量 [kg/m²]
 
     Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
@@ -216,7 +217,7 @@ function solve_canopy_energy_balance!(
   leleaf, PAI = cache
 
   (; ρₐ, cp, VPD, ea, Δ, γ) = met
-  (; Tair, RH, wind) = forcing
+  (; Tair, RH, wind, LR) = forcing
   (; z_canopy_o, z_canopy_u, z_wind, Ω, lai_o, lai_u, pai_o, pai_u) = geo_params
   (; perc_snow_o, perc_snow_u, frac_snow, α_v_sw, α_n_sw, α_v, α_n) = snow_params
   (; g0_w, g1_w, Vcmax_sunlit, Vcmax_shaded) = biophys_params
@@ -252,7 +253,7 @@ function solve_canopy_energy_balance!(
     radiation_o, radiation_u, radiation_g = netRadiation_jl(
       Srad, CosZs, Tc,
       lai_o, lai_u, pai_o, pai_u, PAI,
-      Ω, Tair, RH,
+      Ω, Tair, RH, LR,
       α_v_sw[], α_n_sw[], α_v, α_n,
       perc_snow_o, perc_snow_u, frac_snow.g,
       Rn, Rns, Rnl, Ra)
