@@ -30,7 +30,7 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
   lai_o, lai_u, stem_o, stem_u = lai2!(ps.veg, Ω, CosZs, lai, LAI, PAI)
 
   # ===== 2. 气象变量初始化 =====
-  (; Srad, LR, Tair, RH, wind) = forcing
+  (; Rs, Rln_in, Tair, RH, Uz) = forcing
   precip = forcing.rain / step
   met = meteo_pack_jl(Tair, RH) # 变量类型转换
 
@@ -45,8 +45,8 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
 
   # 雪覆盖和反照率 [-]
   frac_snow, A_snow, frac_water = Layer3(0.0), Layer2(), Layer2()
-  α_v = Srad <= 0 ? Layer3() : Layer3(α_canopy_vis)
-  α_n = Srad <= 0 ? Layer3() : Layer3(α_canopy_nir)
+  α_v = Rs <= 0 ? Layer3() : Layer3(α_canopy_vis)
+  α_n = Rs <= 0 ? Layer3() : Layer3(α_canopy_nir)
   ρ_snow, α_v_sw, α_n_sw = init_dbl(state.ρ_snow), init_dbl(), init_dbl()
   Tc = Layer3()
 
@@ -217,12 +217,12 @@ function solve_canopy_energy_balance!(
   leleaf, PAI = cache
 
   (; ρₐ, cp, VPD, ea, Δ, γ) = met
-  (; Tair, RH, wind, LR) = forcing
+  (; Tair, RH, Uz, Rln_in) = forcing
   (; z_canopy_o, z_canopy_u, z_wind, Ω, lai_o, lai_u, pai_o, pai_u) = geo_params
   (; perc_snow_o, perc_snow_u, frac_snow, α_v_sw, α_n_sw, α_v, α_n) = snow_params
   (; g0_w, g1_w, Vcmax_sunlit, Vcmax_shaded) = biophys_params
 
-  Srad = forcing.Srad # Directly use Srad
+  Rs = forcing.Rs # Directly use shortwave radiation
 
   radiation_o = radiation_u = radiation_g = ra_g = 0.0
   n_iter = 0
@@ -231,7 +231,7 @@ function solve_canopy_energy_balance!(
     n_iter += 1
     # /***** Aerodynamic conductance module by G.Mo  *****/
     ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
-      aerodynamic_conductance_jl(z_canopy_o, z_canopy_u, z_wind, Ω, Tair, wind, H_canopy_o,
+      aerodynamic_conductance_jl(z_canopy_o, z_canopy_u, z_wind, Ω, Tair, Uz, H_canopy_o,
         pai_o, pai_u)
 
     # 热量传输导度 [mol/m²/s]
@@ -251,9 +251,9 @@ function solve_canopy_energy_balance!(
 
     # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
     radiation_o, radiation_u, radiation_g = netRadiation_jl(
-      Srad, CosZs, Tc,
+      Rs, CosZs, Tc,
       lai_o, lai_u, pai_o, pai_u, PAI,
-      Ω, Tair, RH, LR,
+      Ω, Tair, RH, Rln_in,
       α_v_sw[], α_n_sw[], α_v, α_n,
       perc_snow_o, perc_snow_u, frac_snow.g,
       Rn, Rns, Rnl, Ra)

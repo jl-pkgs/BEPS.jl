@@ -4,6 +4,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,ParamBEPS}=
   fix_snowpack=true, kw...) where {FT<:AbstractFloat}
 
   met = Met()
+  d = standardize_forcing_columns(d)
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
@@ -19,7 +20,7 @@ function besp_modern(d::DataFrame, lai::Vector; model::Union{Nothing,ParamBEPS}=
   output_Tsoil = zeros(ntime, layer) ## 返回变量
   output_θ = zeros(ntime, layer)
 
-  Ta = d.tem[1] # 第时刻的温度
+  Ta = d.Tair[1] # 第时刻的温度
   state = StateBEPS()
   soil = Soil()
   Params2Soil!(soil, model)

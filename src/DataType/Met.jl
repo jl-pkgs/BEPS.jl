@@ -6,49 +6,50 @@ $(TYPEDFIELDS)
 """
 @with_kw mutable struct Met
   "Inward shortwave radiation, `[W m⁻²]`"
-  Srad::Cdouble = 0.0
+  Rs::Cdouble = 0.0
   
   "Inward longwave radiation, `[W m⁻²]`"
-  LR::Cdouble = 0.0
+  Rln_in::Cdouble = NaN
 
   "2m air temperature, `[°C]`"
   Tair::Cdouble = 0.0
-  
+
   "Relative Humidity, `[%]`"
   RH::Cdouble = 0.0
   
   "precipitation, `[mm/h]`"
   rain::Cdouble = 0.0
   
-  "2m wind, `[m/s]`"
-  wind::Cdouble = 0.0  
+  "Wind speed at measurement height z, `[m/s]`"
+  Uz::Cdouble = 0.0
 end
 
-# Met(Srad, LR, Tair, RH, rain, wind) = 
-#   Met(; Srad, LR, Tair, RH, rain, wind)
+# Met(Rs, Rln_in, Tair, RH, rain, Uz) =
+#   Met(; Rs, Rln_in, Tair, RH, rain, Uz)
 
 """
 # Arguments
-- `Srad`: W m-2
+- `Rs`: W m-2
 - `Tair`: degC
 - `rain`: mm
-- `wind`: m/s
-- `hum`: specific humidity, q
+- `Uz`: m/s
+- `RH`: relative humidity, %
 """
 function fill_met!(met::Met,
-  rad::FT, tem::FT, pre::FT, wind::FT, hum::FT)
+  Rs::FT, Tair::FT, rain::FT, Uz::FT, RH::FT)
 
-  met.Srad = rad
-  met.Tair = tem
-  met.rain = pre / 1000 # mm to m
-  met.wind = wind
-  met.LR = NaN # use model longwave estimation unless overridden
-  met.RH = q2RH(hum, tem)
+  met.Rs = Rs
+  met.Tair = Tair
+  met.rain = rain / 1000 # mm to m
+  met.Uz = Uz
+  met.Rln_in = NaN # use model longwave estimation unless overridden
+  met.RH = RH
 end
 
 function fill_met!(met::Met, d::DataFrame, k::Int=1; use_lrad::Bool=false)
-  fill_met!(met, d.rad[k], d.tem[k], d.pre[k], d.wind[k], d.hum[k])
-  use_lrad && hasproperty(d, :lrad) && isfinite(d.lrad[k]) && (met.LR = d.lrad[k])
+  RH = hasproperty(d, :RH) ? d.RH[k] : q2RH(d.qair[k], d.Tair[k])
+  fill_met!(met, d.Rs[k], d.Tair[k], d.rain[k], d.Uz[k], RH)
+  use_lrad && isfinite(d.Rln_in[k]) && (met.Rln_in = d.Rln_in[k])
 end
 
 
@@ -79,4 +80,43 @@ $(TYPEDFIELDS)
   RH::FT
   "Wind speed `[m s⁻¹]`"
   wind::FT = FT(2)
+end
+
+
+
+const FORCING_RENAME_MAP = (
+  :rad => :Rs,
+  :tem => :Tair,
+  :pre => :rain,
+  :wind => :Uz,
+  :hum => :qair,
+  :lrad => :Rln_in,
+)
+
+function standardize_forcing_columns(d::DataFrame)
+  cols = Set(Symbol.(names(d)))
+  d2 = d
+
+  for (old_col, new_col) in FORCING_RENAME_MAP
+    if (old_col in cols) && !(new_col in cols)
+      d2 === d && (d2 = copy(d))
+      rename!(d2, old_col => new_col)
+      push!(cols, new_col)
+    end
+  end
+
+  required = (:day, :hour, :Rs, :Tair, :rain, :Uz)
+  missing_cols = [string(c) for c in required if !(c in cols)]
+  !isempty(missing_cols) && 
+    throw(ArgumentError("Missing forcing columns: $(join(missing_cols, ", "))"))
+
+  if !(:RH in cols) && !(:qair in cols)
+    throw(ArgumentError("Missing humidity column: require RH or qair"))
+  end
+
+  if !(:Rln_in in cols)
+    d2 === d && (d2 = copy(d))
+    d2.Rln_in = fill(NaN, nrow(d2))
+  end
+  d2
 end

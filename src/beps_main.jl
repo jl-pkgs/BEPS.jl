@@ -8,6 +8,7 @@ function besp_main(d::DataFrame, lai::Vector;
   verbose=true, kw...) where {FT<:AbstractFloat}
 
   met = Met()
+  d = standardize_forcing_columns(d)
   mid_res = Results()
   mid_ET = OutputET()
   Ra = Radiation()
@@ -24,7 +25,7 @@ function besp_main(d::DataFrame, lai::Vector;
   output_θ = zeros(n, layer)
 
   ## 初始化参数和状态变量
-  Ta = d.tem[1]
+  Ta = d.Tair[1]
 
   # 使用统一的 setup 函数初始化
   soil, state, params = setup_model(VegType, SoilType;

@@ -10,7 +10,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   T::Layer3{FT}, 
   lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
   lai::Leaf,
-  Ω::FT, Tair::FT, RH::FT, LR::FT,
+  Ω::FT, Tair::FT, RH::FT, Rln_in::FT,
   α_snow_v::FT, α_snow_n::FT, α_v::Layer3{FT}, α_n::Layer3{FT},
   percArea_snow_o::FT, percArea_snow_u::FT, perc_snow_g::FT,
   Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
@@ -86,7 +86,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Rns_u = Ra.Rns_u_dir + Ra.Rns_u_df
   Rns_g = Ra.Rns_g_dir + Ra.Rns_g_df
 
-  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(Tair, RH, T, lai_o, lai_u, Ω, LR)
+  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(Tair, RH, T, lai_o, lai_u, Ω, Rln_in)
 
   # 计算植被和地面的总净辐射
   Rn_o = Rns_o + Rnl_o
@@ -135,7 +135,7 @@ end
 
 
 function cal_Rln_Longwave(Tair::FT, RH::FT, T::Layer3{FT}, 
-  lai_o::FT, lai_u::FT, Ω::FT, LR::FT) where {FT<:Real}
+  lai_o::FT, lai_u::FT, Ω::FT, Rln_in::FT) where {FT<:Real}
 
   # indicators to describe leaf distribution angles in canopy. slightly related with LAI
   cosQ_o::FT = 0.537 + 0.025 * lai_o  # Luo2018, A10, a representative zenith angle for diffuse radiation transmission
@@ -154,7 +154,7 @@ function cal_Rln_Longwave(Tair::FT, RH::FT, T::Layer3{FT},
   ϵ_g = 0.96
 
   # 计算植被和地面的净长波辐射
-  Rl_air = isfinite(LR) ? LR : cal_Rln(ϵ_air, Tair)
+  Rl_air = isfinite(Rln_in) ? Rln_in : cal_Rln(ϵ_air, Tair)
   Rl_o = cal_Rln(ϵ_o, T.o)
   Rl_u = cal_Rln(ϵ_u, T.u)
   Rl_g = cal_Rln(ϵ_g, T.g)
