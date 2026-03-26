@@ -1,5 +1,5 @@
 #import "@local/modern-cug-report:0.1.3": *
-#show: doc => template(doc, footer: "CUG水文气象学2025", header: "")
+#show: doc => template(doc, footer: "BEPS.jl", header: "")
 
 // *BEPS模型中使用的土壤类型编号：*
 
