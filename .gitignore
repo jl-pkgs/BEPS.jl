@@ -40,3 +40,10 @@ Project_FI-Hyy
 Plans
 
 dev
+BEPS_C.md
+BEPS_jl.md
+
+backup
+
+*.sh
+log.txt
