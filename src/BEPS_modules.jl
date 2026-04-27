@@ -43,7 +43,7 @@ include("netRadiation.jl")
 include("photosynthesis.jl")
 
 # 独立光合作用模块
-include("Photosynthesis/Photosynthesis.jl")
+include("Photosynthesis/photosynthesis.jl")
 
 include("inter_prg.jl")
 
