@@ -6,13 +6,14 @@ function beps_optimize(d::DataFrame, lai::Vector, model::ParamBEPS, obs::Abstrac
   x0, lb, ub, paths = get_opt_info(model)
 
   function cal_func(x)
-    # 每次评估使用独立副本，确保并行安全
+    # deepcopy 避免迭代间状态污染
     m = deepcopy(model)
     update!(m, paths, x)
     df_out = df_ET = nothing
     try
       df_out, df_ET, _, _ = beps_modern(d, lai; model=m, kwargs...)
-    catch
+    catch e
+      e isa DomainError || @warn "beps_optimize: unexpected error" exception=e
       return Inf  # 参数违反物理约束时返回大值
     end
 
