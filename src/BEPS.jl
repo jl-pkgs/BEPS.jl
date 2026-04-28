@@ -40,5 +40,6 @@ using BEPS.clang
 # include("beps_inter_prg.jl")
 include("beps_main.jl")
 include("beps_modern.jl")
+include("beps_optimize.jl")
 
 end # module BEPS

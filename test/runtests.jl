@@ -9,6 +9,8 @@ end
 
 include("test-photosynthesis_standalone.jl")
 include("test-beps_main.jl")
+include("test-beps_modern.jl")
 include("test-ModelParams.jl")
 include("test-utilize.jl")
+include("test-optimization.jl")
 include("modules/modules.jl")
