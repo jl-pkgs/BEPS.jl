@@ -13,7 +13,7 @@ end
 # ── V1 vs C（仅 Windows 有效） ──────────────────────────────────────
 @testset "aerodynamic_conductance V1 vs C" begin
   if !Sys.iswindows()
-    @test true skip = true  # libbeps.dll 仅在 Windows 上可用
+    @test_skip "libbeps.dll 仅在 Windows 上可用"
   else
     canopyh_o = 2.0
     canopyh_u = 0.2

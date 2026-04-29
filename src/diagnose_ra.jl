@@ -27,7 +27,9 @@ SH = ρₐ cp (Tc - Ta) / ra  →  ra = ρₐ cp (Tc - Ta) / SH
 - `cp`     : specific heat of air [J/kg/K]  (default 1010.0)
 
 # Returns
-`ra` in [s/m]; returns `Inf` when `|SH_obs| < 1 W/m²` to avoid singularities.
+`ra` in [s/m]; returns `Inf` when `|SH_obs| < 1 W/m²` (near-zero flux
+condition where the inversion is physically unreliable — such points should be
+filtered before further analysis).
 """
 function ra_from_flux(SH_obs::T, Tc::T, Ta::T;
   ρₐ::T=T(1.292), cp::T=T(1010.0))::T where {T<:Real}
@@ -59,7 +61,8 @@ LE = [Δ(Rn-G) + ρₐ cp VPD Ga] / [Δ + γ(1 + Ga/Gc)]
 
 # Returns
 `Gc` in [m/s]; returns `NaN` when denominator < 1e-3 (near-saturated or
-energy-limited regime where PM inversion is ill-conditioned).
+energy-limited regime where PM inversion is ill-conditioned — filter `isnan`
+results before statistical analysis).
 """
 function Gc_penman(LE_obs::T, Ga::T, Rn::T, G_soil::T,
   Ta::T, RH::T)::T where {T<:Real}
