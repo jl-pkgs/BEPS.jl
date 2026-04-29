@@ -56,14 +56,15 @@ end
     of_Bias(obs, sim) -> Float64
 
 Mean relative bias (%). Positive = overestimate, negative = underestimate.
+Uses `mean(obs)` as denominator; returns `NaN` when `mean(obs) == 0`.
 """
 function of_Bias(obs::AbstractVector, sim::AbstractVector)
   valid = @. !isnan(obs) & !isnan(sim)
   o, s = obs[valid], sim[valid]
   isempty(o) && return NaN
-  μo = mean(abs.(o))
+  μo = mean(o)
   μo == 0 && return NaN
-  (mean(s) - mean(o)) / μo * 100.0
+  (mean(s) - μo) / abs(μo) * 100.0
 end
 
 
