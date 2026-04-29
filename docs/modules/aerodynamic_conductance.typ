@@ -273,7 +273,80 @@ $
   地表通量与各层叶片通量通过各自的阻力（$r_(a,g)$, $r_(b,u)$, $r_(b,o)$）*并联*注入冠层内部的空气节点，最终统一经由 $r_(a,o)$ 排入大气层。各分层阻力代表独立的传输通道，*严禁将各层空气阻力进行简单的电路串联累加*（即 $r_(a,g) eq.not r_(a,g) + r_(a,u) + r_(a,o)$），否则会破坏能量守恒定律并导致底层通量极度失真。
 ]
 
+#box-blue[
+  *实现说明：代码中 `ra_g` 的含义* \
+  尽管在并联阻力网络中各分量不应串联，代码中返回的 `ra_g` 是*地表至参考高度的总串联阻力*（即 $r_(a,g,"local") + r_(a,u) + r_(a,o)$），专用于 `evaporation_soil` 模块计算地表蒸发时的 $G_("heat,g") = 1 / r_(a,g)$。这与表征冠层内部阻力分配的局部 $r_(a,g,"local")$ 概念不同，两者不可混用。
+]
+
 // #pagebreak()
+
+#v(2em)
+= 5 V1 与 V2 实现对比
+
+本模型经历了两个主要实现版本（`aerodynamic_conductance.jl` 与 `aerodynamic_conductance_V2.jl`），V2 在物理一致性上有系统性提升。
+
+== 5.1 主要改进点汇总
+
+#figure(
+  table(
+    columns: (auto, 1fr, 1fr),
+    align: (left, left, left),
+    table.header([*项目*], [*V1（旧版）*], [*V2（新版）*]),
+    [Monin-Obukhov 长度 $L$],
+      [$L = -(k g H) / (rho c_p T u_star^3)$（公式倒置）],
+      [$L = -(rho c_p T u_star^3) / (k g H)$（正确 MOST 公式）],
+    [热量粗糙度 $z_"0h"$],
+      [与动量粗糙度混用：$z_0 = 0.08h$],
+      [显式区分：$z_"0m" = 0.08h$，$z_"0h" = 0.1 z_"0m"$（$k B^(-1) approx 2.3$）],
+    [$r_(a,o)$ 稳定性修正],
+      [$1/(k u_star) (ln((z-d)\/z_0) + n (z-d) L)$（加法形式，错误）],
+      [$1/(k u_star) (ln((z-d)\/z_"0h") - Psi_h)$（正确 MOST 积分形式）],
+    [消光系数 $gamma$],
+      [所有层共用同一 $gamma$],
+      [动量/热量解耦：$gamma_(o,m)$、$gamma_(o,h)$、$gamma_(u,m)$、$gamma_(g,h)$],
+    [$K_H$ 连续性],
+      [林下阻力直接使用 $K_(h,o)$（冠层顶部值）],
+      [$K_(h,u) = K_(h,o) exp(-gamma_(o,h)(1-h_u\/h))$（物理连续交接）],
+    [$r_(a,g)$ 公式],
+      [$h / (gamma K_(h,o)) [exp(gamma) - exp(gamma (1-h_u\/h))]$],
+      [$h_u / (gamma_(g,h) K_(h,u)) [exp(gamma_(g,h)) - 1]$（以 $h_u$ 为基准，更简洁）],
+  ),
+  caption: [V1 与 V2 关键差异对比],
+)
+
+== 5.2 关键公式对比
+
+=== Monin-Obukhov 长度（最重要的改正）
+
+V1 中 L 的计算实际上是标准公式的*倒数*，即 $L_"V1" = 1 / L_"standard"^2$，量纲也不正确：
+
+$
+  L_"V1" = -(k g H) / (rho c_p T u_star^3)
+  quad arrow.r quad
+  L_"V2" = -(rho c_p T u_star^3) / (k g H)  quad [m]
+$
+
+这一错误会导致稳定度参数 $xi = (z-d)/L$ 的量级完全失真，进而影响所有稳定度修正函数的计算。
+
+=== 热量粗糙度长度
+
+$r_(a,o)$ 的推导（见 @eq-ra）积分下边界为热量粗糙度长度 $z_"0h"$，而非动量粗糙度长度 $z_"0m"$。V1 误用 $z_"0m"$，而 V2 正确引入：
+
+$
+  z_"0h" = 0.1 z_"0m" = 0.008 h
+  quad arrow.r quad
+  ln((z-d) / z_"0h") = ln((z-d) / z_"0m") + ln(z_"0m" / z_"0h") = ln((z-d) / z_"0m") + k B^(-1)
+$
+
+其中 $k B^(-1) approx 2.3$。这使得 V2 的 $r_(a,o)$ 系统性地高于 V1 约 $k B^(-1) / (k u_star) approx 5.75 / u_star$ s/m。
+
+== 5.3 预期的数值差异
+
+V2 与 V1 的结果不兼容，不可互相替代用于对比验证。主要影响：
+
+- $r_(a,o)$：V2 > V1，约增大 $5 tilde 15$ s/m（取决于 $u_star$）
+- $r_(a,u)$、$r_(a,g)$：因 $K_h$ 计算方式不同而有差异
+- 稳定/不稳定条件下，两版本的相对误差方向可能改变
 
 #v(2em)
 = 附录 // <!-- omit in toc -->
