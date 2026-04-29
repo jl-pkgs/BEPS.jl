@@ -28,7 +28,8 @@ Vcmax 的温度响应（Medlyn et al. 2002 归一化峰值 Arrhenius）
 - `T`: 叶片温度 [K]
 - `Vcmax25`: 25°C 时的最大羧化速率 [μmol m-2 s-1]
 - `evc`: 活化能 [J mol-1]
-- `toptvc`: 最适温度 [K]（保留以备用，当前公式使用固定 Hd 和 S）
+- `toptvc`: 最适温度 [K]（当前实现未使用，保留以保持 API 兼容性；
+  去活化由固定参数 Hd=200000 J/mol, S=640 J/mol/K 控制）
 
 # Returns
 - 温度调整后的 Vcmax [μmol m-2 s-1]，在 25°C 归一化为 Vcmax25
@@ -57,7 +58,8 @@ Jmax 的温度响应（Medlyn et al. 2002 归一化峰值 Arrhenius）
 - `T`: 叶片温度 [K]
 - `Jmax25`: 25°C 时的最大电子传递速率 [μmol m-2 s-1]
 - `ejm`: 活化能 [J mol-1]
-- `toptjm`: 最适温度 [K]（保留以备用）
+- `toptjm`: 最适温度 [K]（当前实现未使用，保留以保持 API 兼容性；
+  去活化由固定参数 Hd=200000 J/mol, S=640 J/mol/K 控制）
 
 # Returns
 - 温度调整后的 Jmax [μmol m-2 s-1]，在 25°C 归一化为 Jmax25

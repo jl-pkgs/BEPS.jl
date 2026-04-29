@@ -110,9 +110,11 @@ using DataFrames
     #=
     对比说明：
     - 原始 photosynthesis_jl：使用 TBOLTZ 钟形温度响应（topt=301K），
-      kc25=274.6, ko25=419.8, tau25=2904，最适温度 ~25–28°C
-    - 独立 Photosynthesis 模块：使用 Medlyn 归一化 Arrhenius，
-      kc25=404, ko25=248, tau25=2600，最适温度 ~15°C（北方针叶林参数化）
+      Michaelis 常数 kc25=274.6, ko25=419.8, tau25=2904（Harley & Baldocchi 1995），
+      最适温度 ~25–28°C
+    - 独立 Photosynthesis 模块：使用 Medlyn et al. 2002 归一化 Arrhenius 温度响应，
+      Michaelis 常数 kc25=404, ko25=248, tau25=2600（Bernacchi et al. 2001），
+      最适温度 ~15°C（北方针叶林参数化）
     两者 Vcmax25 和 Jmax25 相同，但温度响应函数和 Michaelis 常数不同。
     =#
     params = InitParam_Photo_Farquhar()
@@ -147,12 +149,14 @@ using DataFrames
     end
 
     # 原始模块在 25°C 最接近最适，应大于在 0°C
-    _, An_orig_25, _ = photosynthesis_jl(298.15, Srad, RH/100*0.6108*exp(17.27*25/262.3),
-                                          0.5*298.15*pstat273, Vcmax25, 1.0, g0_w, g1_w,
-                                          0.7*380.0, 25.0, 0.0)
-    _, An_orig_0, _  = photosynthesis_jl(273.15, Srad, RH/100*0.6108*exp(17.27*0/237.3),
-                                          0.5*273.15*pstat273, Vcmax25, 1.0, g0_w, g1_w,
-                                          0.7*380.0, 0.0, 0.0)
+    ea_25 = RH / 100 * 0.6108 * exp(17.27 * 25.0 / (25.0 + 237.3))
+    ea_0  = RH / 100 * 0.6108 * exp(17.27 * 0.0  / (0.0  + 237.3))
+    _, An_orig_25, _ = photosynthesis_jl(298.15, Srad, ea_25,
+                                          0.5 * 298.15 * pstat273, Vcmax25, 1.0, g0_w, g1_w,
+                                          0.7 * 380.0, 25.0, 0.0)
+    _, An_orig_0, _  = photosynthesis_jl(273.15, Srad, ea_0,
+                                          0.5 * 273.15 * pstat273, Vcmax25, 1.0, g0_w, g1_w,
+                                          0.7 * 380.0, 0.0, 0.0)
     @test An_orig_25 > An_orig_0  # 原始模块：25°C > 0°C（峰值在 ~28°C）
   end
 

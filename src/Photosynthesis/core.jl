@@ -36,7 +36,8 @@ function farquhar_model(T::FT, PAR::FT, ci::FT, params) where {FT<:AbstractFloat
 
   # 3. Rubisco 限制速率
   # Wc = Vcmax * (ci - Γ*) / (ci + Kc * (1 + O2/Ko))
-  # Γ* = 0.5 * O2 / tau, O2 = 210 mmol/mol → 105000 μmol/mol equivalent
+  # Γ* = 0.5 * O2 / tau，O2 = 210 mmol/mol = 210000 μmol/mol
+  # 故 0.5 * 210000 = 105000
   Γstar = FT(105000.0) / tau  # CO2 补偿点 [μmol mol-1]
   Wc = Vcmax * (ci - Γstar) / (ci + Kc * (1.0 + 210.0 / Ko))
 
