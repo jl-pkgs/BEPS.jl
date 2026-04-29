@@ -36,7 +36,8 @@ function farquhar_model(T::FT, PAR::FT, ci::FT, params) where {FT<:AbstractFloat
 
   # 3. Rubisco 限制速率
   # Wc = Vcmax * (ci - Γ*) / (ci + Kc * (1 + O2/Ko))
-  Γstar = 40.0 / tau  # CO2 补偿点
+  # Γ* = 0.5 * O2 / tau, O2 = 210 mmol/mol → 105000 μmol/mol equivalent
+  Γstar = FT(105000.0) / tau  # CO2 补偿点 [μmol mol-1]
   Wc = Vcmax * (ci - Γstar) / (ci + Kc * (1.0 + 210.0 / Ko))
 
   # 4. 光限制速率
@@ -46,8 +47,8 @@ function farquhar_model(T::FT, PAR::FT, ci::FT, params) where {FT<:AbstractFloat
   J = (I2 + Jmax - sqrt((I2 + Jmax)^2 - 4.0 * theta2 * I2 * Jmax)) / (2.0 * theta2)
   Wj = J * (ci - Γstar) / (4.0 * ci + 8.0 * Γstar)
 
-  # 5. TPU 限制（简化）
-  Wp = FT(0.167) * Vcmax
+  # 5. TPU 限制: Wp = 3 * TPU ≈ 0.5 * Vcmax (TPU ≈ Vcmax/6)
+  Wp = FT(0.5) * Vcmax
 
   # 6. 净光合速率
   Ac = min(Wc, Wj, Wp)

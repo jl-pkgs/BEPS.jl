@@ -35,7 +35,7 @@ export photosynthesis
 - `params`: 光合作用参数（ParamPhoto_Farquhar）
 - `ca`: 大气 CO2 浓度 [μmol mol-1] (默认 380)
 - `β_soil`: 土壤水分胁迫因子 [0-1] (默认 1.0，无胁迫)
-- `gb_w`: 边界层导度 [mol m-2 s-1] (默认 0.01)
+- `gb_w`: 边界层导度 [mol m-2 s-1] (默认 0.5，典型叶片值)
 
 # Returns
 - `PhotoResult`: 包含 An, Gs, Ci, Gc, Rd
@@ -58,7 +58,7 @@ function photosynthesis(Tair::FT, RH::FT, Srad::FT, LAI::FT,
                        params;
                        ca::FT=FT(380.0),
                        β_soil::FT=FT(1.0),
-                       gb_w::FT=FT(0.01)) where {FT<:AbstractFloat}
+                       gb_w::FT=FT(0.5)) where {FT<:AbstractFloat}
   # 计算气象变量
   ea = cal_ea(Tair, RH)
   rho_a = cal_rho_a(Tair, ea)

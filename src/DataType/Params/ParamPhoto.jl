@@ -68,7 +68,7 @@ Farquhar 光合作用模型参数
 
   # ===== Michaelis-Menten 常数 =====
   kc25::FT = 404.0 | (200.0, 600.0)               # [μmol mol-1] CO2
-  ko25::FT = 248000.0 | (200000.0, 300000.0)      # [mmol mol-1] O2
+  ko25::FT = 248.0 | (150.0, 400.0)               # [mmol mol-1] O2 Michaelis 常数
   tau25::FT = 2600.0 | (2000.0, 3000.0)           # [mmol mol-1] Rubisco 特异性
 
   # ===== 电子传输参数 =====

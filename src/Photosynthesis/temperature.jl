@@ -22,52 +22,59 @@ end
 """
     fTv(T::FT, Vcmax25::FT, evc::FT, toptvc::FT) where {FT<:AbstractFloat}
 
-Vcmax 的温度响应
+Vcmax 的温度响应（Medlyn et al. 2002 归一化峰值 Arrhenius）
 
 # Arguments
 - `T`: 叶片温度 [K]
 - `Vcmax25`: 25°C 时的最大羧化速率 [μmol m-2 s-1]
 - `evc`: 活化能 [J mol-1]
-- `toptvc`: 最适温度 [K]
+- `toptvc`: 最适温度 [K]（保留以备用，当前公式使用固定 Hd 和 S）
 
 # Returns
-- 温度调整后的 Vcmax [μmol m-2 s-1]
+- 温度调整后的 Vcmax [μmol m-2 s-1]，在 25°C 归一化为 Vcmax25
+
+# References
+- Medlyn et al., 2002, Plant Cell Environ.
 """
 @fastmath function fTv(T::FT, Vcmax25::FT, evc::FT, toptvc::FT) where {FT<:AbstractFloat}
   rugc = FT(8.314)
-  
-  # 温度响应因子
-  ft = TBOLTZ(T, evc)
-  
-  # 高温抑制因子
-  fth = 1.0 + exp((-22000.0 + 710.0 * (T - 298.15)) / (298.15 * rugc))
-  fth2 = 1.0 + exp((200000.0 - 640.0 * T) / (T * rugc))
-  
-  return Vcmax25 * ft / fth * fth2
+  TK25 = FT(298.15)
+  Hd   = FT(200000.0)  # 去活化焓 [J mol-1]
+  S    = FT(640.0)     # 熵项 [J mol-1 K-1]
+
+  ft  = TBOLTZ(T, evc)
+  num = FT(1.0) + exp((S * TK25 - Hd) / (TK25 * rugc))  # 25°C 归一化因子
+  den = FT(1.0) + exp((S * T - Hd) / (T * rugc))          # 当前温度去活化
+  return Vcmax25 * ft * num / den
 end
 
 """
     fTj(T::FT, Jmax25::FT, ejm::FT, toptjm::FT) where {FT<:AbstractFloat}
 
-Jmax 的温度响应
+Jmax 的温度响应（Medlyn et al. 2002 归一化峰值 Arrhenius）
 
 # Arguments
 - `T`: 叶片温度 [K]
 - `Jmax25`: 25°C 时的最大电子传递速率 [μmol m-2 s-1]
 - `ejm`: 活化能 [J mol-1]
-- `toptjm`: 最适温度 [K]
+- `toptjm`: 最适温度 [K]（保留以备用）
 
 # Returns
-- 温度调整后的 Jmax [μmol m-2 s-1]
+- 温度调整后的 Jmax [μmol m-2 s-1]，在 25°C 归一化为 Jmax25
+
+# References
+- Medlyn et al., 2002, Plant Cell Environ.
 """
 @fastmath function fTj(T::FT, Jmax25::FT, ejm::FT, toptjm::FT) where {FT<:AbstractFloat}
   rugc = FT(8.314)
-  
-  ft = TBOLTZ(T, ejm)
-  fth = 1.0 + exp((30000.0 - 630.0 * (T - 298.15)) / (298.15 * rugc))
-  fth2 = 1.0 + exp((100000.0 - 200.0 * T) / (T * rugc))
-  
-  return Jmax25 * ft / fth * fth2
+  TK25 = FT(298.15)
+  Hd   = FT(200000.0)  # 去活化焓 [J mol-1]
+  S    = FT(640.0)     # 熵项 [J mol-1 K-1]
+
+  ft  = TBOLTZ(T, ejm)
+  num = FT(1.0) + exp((S * TK25 - Hd) / (TK25 * rugc))  # 25°C 归一化因子
+  den = FT(1.0) + exp((S * T - Hd) / (T * rugc))          # 当前温度去活化
+  return Jmax25 * ft * num / den
 end
 
 """
