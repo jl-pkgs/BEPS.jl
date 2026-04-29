@@ -12,6 +12,7 @@ using StaticArrays
 using Statistics
 using ModelParams
 using ModelParams: of_RMSE
+export of_RMSE
 
 @reexport using Serialization: deserialize, serialize
 @reexport using DelimitedFiles: readdlm
@@ -41,5 +42,7 @@ using BEPS.clang
 include("beps_main.jl")
 include("beps_modern.jl")
 include("beps_optimize.jl")
+include("evaluate.jl")
+include("multisite.jl")
 
 end # module BEPS
