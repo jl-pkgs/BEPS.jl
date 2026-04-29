@@ -7,7 +7,7 @@ end
 # ── V1 vs C（仅 Windows 有效） ──────────────────────────────────────
 @testset "aerodynamic_conductance V1 vs C" begin
   if !Sys.iswindows()
-    @test_skip "libbeps.dll 仅在 Windows 上可用"
+    @test true skip = true  # libbeps.dll 仅在 Windows 上可用
   else
     canopyh_o = 2.0
     canopyh_u = 0.2
@@ -41,11 +41,12 @@ end
   lai_o = 4.0; lai_u = 2.0
 
   # 1. 零风速 → 返回默认值
-  r0 = AC_V2.aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, 0.0, 100.0, lai_o, lai_u)
-  @test r0[1] == 0.0         # ra_o = 0
-  @test r0[3] == 300.0       # ra_g = 300
-  @test r0[4] ≈ 1 / 200.0   # G_o_a = 1/200
-  @test r0[6] ≈ 1 / 200.0   # G_u_a = 1/200
+  ra_o0, ra_u0, ra_g0, Ga_o0, Gb_o0, Ga_u0, Gb_u0 =
+    AC_V2.aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, 0.0, 100.0, lai_o, lai_u)
+  @test ra_o0 == 0.0
+  @test ra_g0 == 300.0
+  @test Ga_o0 ≈ 1 / 200.0
+  @test Ga_u0 ≈ 1 / 200.0
 
   # 2. 近中性（H≈0）→ ra_o 接近解析解
   #    u* ≈ u·k/ln((z-d)/z0m), ra_o_neutral ≈ 1/(k·u*)·ln((z-d)/z0h)

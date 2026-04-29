@@ -318,15 +318,29 @@ $
 
 === Monin-Obukhov 长度（最重要的改正）
 
-V1 中 L 的计算实际上是标准公式的*倒数*，即 $L_"V1" = 1 / L_"standard"^2$，量纲也不正确：
+V1 与 V2 中 L 的计算互为倒数关系（$L_"V1" dot L_"V2" = 1$）：
 
 $
-  L_"V1" = -(k g H) / (rho c_p T u_star^3)
+  L_"V1" = -(k g H) / (rho c_p T u_star^3)  quad [upright("量纲: m"^(-1))]
   quad arrow.r quad
-  L_"V2" = -(rho c_p T u_star^3) / (k g H)  quad [m]
+  L_"V2" = -(rho c_p T u_star^3) / (k g H)  quad [upright("量纲: m")]
 $
 
-这一错误会导致稳定度参数 $xi = (z-d)/L$ 的量级完全失真，进而影响所有稳定度修正函数的计算。
+$L_"V1"$ 量纲为 m⁻¹，与 Monin-Obukhov 长度的物理单位（m）不符，属于量纲错误。两者之间满足 $L_"V1" = 1 \/ L_"V2"$。
+
+然而由于 V1 在计算稳定度参数时使用乘法 $xi_"V1" = (z-d) dot L_"V1"$，而 V2 使用除法 $xi_"V2" = (z-d) \/ L_"V2"$，两者恰好相等：
+
+$
+  xi_"V1" = (z-d) dot L_"V1" = (z-d) dot frac(1, L_"V2") = frac(z-d, L_"V2") = xi_"V2"
+$
+
+因此 *$xi$ 的数值计算结果一致*，V1 的 L 公式错误在稳定度参数层面被"抵消"。但在 V1 的 $r_(a,o)$ 公式中使用了加法形式的稳定性修正 $+n dot xi$，而非正确的积分形式 $-Psi_h$：
+
+$
+  r_(a,o)^"V1" = 1 / (k u_star) [ln((z-d) / z_"0m") + n xi]
+  quad arrow.r quad
+  r_(a,o)^"V2" = 1 / (k u_star) [ln((z-d) / z_"0h") - Psi_h (xi)]
+$
 
 === 热量粗糙度长度
 
