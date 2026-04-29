@@ -1,3 +1,9 @@
+## V1: 独立模块，保留旧版用于对比（已被 BEPS 模块替换为 V2）
+module AC_V1
+  const FT = Float64
+  include(normpath(joinpath(@__DIR__, "../../src/aerodynamic_conductance.jl")))
+end
+
 ## V2: 独立模块，不依赖 BEPS 导出，方便物理验证
 module AC_V2
   const FT = Float64
@@ -85,7 +91,7 @@ end
   Ta = 20.0; u = 3.0; H = 100.0; lai_o = 4.0; lai_u = 2.0
 
   ra_o1, ra_u1, ra_g1, Ga_o1, Gb_o1, Ga_u1, Gb_u1 =
-    aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, u, H, lai_o, lai_u)
+    AC_V1.aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, u, H, lai_o, lai_u)
   ra_o2, ra_u2, ra_g2, Ga_o2, Gb_o2, Ga_u2, Gb_u2 =
     AC_V2.aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, u, H, lai_o, lai_u)
 

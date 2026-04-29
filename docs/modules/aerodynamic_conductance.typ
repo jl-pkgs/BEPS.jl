@@ -354,13 +354,72 @@ $
 
 其中 $k B^(-1) approx 2.3$。这使得 V2 的 $r_(a,o)$ 系统性地高于 V1 约 $k B^(-1) / (k u_star) approx 5.75 / u_star$ s/m。
 
-== 5.3 预期的数值差异
+== 5.3 V2 对感热通量模拟精度的影响
 
-V2 与 V1 的结果不兼容，不可互相替代用于对比验证。主要影响：
+=== 5.3.1 感热通量传播链
 
-- $r_(a,o)$：V2 > V1，约增大 $5 tilde 15$ s/m（取决于 $u_star$）
-- $r_(a,u)$、$r_(a,g)$：因 $K_h$ 计算方式不同而有差异
-- 稳定/不稳定条件下，两版本的相对误差方向可能改变
+感热通量从气动阻力到最终输出，经历以下传播链：
+
+$ r_(a,o) arrow.r G_(a,o) = 1\/r_(a,o) arrow.r G_h = 1\/(1\/G_(a,o) + 0.5\/G_(b,o)) arrow.r T_c arrow.r "SH" = rho_a c_p G_h (T_c - T_a) $
+
+其中叶温方程（忽略气孔水汽项的简化形式）为：
+
+$
+  T_c = T_a + frac(R_n - "VPD" dot rho_a c_p G_w \/ gamma, rho_a c_p (G_h + Delta G_w \/ gamma))
+$ <eq-Tc>
+
+V2 相对 V1 使 $r_(a,o)$ 增大（典型中性条件增大约 15 s/m，见 @tab-v1v2-compare），导致 $G_h$ 减小。
+
+#figure(
+  table(
+    columns: (auto, 1fr, 1fr, 1fr),
+    align: (left, center, center, center),
+    table.header([*变量*], [*V1*], [*V2*], [*差异*]),
+    [$r_(a,o)$ [s/m]],  [6.87],  [22.28], [+15.41],
+    [$G_(a,o)$ [m/s]],  [0.1455],[0.0449],[-69%],
+    [$G_h$ [m/s]],      [0.0276],[0.0150],[-46%],
+    [$T_c$ [°C]],       [22.3],  [24.6],  [+2.3 K],
+    [SH [W/m²]],        [64],    [70],    [+10%],
+  ),
+  caption: [典型条件（$h=20$ m, $u=3$ m/s, $H_"init"=100$ W/m², $R_n=300$ W/m²）下 V1 与 V2 的差异，],
+) <tab-v1v2-compare>
+
+=== 5.3.2 Bowen 比效应
+
+@eq-Tc 显示，SH 对 $G_h$ 的敏感性取决于 $G_h$ 与 $Delta G_w\/gamma$ 的相对大小（即 Bowen 比 $beta$）。定义：
+
+$
+  beta = "SH" \/ "LE" = G_h \/ (Delta G_w \/ gamma)
+$
+
+- *干旱/低蒸腾条件*（$G_w → 0$，$beta gg 1$）：$T_c ≈ T_a + R_n \/ (rho_a c_p G_h)$，SH 与 $G_h$ 近线性负相关。V2 的 $G_h$ 减小导致 SH 非单调变化，改进最显著。  
+- *湿润/高蒸腾条件*（$G_w$ 大，$beta ll 1$）：$T_c - T_a$ 小，SH 对 $G_h$ 不敏感，V1/V2 差异减弱。
+
+=== 5.3.3 逆向诊断方案
+
+==== 方法 A：直接气动阻力反演（需冠层温度 LST）
+
+若有红外测温 $T_c$ 和涡度协方差 SH 观测，可反演叶片总传热阻力 $r_H = 1\/G_h$：
+
+$
+  r_H = frac(rho_a c_p (T_c - T_a), "SH"_"obs")  = 1\/G_h = r_(a,o) + 0.5 r_(b,o)
+$ <eq-ra-inv>
+
+进而分离气动阻力：$r_(a,o)^"EC" = r_H - 0.5 r_(b,o)$（$r_{b,o}$ 由叶片边界层模型提供）。将 $r_(a,o)^"EC"$ 与 V1/V2 预测值对比，可直接评估两版本精度（见代码 `ra_from_flux`）。
+
+==== 方法 B：Penman-Monteith 逆推（仅需 LE 观测）
+
+不需要 LST，从能量平衡逆推冠层导度：
+
+$
+  G_c = frac(gamma dot "LE"_"obs" dot G_a, Delta(R_n - G) + rho_a c_p "VPD" dot G_a - (Delta + gamma) "LE"_"obs")
+$ <eq-Gc-inv>
+
+$G_a = 1\/r_(a,o)$ 分别取 V1/V2 值，对比逆推得到的 $G_c$ 与模型 $G_w$ 之差，判断哪个版本更接近生理合理值（见代码 `Gc_penman`）。
+
+==== 分稳定度区间统计
+
+利用 `stability_class(ξ)` 函数将逐小时数据分为三类（$xi<-0.5$：不稳定；$-0.5~0.5$：中性；$>0.5$：稳定），分别计算 V1/V2 的 SH RMSE，量化改进效果。完整示例见 `examples/example_diagnose_ra.jl`。
 
 #v(2em)
 = 附录 // <!-- omit in toc -->

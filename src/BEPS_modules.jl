@@ -3,6 +3,7 @@ export s_coszs, lai2, ReadParamVeg,
   snowpack_stage1_jl, snowpack_stage2_jl, snowpack_stage3_jl
 
 export aerodynamic_conductance_jl,
+  ra_from_flux, Gc_penman, stability_class,
   sensible_heat_jl,
   latent_heat!,
   Leaf_Temperatures_jl,
@@ -25,7 +26,8 @@ export photosynthesis
 include("SoilPhysics/SoilPhysics.jl")
 # include("soil_thermal_regime.jl")
 
-include("aerodynamic_conductance.jl")
+include("aerodynamic_conductance_V2.jl")
+include("diagnose_ra.jl")
 # include("latent_heat.jl")
 # include("sensible_heat.jl")
 include("heat_H_and_LE.jl")
