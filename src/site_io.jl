@@ -42,13 +42,18 @@ Returns a `DataFrame` with canonical column names ready for `beps_modern`.
 function load_forcing(path::AbstractString)::DataFrame
   isfile(path) || throw(ArgumentError("Forcing file not found: $path"))
   ext = lowercase(splitext(path)[2])
-  delim = ext == ".csv" ? ',' : '\t'
 
-  data, header = readdlm(path, delim, Any, header=true)
+  # CSV 用逗号；其他格式（.txt 等）用 readdlm 默认的任意空白分隔，
+  # 能自动处理 tab、多空格等常见格式
+  data, header = if ext == ".csv"
+    readdlm(path, ',', Any, header=true)
+  else
+    readdlm(path, Any, header=true)
+  end
   cols = Symbol.(vec(header))
-  # 尝试将每列转为数值
+  # 将每列尽量转为数值
   d = DataFrame(
-    [col => _coerce_numeric(data[:, i]) for (i, col) in enumerate(cols)]...
+    [col => _coerce_numeric(col, data[:, i]) for (i, col) in enumerate(cols)]...
   )
   d = standardize_forcing_columns(d)
   # day/hour 必须为 Int（s_coszs 要求）
@@ -57,11 +62,13 @@ function load_forcing(path::AbstractString)::DataFrame
   d
 end
 
-# 将 Any 数组尽量转为 Float64，失败时保留原始类型
-function _coerce_numeric(col::AbstractVector)
+# 将 Any 数组转为 Float64；失败时发出警告并保留原始类型
+function _coerce_numeric(colname::Symbol, col::AbstractVector)
   try
     return Float64.(col)
-  catch
+  catch e
+    e isa Union{InexactError, MethodError} ||
+      @warn "Unexpected error converting column $colname to Float64" exception=e
     return col
   end
 end
@@ -185,8 +192,11 @@ function load_multisite_data(site_info::DataFrame;
     ok || continue
 
     try
-      forcing_dict[id] = load_forcing(f_path)
-      lai_dict[id]     = load_lai(l_path)
+      fd = load_forcing(f_path)
+      ld = load_lai(l_path)
+      # 两者都成功才写入，确保状态一致
+      forcing_dict[id] = fd
+      lai_dict[id]     = ld
     catch e
       @warn "Failed to load data for site $id" exception=e
     end
