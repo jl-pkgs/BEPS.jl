@@ -9,15 +9,18 @@ Provides three complementary approaches:
 
 
 """
-    ra_from_flux(SH_obs, Tc, Ta; ρₐ=1.292, cp=1010.0) -> ra [s/m]
+    ra_from_flux(SH_obs, Tc, Ta; ρₐ=1.292, cp=1010.0) -> r_H [s/m]
 
-Method A: directly invert aerodynamic resistance from observed sensible heat
-flux and canopy (or surface) temperature.
+Method A: invert total heat transfer resistance `r_H` (leaf-to-air) from
+observed sensible heat flux and canopy radiometric temperature.
 
 # Physics
 ```
-SH = ρₐ cp (Tc - Ta) / ra  →  ra = ρₐ cp (Tc - Ta) / SH
+SH = ρₐ cp (Tc - Ta) / r_H  →  r_H = ρₐ cp (Tc - Ta) / SH
 ```
+`r_H` is the combined resistance including both aerodynamic (`ra_o`) and
+leaf boundary-layer (`0.5 rb_o`) components. To isolate `ra_o` subtract the
+boundary-layer term: `ra_o = r_H - 0.5 / Gb_o`.
 
 # Arguments
 - `SH_obs` : observed sensible heat flux [W/m²]
@@ -27,12 +30,12 @@ SH = ρₐ cp (Tc - Ta) / ra  →  ra = ρₐ cp (Tc - Ta) / SH
 - `cp`     : specific heat of air [J/kg/K]  (default 1010.0)
 
 # Returns
-`ra` in [s/m]; returns `Inf` when `|SH_obs| < 1 W/m²` (near-zero flux
+`r_H` in [s/m]; returns `Inf` when `|SH_obs| < 1 W/m²` (near-zero flux
 condition where the inversion is physically unreliable — such points should be
 filtered before further analysis).
 """
 function ra_from_flux(SH_obs::T, Tc::T, Ta::T;
-  ρₐ::T=T(1.292), cp::T=T(1010.0))::T where {T<:Real}
+  ρₐ::T=T(1.292), cp::T=T(1010.0))::T where {T<:AbstractFloat}
   abs(SH_obs) < 1.0 && return T(Inf)
   ρₐ * cp * (Tc - Ta) / SH_obs
 end
@@ -65,7 +68,7 @@ energy-limited regime where PM inversion is ill-conditioned — filter `isnan`
 results before statistical analysis).
 """
 function Gc_penman(LE_obs::T, Ga::T, Rn::T, G_soil::T,
-  Ta::T, RH::T)::T where {T<:Real}
+  Ta::T, RH::T)::T where {T<:AbstractFloat}
   met = meteo_pack_jl(Ta, RH)
   (; Δ, γ, ρₐ, cp, VPD) = met
 

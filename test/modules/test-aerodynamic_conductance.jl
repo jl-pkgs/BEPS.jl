@@ -26,7 +26,7 @@ end
     pai_u = 2.0
 
     ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
-      aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
+      AC_V1.aerodynamic_conductance_jl(canopyh_o, canopyh_u, height_wind_sp, clumping, Ta, wind_sp, GH_o,
         pai_o, pai_u)
     r1 = (; ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u)
 
@@ -65,8 +65,8 @@ end
   @test ra_o_n ≈ ra_o_expected rtol = 0.01   # 1% 偏差
 
   # 3. 物理合理性：稳定 (H<0) > 中性 > 不稳定 (H>0) → ra_o 有序
-  ra_o_stable, = AC_V2.aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, u, -200.0, lai_o, lai_u)
-  ra_o_unstable, = AC_V2.aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, u, 200.0, lai_o, lai_u)
+  ra_o_stable   = first(AC_V2.aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, u, -200.0, lai_o, lai_u))
+  ra_o_unstable = first(AC_V2.aerodynamic_conductance_jl(h, h_u, z_wind, Ω, Ta, u,  200.0, lai_o, lai_u))
   @test ra_o_stable >= ra_o_n          # 稳定层结阻力更大
   @test ra_o_unstable <= ra_o_n        # 不稳定层结阻力更小
 
@@ -108,13 +108,52 @@ end
 
   # V2 改进点：使用 z0h 导致 ra_o 偏大（z0h < z0m，对数项更大）
   @test ra_o2 > ra_o1
+end
 
-  # 打印两版本对比（便于手动核查）
-  println("\n── V1 vs V2 数值对比 (h=20m, u=3m/s, H=100W/m²) ──")
-  println("       │   V1   │   V2")
-  println("ra_o   │ $(round(ra_o1; digits=2)) │ $(round(ra_o2; digits=2))")
-  println("ra_u   │ $(round(ra_u1; digits=2)) │ $(round(ra_u2; digits=2))")
-  println("ra_g   │ $(round(ra_g1; digits=2)) │ $(round(ra_g2; digits=2))")
-  println("Ga_o   │ $(round(Ga_o1; digits=4)) │ $(round(Ga_o2; digits=4))")
-  println("Gb_o   │ $(round(Gb_o1; digits=4)) │ $(round(Gb_o2; digits=4))")
+# ── diagnose_ra 单元测试 ────────────────────────────────────────────
+@testset "ra_from_flux" begin
+  ρₐ = 1.292; cp = 1010.0
+
+  # 典型白天条件
+  r_H = ra_from_flux(200.0, 25.0, 20.0)
+  @test r_H ≈ ρₐ * cp * 5.0 / 200.0 rtol = 1e-10
+
+  # 冷冠层（SH < 0, Tc < Ta）→ r_H > 0（阻力始终为正，两者同号）
+  r_H_neg = ra_from_flux(-50.0, 15.0, 20.0)
+  @test r_H_neg > 0
+
+  # Tc == Ta → r_H = 0（无温度梯度）
+  @test ra_from_flux(50.0, 20.0, 20.0) ≈ 0.0
+
+  # |SH| < 1 → Inf（数值病态，过滤）
+  @test ra_from_flux(0.5, 25.0, 20.0) == Inf
+  @test ra_from_flux(-0.5, 20.0, 25.0) == Inf
+
+  # AbstractFloat 约束：Float32 输入应正常工作
+  r_H_f32 = ra_from_flux(200f0, 25f0, 20f0)
+  @test r_H_f32 isa Float32
+end
+
+@testset "Gc_penman" begin
+  # 典型夏日午后（草地）
+  Ta = 25.0; RH = 60.0; Rn = 400.0; G_soil = 40.0; LE = 200.0; Ga = 0.05
+
+  Gc = Gc_penman(LE, Ga, Rn, G_soil, Ta, RH)
+  @test Gc > 0
+  @test Gc < 0.1   # 典型 Gc 范围 [0.001, 0.05] m/s
+
+  # 分母趋零 → NaN（能量平衡极端条件）
+  @test isnan(Gc_penman(0.0, 0.0, 0.0, 0.0, Ta, RH))
+end
+
+@testset "stability_class" begin
+  @test stability_class(-1.0) == :unstable
+  @test stability_class(-0.5) == :neutral   # 边界 -0.5：< -0.5 才是不稳定，-0.5 本身为中性
+  @test stability_class(-0.6) == :unstable
+  @test stability_class(-0.4) == :neutral
+  @test stability_class(0.0)  == :neutral
+  @test stability_class(0.4)  == :neutral
+  @test stability_class(0.5)  == :neutral   # 边界 0.5：> 0.5 才是稳定，0.5 本身为中性
+  @test stability_class(0.6)  == :stable
+  @test stability_class(2.0)  == :stable
 end
