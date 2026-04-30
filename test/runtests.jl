@@ -7,6 +7,7 @@ function nanmax(x)
   maximum(x)
 end
 
+include("dev/test-aerodynamic_conductance.jl")
 include("test-photosynthesis_standalone.jl")
 include("test-beps_main.jl")
 include("test-beps_modern.jl")
