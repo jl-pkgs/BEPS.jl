@@ -2,6 +2,7 @@ ignore:
   - "src/debug/*"
   - "*/debug/*"
   - "src/*/deprecated"
+  - "src/*/*/deprecated"
   - "src/*/temp"
   - "src/*/backup/*"
   - "src/clang/*"
