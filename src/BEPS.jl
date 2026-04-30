@@ -6,7 +6,7 @@ using UnPack
 import Parameters: @with_kw, @with_kw_noshow
 using Printf
 using Reexport
-using DataFrames: DataFrame
+using DataFrames: DataFrame, nrow, rename!, propertynames, eachrow, hasproperty
 
 using StaticArrays
 using Statistics
@@ -44,5 +44,6 @@ include("beps_modern.jl")
 include("beps_optimize.jl")
 include("evaluate.jl")
 include("multisite.jl")
+include("site_io.jl")
 
 end # module BEPS
