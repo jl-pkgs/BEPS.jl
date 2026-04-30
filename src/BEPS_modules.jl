@@ -26,7 +26,7 @@ export photosynthesis
 include("SoilPhysics/SoilPhysics.jl")
 # include("soil_thermal_regime.jl")
 
-include("aerodynamic_conductance_V2.jl")
+include("aerodynamic_conductance.jl")
 include("diagnose_ra.jl")
 # include("latent_heat.jl")
 # include("sensible_heat.jl")

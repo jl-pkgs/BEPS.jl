@@ -28,14 +28,9 @@ kw = (lon=120.5, lat=30.5,
   # @test abs(r.Evap - 748.8864673979658) < 0.01
   # @test abs(r.Trans - 444.02624822679013) < 0.01
 
-  # Annual totals comparison (V2 vs C/V1)
-  r_c = sum(df_c)
-  @show r = sum(df_jl)
-  @show r_c
-
-  # Relative annual budget: V2 uses kB⁻¹ correction (z0h=0.1*z0m), larger ra_o → less ET
-  # Annual sum should be within 50% of C version (generous tolerance for physics change)
-  @test abs(r.GPP / r_c.GPP - 1) < 0.50
-  @test abs(r.Evap / r_c.Evap - 1) < 0.50
-  @test abs(r.Trans / r_c.Trans - 1) < 0.50
+  df_diff_perc = abs.(df_jl .- df_c) ./ (abs.(df_c) .+ 1e-6) .* 100
+  df_diff_perc = df_diff_perc[:, Cols(:GPP, :Evap, :Trans)]
+  l = maximum(df_diff_perc)
+  @show nanmax(l)
+  @test nanmax(l) < 2.5  # Julia V1 should match C within 2.5%
 end
