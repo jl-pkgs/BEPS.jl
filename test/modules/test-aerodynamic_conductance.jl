@@ -147,13 +147,15 @@ end
 end
 
 @testset "stability_class" begin
-  @test stability_class(-1.0) == :unstable
-  @test stability_class(-0.5) == :neutral   # 边界 -0.5：< -0.5 才是不稳定，-0.5 本身为中性
-  @test stability_class(-0.6) == :unstable
-  @test stability_class(-0.4) == :neutral
-  @test stability_class(0.0)  == :neutral
-  @test stability_class(0.4)  == :neutral
-  @test stability_class(0.5)  == :neutral   # 边界 0.5：> 0.5 才是稳定，0.5 本身为中性
-  @test stability_class(0.6)  == :stable
-  @test stability_class(2.0)  == :stable
+  @test stability_class(-1.0)    == :unstable
+  @test stability_class(-0.5001) == :unstable  # 刚越过下边界
+  @test stability_class(-0.5)    == :neutral   # 边界 -0.5：< -0.5 才是不稳定，-0.5 本身为中性
+  @test stability_class(-0.6)    == :unstable
+  @test stability_class(-0.4)    == :neutral
+  @test stability_class(0.0)     == :neutral
+  @test stability_class(0.4)     == :neutral
+  @test stability_class(0.5)     == :neutral   # 边界 0.5：> 0.5 才是稳定，0.5 本身为中性
+  @test stability_class(0.5001)  == :stable    # 刚越过上边界
+  @test stability_class(0.6)     == :stable
+  @test stability_class(2.0)     == :stable
 end
