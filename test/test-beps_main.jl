@@ -28,19 +28,14 @@ kw = (lon=120.5, lat=30.5,
   # @test abs(r.Evap - 748.8864673979658) < 0.01
   # @test abs(r.Trans - 444.02624822679013) < 0.01
 
-  df_diff = abs.(df_jl .- df_c)
-  df_diff_perc = abs.(df_jl .- df_c) ./ df_c .* 100
+  # Annual totals comparison (V2 vs C/V1)
+  r_c = sum(df_c)
+  @show r = sum(df_jl)
+  @show r_c
 
-  # gpp_u_sunlit has a large bias in i=193, unknown reason
-  # df_diff_perc = df_diff_perc[:, Cols(1:1, 3:end)]
-  df_diff_perc = df_diff_perc[:, Cols(:GPP, :Evap, :Trans)]
-  l = maximum(df_diff_perc)
-  @show l
-  @show nanmax(l)
-  @test true
-
-  # @test nanmax(l) < 1.5 # SH, 1.48%的误差, current 0.09%
-  # V2 使用正确 MOST 公式，与 C（V1）物理不同，跨版本差异不再受约束
-  # @test nanmax(l) < 2.5 # GPP, 2.38%的误差, current 0.09%
-  @test true
+  # Relative annual budget: V2 uses kB⁻¹ correction (z0h=0.1*z0m), larger ra_o → less ET
+  # Annual sum should be within 50% of C version (generous tolerance for physics change)
+  @test abs(r.GPP / r_c.GPP - 1) < 0.50
+  @test abs(r.Evap / r_c.Evap - 1) < 0.50
+  @test abs(r.Trans / r_c.Trans - 1) < 0.50
 end
