@@ -44,8 +44,7 @@ function run_multisite(
       Tsoil0   = Float64(row.Tsoil0),
       θ0       = Float64(row.θ0),
       z_snow0  = Float64(row.z_snow0),
-      verbose  = false,
-      kw...
+      kw...   # let caller control verbose and other options
     )
     lock(lk) do
       out[id] = (; df_out, df_ET, Tsoil, θ)
@@ -131,8 +130,7 @@ function beps_multisite_optimize(
           Tsoil0   = Float64(row.Tsoil0),
           θ0       = Float64(row.θ0),
           z_snow0  = Float64(row.z_snow0),
-          verbose  = false,
-          kwargs...
+          kwargs...  # let caller control verbose and other options
         )
       catch e
         e isa DomainError || @warn "beps_multisite_optimize: site $id error" exception=e
@@ -143,6 +141,7 @@ function beps_multisite_optimize(
       obs_site = obs_dict[id]
       site_obj = if obs_site isa Dict
         # multi-objective per site
+        isempty(obs_site) && throw(ArgumentError("obs_dict[\"$id\"] must not be empty"))
         sim_dict = Dict(col => _get_col(df_out, df_ET, col) for col in keys(obs_site))
         wts_site = Dict(col => 1.0 / length(obs_site) for col in keys(obs_site))
         _weighted_rmse(obs_site, sim_dict, wts_site, normalize)
@@ -150,8 +149,14 @@ function beps_multisite_optimize(
         sim  = _get_col(df_out, df_ET, col_sim)
         n    = min(length(obs_site), length(sim))
         rmse = of_RMSE(obs_site[1:n], sim[1:n])
-        σ    = normalize ? std(filter(!isnan, obs_site[1:n])) : 1.0
-        σ == 0 ? Inf : rmse / σ
+        if normalize
+          valid_obs = filter(!isnan, obs_site[1:n])
+          length(valid_obs) < 2 && (J += w * 1e6; W += w; continue)
+          σ = std(valid_obs)
+          (!isfinite(σ) || σ == 0) ? Inf : rmse / σ
+        else
+          rmse
+        end
       end
 
       J += w * site_obj;  W += w

@@ -57,7 +57,10 @@ Multi-objective single-site optimization.
 """
 function beps_optimize(d::DataFrame, lai::Vector, model::ParamBEPS,
     obs::Dict{Symbol,<:AbstractVector};
-    weights::Dict{Symbol,Float64}=Dict(k => 1.0 / length(obs) for k in keys(obs)),
+    weights::Dict{Symbol,Float64}=begin
+      isempty(obs) && throw(ArgumentError("obs dict must not be empty"))
+      Dict(k => 1.0 / length(obs) for k in keys(obs))
+    end,
     normalize::Bool=true,
     opt_paths=nothing,
     maxn=2000, kstop=5, f_reltol=0.0001, x_reltol=0.0001, seed=1,
@@ -108,8 +111,7 @@ function _get_col(df_out, df_ET, col::Symbol)
 end
 
 # Weighted normalized RMSE across multiple variables.
-# When std(obs) == 0, treat that variable as infinitely penalized (skip normalization
-# would silently discard the variable; returning Inf surfaces data quality issues).
+# When std(obs) == 0 or too few valid values, return Inf to surface data quality issues.
 function _weighted_rmse(obs_dict, sim_dict, weights, normalize)
   J = 0.0; W = 0.0
   for (col, obs) in obs_dict
@@ -118,8 +120,10 @@ function _weighted_rmse(obs_dict, sim_dict, weights, normalize)
     n   = min(length(obs), length(sim))
     rmse = of_RMSE(obs[1:n], sim[1:n])
     if normalize
-      σ = std(filter(!isnan, obs[1:n]))
-      σ == 0 && return Inf  # zero-variance obs → degenerate
+      valid_obs = filter(!isnan, obs[1:n])
+      length(valid_obs) < 2 && return Inf   # too few valid obs → degenerate
+      σ = std(valid_obs)
+      (!isfinite(σ) || σ == 0) && return Inf
       J += w * rmse / σ
     else
       J += w * rmse

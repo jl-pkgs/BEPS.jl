@@ -19,10 +19,10 @@ using BEPS: of_NSE, of_KGE, of_R2, of_Bias, of_MAE, evaluate_site, evaluate_mult
   @test of_Bias(obs, sim2) > 0.0   # positive = overestimate
   @test of_MAE(obs, sim2)  ≈ 1.0
 
-  # 完全不相关: R² ≈ 0
+  # 完全负相关：R² = cor² = 1（符号被平方掉了）
   obs3 = [1.0, 2.0, 3.0]
   sim3 = [3.0, 2.0, 1.0]  # perfect negative correlation
-  @test of_R2(obs3, sim3) ≈ 1.0   # R² = cor²，符号被平方掉了
+  @test of_R2(obs3, sim3) ≈ 1.0   # R² = cor²，与相关方向无关
 
   # NSE < 1 when sim != obs
   @test of_NSE(obs, sim2) < 1.0

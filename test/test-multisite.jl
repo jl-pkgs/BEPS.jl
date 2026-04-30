@@ -50,10 +50,10 @@ end
     VegType=[25], SoilType=[8], clumping=[0.85],
     Tsoil0=[2.0], θ0=[0.4], z_snow0=[0.0]
   )
-  # only "X" in forcing, missing in lai_dict → should warn and skip
+  # only "X" in forcing, missing in lai_dict → @warn is emitted and site is skipped
   res = run_multisite(sites, Dict("X" => d), Dict{String,Vector}();
           parallel=false, fix_snowpack=false)
-  @test !haskey(res, "X")   # skipped silently
+  @test !haskey(res, "X")   # site skipped due to missing LAI
 end
 
 @testset "beps_multisite_optimize basic" begin

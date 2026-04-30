@@ -28,11 +28,12 @@ KGE = 1 - sqrt((r-1)² + (α-1)² + (β-1)²), where α = σ_s/σ_o, β = μ_s/�
 function of_KGE(obs::AbstractVector, sim::AbstractVector)
   valid = @. !isnan(obs) & !isnan(sim)
   o, s = obs[valid], sim[valid]
-  isempty(o) && return NaN
+  length(o) < 2 && return NaN
   μo, μs = mean(o), mean(s)
   σo, σs = std(o), std(s)
   (σo == 0 || μo == 0) && return NaN
   r = cor(o, s)
+  !isfinite(r) && return NaN
   α = σs / σo  # variability ratio
   β = μs / μo  # bias ratio
   1.0 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)
@@ -47,8 +48,11 @@ Coefficient of determination (R²). Range [0, 1].
 function of_R2(obs::AbstractVector, sim::AbstractVector)
   valid = @. !isnan(obs) & !isnan(sim)
   o, s = obs[valid], sim[valid]
-  isempty(o) && return NaN
-  cor(o, s)^2
+  length(o) < 2 && return NaN
+  (std(o) == 0 || std(s) == 0) && return NaN
+  r = cor(o, s)
+  !isfinite(r) && return NaN
+  r^2
 end
 
 
