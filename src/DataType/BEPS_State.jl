@@ -78,9 +78,9 @@ abstract type AbstractSoil end
   G           ::Vector{Float64} = zeros(10) # [state], 土壤热通量
 
   ## temporary variables in soil_water_factor_v2
-  ft          ::Vector{Float64} = zeros(10) # [state], f_i(Tsoil_i), 温度对水分限制影响, Eq. 5
-  dtt         ::Vector{Float64} = zeros(10) # [state], 叠加根系分布比例，f_root[i] * fpsisr[i]
-  fpsisr      ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3
+  f_temp      ::Vector{Float64} = zeros(10) # [state], f_i(Tsoil_i), 温度对水分限制影响, Eq. 5
+  w_root      ::Vector{Float64} = zeros(10) # [state], 叠加根系分布比例，f_root[i] * f_stress[i]
+  f_stress    ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3, (水分 + 温度)
 end
 
 
@@ -130,9 +130,9 @@ end
   G          ::Vector{Float64} = zeros(10) # [state], 土壤热通量
 
   ## temporary variables in soil_water_factor_v2
-  ft         ::Vector{Float64} = zeros(10) # [state], f_i(Tsoil_i), 温度对水分限制影响, Eq. 5
-  dtt        ::Vector{Float64} = zeros(10) # [state], 叠加根系分布比例，f_root[i] * fpsisr[i]
-  fpsisr     ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3
+  f_temp     ::Vector{Float64} = zeros(10) # [state], f_i(Tsoil_i), 温度对水分限制影响, Eq. 5
+  w_root     ::Vector{Float64} = zeros(10) # [state], 叠加根系分布比例，f_root[i] * f_stress[i]
+  f_stress   ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3
 end
 
 
@@ -141,7 +141,7 @@ function StateBEPS(soil::Soil)
   @unpack n_layer, dz, z_water, z_snow, r_rain_g, f_soilwater,
           f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
           f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
-          ft, dtt, fpsisr = soil
+          f_temp, w_root, f_stress = soil
 
   StateBEPS(; 
     n_layer, dz, z_water, z_snow, 
@@ -149,7 +149,7 @@ function StateBEPS(soil::Soil)
     f_root, dt, ice_ratio, θ, θ_prev,
     Tsoil_p, Tsoil_c, f_water, ψ,
     r_waterflow, km, KK, Cv, κ,
-    Ett, G, ft, dtt, fpsisr
+    Ett, G, f_temp, w_root, f_stress
   )
 end
 
@@ -158,12 +158,12 @@ function State2Soil!(soil::Soil, st::StateBEPS)
   @unpack z_water, z_snow, r_rain_g, f_soilwater,
           f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
           f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
-          ft, dtt, fpsisr = st
+          f_temp, w_root, f_stress = st
 
   @pack! soil = z_water, z_snow, r_rain_g, f_soilwater,
                 f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
                 f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
-                ft, dtt, fpsisr
+                f_temp, w_root, f_stress
   return soil
 end
 

@@ -97,10 +97,10 @@ using DataFrames
     # Vcmax 和 Jmax 温度响应需在 25°C 归一化
     Hd  = 200000.0; S = 640.0
     fTv_f = (T, Vc, evc) -> begin
-      ft  = TBOLTZ_f(T, evc)
+      f_temp  = TBOLTZ_f(T, evc)
       num = 1.0 + exp((S * T25 - Hd) / (T25 * rugc))
       den = 1.0 + exp((S * T  - Hd) / (T  * rugc))
-      Vc * ft * num / den
+      Vc * f_temp * num / den
     end
     Vcmax_at_25 = fTv_f(T25, params.Vcmax25, params.evc)
     @test isapprox(Vcmax_at_25, params.Vcmax25, rtol=0.01)  # 1% 以内

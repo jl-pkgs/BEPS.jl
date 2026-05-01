@@ -43,10 +43,10 @@ Vcmax 的温度响应（Medlyn et al. 2002 归一化峰值 Arrhenius）
   Hd   = FT(200000.0)  # 去活化焓 [J mol-1]
   S    = FT(640.0)     # 熵项 [J mol-1 K-1]
 
-  ft  = TBOLTZ(T, evc)
+  f_temp  = TBOLTZ(T, evc)
   num = FT(1.0) + exp((S * TK25 - Hd) / (TK25 * rugc))  # 25°C 归一化因子
   den = FT(1.0) + exp((S * T - Hd) / (T * rugc))          # 当前温度去活化
-  return Vcmax25 * ft * num / den
+  return Vcmax25 * f_temp * num / den
 end
 
 """
@@ -73,10 +73,10 @@ Jmax 的温度响应（Medlyn et al. 2002 归一化峰值 Arrhenius）
   Hd   = FT(200000.0)  # 去活化焓 [J mol-1]
   S    = FT(640.0)     # 熵项 [J mol-1 K-1]
 
-  ft  = TBOLTZ(T, ejm)
+  f_temp  = TBOLTZ(T, ejm)
   num = FT(1.0) + exp((S * TK25 - Hd) / (TK25 * rugc))  # 25°C 归一化因子
   den = FT(1.0) + exp((S * T - Hd) / (T * rugc))          # 当前温度去活化
-  return Jmax25 * ft * num / den
+  return Jmax25 * f_temp * num / den
 end
 
 """

@@ -157,7 +157,7 @@ end
   soil_water_factor_v2(st, ps)
 
   @test st.f_soilwater ≈ soil.f_soilwater
-  @test st.fpsisr[1:5] ≈ soil.fpsisr[1:5]
+  @test st.f_stress[1:5] ≈ soil.f_stress[1:5]
   @test st.dt[1:5] ≈ soil.dt[1:5]
 
   # 测试 UpdateThermal_κ
