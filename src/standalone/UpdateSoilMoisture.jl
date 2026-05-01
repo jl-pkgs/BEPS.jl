@@ -3,7 +3,7 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
   Δt, total_t, max_Fb = 0.0, 0.0, 0.0
 
   n = soil.n_layer
-  @unpack dz, f_water, K_sat, KK, km, b,
+  @unpack dz, f_water, K_sat, Kavg, Kmid, b,
   ψ_sat, ψ,
   θ_sat, θ, θ_prev = soil
   θ_prev .= θ # assign current soil moisture to prev
@@ -23,7 +23,7 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
     # Hydraulic conductivity: Bonan, Table 8.2, Campbell 1974, K = K_sat*(θ/θ_sat)^(2b+3)
     for i in 1:n
       ψ[i] = cal_ψ(θ[i], θ_sat[i], ψ_sat[i], b[i])
-      km[i] = cal_K(θ[i], θ_sat[i], K_sat[i], b[i]) # Hydraulic conductivity, [m/s]
+      Kmid[i] = cal_K(θ[i], θ_sat[i], K_sat[i], b[i]) # Hydraulic conductivity, [m/s]
     end
 
     # Fb, flow speed. Dancy's law. LHE.
@@ -32,9 +32,9 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
       # 不同层土壤深度不同，能否这样写？
       # K * ψ * b / (b + 3): ?
       # the unsaturated hydraulic conductivity of soil layer
-      KK[i] = (km[i] * ψ[i] + km[i+1] * ψ[i+1]) / (ψ[i] + ψ[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6) # 计算平均的一种方案？
-      Q = KK[i] * (2 * (ψ[i+1] - ψ[i]) / (dz[i] + dz[i+1]) + 1) # z direction
-      Q_max = (θ_sat[i+1] - θ[i+1]) * dz[i+1] / kstep + soil.Ett[i+1]
+      Kavg[i] = (Kmid[i] * ψ[i] + Kmid[i+1] * ψ[i+1]) / (ψ[i] + ψ[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6) # 计算平均的一种方案？
+      Q = Kavg[i] * (2 * (ψ[i+1] - ψ[i]) / (dz[i] + dz[i+1]) + 1) # z direction
+      Q_max = (θ_sat[i+1] - θ[i+1]) * dz[i+1] / kstep + soil.ETi[i+1]
       Q = min(Q, Q_max)
 
       soil.r_waterflow[i] = Q
@@ -49,9 +49,9 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
     # from there: kstep is replaced by this_step. LHE
     for i in 1:n
       if i == 1
-        θ[i] += (inf - soil.r_waterflow[i] - soil.Ett[i]) * Δt / dz[i]
+        θ[i] += (inf - soil.r_waterflow[i] - soil.ETi[i]) * Δt / dz[i]
       else
-        θ[i] += (soil.r_waterflow[i-1] - soil.r_waterflow[i] - soil.Ett[i]) * Δt / dz[i]
+        θ[i] += (soil.r_waterflow[i-1] - soil.r_waterflow[i] - soil.ETi[i]) * Δt / dz[i]
       end
       θ[i] = clamp(θ[i], soil.θ_vwp[i], θ_sat[i])
     end
@@ -76,11 +76,11 @@ end
 function guess_step(max_Fb)
   # this constraint is too large
   if max_Fb > 1.0e-5 # 864 mm/day
-    dt = 1.0
+    Δt = 1.0
   elseif max_Fb > 1.0e-6 # 86.4 mm/day
-    dt = 30.0 # seconds
+    Δt = 30.0 # seconds
   else
-    dt = 360.0
+    Δt = 360.0
   end
-  dt
+  Δt
 end

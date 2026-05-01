@@ -47,12 +47,13 @@ abstract type AbstractSoil end
 
   dz          ::Vector{Float64} = zeros(10) # 土壤厚度
   f_root      ::Vector{Float64} = zeros(10) # [state], 根系比例，root fraction
-  dt          ::Vector{Float64} = zeros(10) # [state], 每层的土壤水限制因子，已归一化
+  w_norm      ::Vector{Float64} = zeros(10) # [state], 每层的土壤水限制因子，已归一化
+
   κ_dry       ::Vector{Float64} = zeros(10) # ? thermal conductivity
   θ_vfc       ::Vector{Float64} = zeros(10) # ? volumetric field capacity
   θ_vwp       ::Vector{Float64} = zeros(10) # ? volumetric wilting point
   θ_sat       ::Vector{Float64} = zeros(10) # ? volumetric saturation
-  K_sat        ::Vector{Float64} = zeros(10) # ? saturated hydraulic conductivity
+  K_sat       ::Vector{Float64} = zeros(10) # ? saturated hydraulic conductivity
   ψ_sat       ::Vector{Float64} = zeros(10) # ? soil matric potential at saturation
   b           ::Vector{Float64} = zeros(10) # ? Cambell parameter b
   ρ_soil      ::Vector{Float64} = zeros(10) # ? 土壤容重，soil density, for volume heat capacity
@@ -64,17 +65,17 @@ abstract type AbstractSoil end
   Tsoil_p     ::Vector{Float64} = zeros(10) # [state], soil temperature in previous time
   Tsoil_c     ::Vector{Float64} = zeros(10) # [state], soil temperature in current time
 
-  f_water     ::Vector{Float64} = zeros(10) # // not used
+  f_water     ::Vector{Float64} = zeros(10) # [state], 冻结因子，用于 UpdateSoilMoisture
   ψ           ::Vector{Float64} = zeros(10) # [state], soil matric potential
   θb          ::Vector{Float64} = zeros(10) # // not used, θ at the bottom of each layer
   ψb          ::Vector{Float64} = zeros(10) # // not used
   r_waterflow ::Vector{Float64} = zeros(10) # [state], vertical water flow rate
-  km          ::Vector{Float64} = zeros(10) # [state], hydraulic conductivity at middle point
+  Kmid        ::Vector{Float64} = zeros(10) # [state], hydraulic conductivity at middle point
   Kb          ::Vector{Float64} = zeros(10) # // not used
-  KK          ::Vector{Float64} = zeros(10) # [state], average conductivity of two soil layers
+  Kavg        ::Vector{Float64} = zeros(10) # [state], average conductivity of two soil layers
   Cv          ::Vector{Float64} = zeros(10) # [state], volume heat capacity
   κ           ::Vector{Float64} = zeros(10) # [state]
-  Ett         ::Vector{Float64} = zeros(10) # [state], 每层蒸发量ET in each layer
+  ETi         ::Vector{Float64} = zeros(10) # [state], 每层蒸发量ET in each layer
   G           ::Vector{Float64} = zeros(10) # [state], 土壤热通量
 
   ## temporary variables in soil_water_factor_v2
@@ -111,7 +112,6 @@ end
   f_soilwater::Cdouble = Cdouble(0)        # [state], 总体的土壤水限制因子
 
   f_root     ::Vector{Float64} = zeros(10) # [state], 根系比例，root fraction
-  dt         ::Vector{Float64} = zeros(10) # [state], 每层的土壤水限制因子，已归一化
 
   ice_ratio  ::Vector{Float64} = zeros(10) # [state]，ice ratio，
   θ          ::Vector{Float64} = zeros(10) # [state], soil moisture
@@ -122,16 +122,17 @@ end
   f_water    ::Vector{Float64} = zeros(10) # [state], 冻结因子，用于 UpdateSoilMoisture
   ψ          ::Vector{Float64} = zeros(10) # [state], soil matric potential
   r_waterflow::Vector{Float64} = zeros(10) # [state], vertical water flow rate
-  km         ::Vector{Float64} = zeros(10) # [state], hydraulic conductivity at middle point
-  KK         ::Vector{Float64} = zeros(10) # [state], average conductivity of two soil layers
+  Kmid       ::Vector{Float64} = zeros(10) # [state], hydraulic conductivity at middle point
+  Kavg       ::Vector{Float64} = zeros(10) # [state], average conductivity of two soil layers
   Cv         ::Vector{Float64} = zeros(10) # [state], volume heat capacity
   κ          ::Vector{Float64} = zeros(10) # [state]
-  Ett        ::Vector{Float64} = zeros(10) # [state], 每层蒸发量ET in each layer
+  ETi        ::Vector{Float64} = zeros(10) # [state], 每层蒸发量ET in each layer
   G          ::Vector{Float64} = zeros(10) # [state], 土壤热通量
 
   ## temporary variables in soil_water_factor_v2
   f_temp     ::Vector{Float64} = zeros(10) # [state], f_i(Tsoil_i), 温度对水分限制影响, Eq. 5
   w_root     ::Vector{Float64} = zeros(10) # [state], 叠加根系分布比例，f_root[i] * f_stress[i]
+  w_norm     ::Vector{Float64} = zeros(10) # [state], 每层的土壤水限制因子，已归一化
   f_stress   ::Vector{Float64} = zeros(10) # [state], f_{w,i}, He et al., 2017, Eq. 3
 end
 
@@ -139,30 +140,30 @@ end
 # 从 Soil 构造 SoilState（兼容旧代码）
 function StateBEPS(soil::Soil)
   @unpack n_layer, dz, z_water, z_snow, r_rain_g, f_soilwater,
-          f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
-          f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
+          f_root, w_norm, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
+          f_water, ψ, r_waterflow, Kmid, Kavg, Cv, κ, ETi, G,
           f_temp, w_root, f_stress = soil
 
   StateBEPS(; 
     n_layer, dz, z_water, z_snow, 
     r_rain_g, f_soilwater,
-    f_root, dt, ice_ratio, θ, θ_prev,
+    f_root, w_norm, ice_ratio, θ, θ_prev,
     Tsoil_p, Tsoil_c, f_water, ψ,
-    r_waterflow, km, KK, Cv, κ,
-    Ett, G, f_temp, w_root, f_stress
+    r_waterflow, Kmid, Kavg, Cv, κ,
+    ETi, G, f_temp, w_root, f_stress
   )
 end
 
 # 将 StateBEPS 同步回 Soil（兼容旧代码）
 function State2Soil!(soil::Soil, st::StateBEPS)
   @unpack z_water, z_snow, r_rain_g, f_soilwater,
-          f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
-          f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
+          f_root, w_norm, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
+          f_water, ψ, r_waterflow, Kmid, Kavg, Cv, κ, ETi, G,
           f_temp, w_root, f_stress = st
 
   @pack! soil = z_water, z_snow, r_rain_g, f_soilwater,
-                f_root, dt, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
-                f_water, ψ, r_waterflow, km, KK, Cv, κ, Ett, G,
+                f_root, w_norm, ice_ratio, θ, θ_prev, Tsoil_p, Tsoil_c,
+                f_water, ψ, r_waterflow, Kmid, Kavg, Cv, κ, ETi, G,
                 f_temp, w_root, f_stress
   return soil
 end

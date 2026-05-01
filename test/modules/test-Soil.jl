@@ -158,7 +158,7 @@ end
 
   @test st.f_soilwater ≈ soil.f_soilwater
   @test st.f_stress[1:5] ≈ soil.f_stress[1:5]
-  @test st.dt[1:5] ≈ soil.dt[1:5]
+  @test st.w_norm[1:5] ≈ soil.w_norm[1:5]
 
   # 测试 UpdateThermal_κ
   UpdateThermal_κ(soil)
@@ -189,7 +189,7 @@ end
   # 测试 Root_Water_Uptake
   Root_Water_Uptake(soil, 1.0, 2.0, 0.5)
   Root_Water_Uptake(st, 1.0, 2.0, 0.5)
-  @test st.Ett[1:5] ≈ soil.Ett[1:5]
+  @test st.ETi[1:5] ≈ soil.ETi[1:5]
 end
 
 

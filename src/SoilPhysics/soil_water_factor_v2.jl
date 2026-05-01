@@ -31,8 +31,8 @@ function soil_water_factor_v2(st::S, ps::P) where {S<:Union{StateBEPS,Soil},P<:U
   else
     f_stress_sum = 0.0
     for i in 1:n
-      st.dt[i] = st.w_root[i] / w_root_sum
-      f_stress_sum += st.f_stress[i] * st.dt[i]
+      st.w_norm[i] = st.w_root[i] / w_root_sum
+      f_stress_sum += st.f_stress[i] * st.w_norm[i]
     end
     st.f_soilwater = max(0.1, f_stress_sum)
   end

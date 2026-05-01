@@ -20,7 +20,7 @@ function UpdateSoilMoisture(st::S, ps::P, kstep::Float64) where {
 
   r_drainage = ps.r_drainage
   (; θ_sat, K_sat, ψ_sat, b, θ_vwp) = get_hydraulic(ps)
-  (; f_water, KK, km, ψ, θ, θ_prev, Tsoil_c, Ett, r_waterflow, ice_ratio, z_water, r_rain_g) = st
+  (; f_water, Kavg, Kmid, ψ, θ, θ_prev, Tsoil_c, ETi, r_waterflow, ice_ratio, z_water, r_rain_g) = st
 
   θ_prev .= θ
 
@@ -56,7 +56,7 @@ function UpdateSoilMoisture(st::S, ps::P, kstep::Float64) where {
     # Hydraulic conductivity: Bonan, Table 8.2, Campbell 1974, K = K_sat*(θ/θ_sat)^(2b+3)
     for i in 1:n
       ψ[i] = cal_ψ(θ[i], θ_sat[i], ψ_sat[i], b[i])
-      km[i] = f_water[i] * cal_K(θ[i], θ_sat[i], K_sat[i], b[i]) # Hydraulic conductivity, [m/s]
+      Kmid[i] = f_water[i] * cal_K(θ[i], θ_sat[i], K_sat[i], b[i]) # Hydraulic conductivity, [m/s]
     end
 
     # Fb, flow speed. Dancy's law. LHE.
@@ -65,10 +65,10 @@ function UpdateSoilMoisture(st::S, ps::P, kstep::Float64) where {
       # 不同层土壤深度不同，能否这样写？
       # K * ψ * b / (b + 3): ?
       # the unsaturated hydraulic conductivity of soil layer
-      KK[i] = (km[i] * ψ[i] + km[i+1] * ψ[i+1]) / (ψ[i] + ψ[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6) # 计算平均的一种方案？
-      Q = KK[i] * (2 * (ψ[i+1] - ψ[i]) / (dz[i] + dz[i+1]) + 1) # z direction
+      Kavg[i] = (Kmid[i] * ψ[i] + Kmid[i+1] * ψ[i+1]) / (ψ[i] + ψ[i+1]) * (b[i] + b[i+1]) / (b[i] + b[i+1] + 6) # 计算平均的一种方案？
+      Q = Kavg[i] * (2 * (ψ[i+1] - ψ[i]) / (dz[i] + dz[i+1]) + 1) # z direction
       # `Q_max`出现了单位不匹配的问题，导致Q_max未发挥作用
-      Q_max = (θ_sat[i+1] - θ[i+1]) * dz[i+1] / kstep + Ett[i+1]
+      Q_max = (θ_sat[i+1] - θ[i+1]) * dz[i+1] / kstep + ETi[i+1]
       Q = min(Q, Q_max)
 
       r_waterflow[i] = Q
@@ -83,9 +83,9 @@ function UpdateSoilMoisture(st::S, ps::P, kstep::Float64) where {
     # from there: kstep is replaced by this_step. LHE
     for i in 1:n
       if i == 1
-        θ[i] += (inf - r_waterflow[i] - Ett[i]) * Δt / dz[i]
+        θ[i] += (inf - r_waterflow[i] - ETi[i]) * Δt / dz[i]
       else
-        θ[i] += (r_waterflow[i-1] - r_waterflow[i] - Ett[i]) * Δt / dz[i]
+        θ[i] += (r_waterflow[i-1] - r_waterflow[i] - ETi[i]) * Δt / dz[i]
       end
       θ[i] = clamp(θ[i], θ_vwp[i], θ_sat[i])
     end
@@ -114,13 +114,13 @@ end
 function guess_step(max_Fb)
   # this constraint is too large
   if max_Fb > 1.0e-5 # 864 mm/day
-    dt = 1.0
+    Δt = 1.0
   elseif max_Fb > 1.0e-6 # 86.4 mm/day
-    dt = 30.0 # seconds
+    Δt = 30.0 # seconds
   else
-    dt = 360.0
+    Δt = 360.0
   end
-  dt
+  Δt
 end
 
 # Function to calculate soil water uptake from a layer
@@ -134,8 +134,8 @@ function Root_Water_Uptake(st::S, Trans_o::Float64, Trans_u::Float64, Evap_soil:
   S<:Union{StateBEPS,Soil}}
 
   Trans = Trans_o + Trans_u
-  st.Ett[1] = Trans / ρ_w * st.dt[1] + Evap_soil / ρ_w
+  st.ETi[1] = Trans / ρ_w * st.w_norm[1] + Evap_soil / ρ_w
   for i in 2:st.n_layer
-    st.Ett[i] = Trans / ρ_w * st.dt[i]
+    st.ETi[i] = Trans / ρ_w * st.w_norm[i]
   end
 end
