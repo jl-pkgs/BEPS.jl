@@ -34,6 +34,9 @@ kw = (lon=120.5, lat=30.5,
   # gpp_u_sunlit has a large bias in i=193, unknown reason
   # df_diff_perc = df_diff_perc[:, Cols(1:1, 3:end)]
   df_diff_perc = df_diff_perc[:, Cols(:GPP, :Evap, :Trans)]
+  for col in names(df_diff_perc)
+    df_diff_perc[abs.(df_c[!, col]) .< eps(Float64), col] .= 0.0
+  end
   l = maximum(df_diff_perc)
   @show l
   @show nanmax(l)

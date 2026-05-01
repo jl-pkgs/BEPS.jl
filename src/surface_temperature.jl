@@ -20,7 +20,7 @@ end
 
 
 function surface_temperature_jl!(
-  Rn_g::FT, T_air::FT, Tc_u::FT, RH::FT, 
+  Rn_g::FT, T_air::FT, Tc_u::FT, RH::FT,
   z_snow::FT, z_water::FT, ρ_snow::FT, perc_snow_g::FT,
   z_soil1::FT, κ_soil1::FT, Cv_soil1::FT, Cv_soil0::FT, Gheat_g::FT,
   E_soil::FT, E_water_g::FT, E_snow_g::FT,
@@ -84,7 +84,7 @@ function surface_temperature_jl!(
 
     T_interface = (κ_soil1 * T_soil1_last / Δz_soil1 + κ_dry_snow * T_snow0 / Δz_snow + ΔM_soil1 * T_mix0_last) /
                   (κ_soil1 / Δz_soil1 + κ_dry_snow / Δz_snow + ΔM_soil1)        # Ts(z=0) only with snow cover
-    T_mix0 = T_soil0 * (1 - perc_snow_g) + T_interface * perc_snow_g       # Ts(z=0) 
+    T_mix0 = T_soil0 * (1 - perc_snow_g) + T_interface * perc_snow_g            # Ts(z=0)
 
     G_snow = κ_dry_snow * (T_snow0 - T_soil1_last) / (Δz_snow + Δz_soil1)
     G_soil = κ_soil1 * (T_mix0 - T_soil1_last) / Δz_soil1
@@ -133,12 +133,12 @@ end
 
 
 function surface_temperature!(
-  state::AbstractSoil, ps::ParamBEPS{FT}, 
+  state::AbstractSoil, ps::ParamBEPS{FT},
   Tsnow_p::SnowLand{FT}, Tsnow_c::SnowLand{FT},
   radiation_g::FT, Tc_u::FT, T_air::FT, RH::FT, z_snow::FT, z_water::FT, ρ_snow::FT, f_snow_g::FT, Gheat_g::FT,
   Evap_soil::FT, Evap_SW::FT, Evap_SS::FT) where {FT<:AbstractFloat}
 
-  UpdateThermal_κ(state, ps)  # Soil Thermal Conductivity module by L. He 
+  UpdateThermal_κ(state, ps)  # Soil Thermal Conductivity module by L. He
   UpdateThermal_Cv(state, ps)
 
   # 1. 准备土壤热力学参数
@@ -148,7 +148,7 @@ function surface_temperature!(
 
   # 2. 调用 surface_temperature_jl 计算
   G, T_soil0 = surface_temperature_jl!(radiation_g, T_air, Tc_u, RH,
-    z_snow, z_water, ρ_snow, f_snow_g, 
+    z_snow, z_water, ρ_snow, f_snow_g,
     z_soil1, κ_soil1, Cv1, Cv0, Gheat_g,
     Evap_soil, Evap_SW, Evap_SS,
     state.G[1],

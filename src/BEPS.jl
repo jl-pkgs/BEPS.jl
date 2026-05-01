@@ -21,7 +21,9 @@ export beps_optimize
 export Soil_c
 
 path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))
-libbeps = path_proj("deps/libbeps.dll")
+
+using Libdl
+libbeps = path_proj("deps/libbeps.$(dlext)")
 
 # import Statistics: mean, std
 # include("DataFrames.jl")
