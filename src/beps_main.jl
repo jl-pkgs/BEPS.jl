@@ -4,7 +4,7 @@ const DEFAULT_VARS_EXPORT = [
   :θ, :Tsoil_c, :ETi]
 
 # Please use `beps_modern` instead
-# This function is only for testing the consistency between C and Julia versions, 
+# This function is only for testing the consistency between C and Julia versions,
 # and will be deprecated in the future.
 function beps_main(forcing::MetSeries, lai::Vector, dates;
   lon::FT=120.0, lat::FT=20.0,
@@ -49,7 +49,7 @@ function beps_main(forcing::MetSeries, lai::Vector, dates;
 
     fill_met!(met, forcing, i) # 驱动数据
     k = ceil(Int, i / 24)
-    _lai = lai[k] * theta[3] / clumping # re-calculate LAI & renew clump index
+    _lai = lai[k]
 
     # /***** start simulation modules *****/
     if version == "julia"

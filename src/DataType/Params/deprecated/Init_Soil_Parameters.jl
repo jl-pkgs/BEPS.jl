@@ -34,7 +34,7 @@ function Init_Soil_Parameters(soil::Soil, VegType::Integer, SoilType::Integer, r
   par = SOIL_PARAMS[idx]
 
   soil.ρ_soil[1:5] .= [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # from flux tower.
-  soil.V_SOM[1:5] .= [5, 2, 1, 1, 0.3] # volume fraction, 0-1; bug 20260113, unit error
+  soil.V_SOM[1:5] .= [5, 2, 1, 1, 0.3] ./ 100 # volume fraction, 0-1; fixed 20260502
 
   soil.b[1:5] .= par.b
   soil.K_sat[1:5] .= par.K_sat

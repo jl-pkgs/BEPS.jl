@@ -1,7 +1,7 @@
 using BEPS, DataFrames, Test, Dates
 
 @testset "beps_optimize" begin
-  LAI_all = readdlm(path_proj("examples/input/p1_LAI.txt"))[:]
+  LAI_all = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
   forcing_all = deserialize(path_proj("data/p1_forcing"))
 
   # 仅取前 48 小时加速测试（CI 每次评估全年耗时太久）

@@ -3,7 +3,7 @@ using RTableTools
 using BEPS, DataFrames, Test, Dates
 
 ##
-LAI = readdlm(path_proj("examples/input/p1_LAI.txt"))[:]
+LAI = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
 forcing = deserialize(path_proj("data/p1_forcing"))
 dates = DateTime(2010):Hour(1):DateTime(2010, 12, 31, 23)
 ntime = length(dates)
@@ -16,6 +16,7 @@ Ta = Float64(forcing.Tair[1])
 state, _ = setup(ps; Ta, Tsoil=2.2, θ0=0.4115, z_snow=0.0)
 
 df_jl, df_ET_jl, states_jl = beps_main(forcing, LAI, dates; ps, state, kw..., version="julia", verbose=false)
+
 
 ## 1. 测试C与Julia版本的结果是否一致
 @time df_jl, df_ET_jl, states_jl = beps_main(forcing, LAI, dates; ps, state, kw..., version="julia")
@@ -34,6 +35,7 @@ l = maximum(df_diff_perc)
 
 # @test _nanmaximum(l) < 1.5 # SH, 1.48%的误差, current 0.09%
 @test _nanmaximum(l) < 2.5 # GPP, 2.38%的误差, current 0.09%
+
 
 ## 2. 定位差异较大的时刻，输出数据进行对比分析
 inds = findall(df_diff_perc.Trans .> 1)

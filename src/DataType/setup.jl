@@ -10,6 +10,7 @@ function _init_state(ps::ParamBEPS, Tsoil, Ta, θ0, z_snow)
   st.dz[1:ps.N] .= ps.dz
   UpdateRootFraction!(st, ps)
   Init_Soil_T_θ!(st, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
+  st.Tsnow_c .= Float64(Ta)
   st
 end
 

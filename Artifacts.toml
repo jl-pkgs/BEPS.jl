@@ -1,0 +1,37 @@
+[[libbeps]]
+arch = "x86_64"
+git-tree-sha1 = "58b41d6341bb3709b800a453d15385ddb551cb0d"
+lazy = true
+os = "windows"
+
+    [[libbeps.download]]
+    sha256 = "15ff0c9e5c954acf5440f588408b5850e393ad8500b86f41174d892e61445cce"
+    url = "https://github.com/CUG-hydro/BEPS.c/releases/download/v2026.05.03/beps-windows-x86_64.tar.gz"
+[[libbeps]]
+arch = "x86_64"
+git-tree-sha1 = "73fafe8133c8eec7c698d8e69cd7301a43f8f5cc"
+lazy = true
+libc = "glibc"
+os = "linux"
+
+    [[libbeps.download]]
+    sha256 = "de15a67fd7631bbed5a74c4e3b9f8e172283e02e325f05ae7db7bc24011ceab2"
+    url = "https://github.com/CUG-hydro/BEPS.c/releases/download/v2026.05.03/beps-linux-x86_64.tar.gz"
+[[libbeps]]
+arch = "x86_64"
+git-tree-sha1 = "e95955ec4d103406dff8ae85c78a97239b6e896b"
+lazy = true
+os = "macos"
+
+    [[libbeps.download]]
+    sha256 = "dbd02507c4314f2ca4303ba5995740a0b46681d2fc48c4a7c981efd513a7c7f5"
+    url = "https://github.com/CUG-hydro/BEPS.c/releases/download/v2026.05.03/beps-macos-x86_64.tar.gz"
+[[libbeps]]
+arch = "aarch64"
+git-tree-sha1 = "40badbda881f59e28783107c59612cce69cde32e"
+lazy = true
+os = "macos"
+
+    [[libbeps.download]]
+    sha256 = "2bb33d6880a70a9b746e2b5624196723560998c8bf3886a14571e60744695899"
+    url = "https://github.com/CUG-hydro/BEPS.c/releases/download/v2026.05.03/beps-macos-arm64.tar.gz"

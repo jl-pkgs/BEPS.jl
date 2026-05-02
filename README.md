@@ -14,8 +14,7 @@ Boreal Ecosystem Productivity Simulator in Julia
 > - Julia: 0.286327 seconds (822.38 k allocations: 22.998 MiB, 0.85% gc time)
 > - C    : 0.787059 seconds (629.95 k allocations: 13.915 MiB)
 
-> [!CAUTION]
-> `BEPS.clang` only works under Windows.
+> `BEPS.clang` works for Windows, Linux and Mac (v2026.05.02).
 
 ## Install
 
@@ -114,6 +113,7 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
 
 ### 2026-05-02
   - [x] `inter_prg`中`UpdateHeatFlux(state, _Ta_annual, kstep)`，第二参数应传入Ta_annual而非Tair，对G会引起较大误差。
+  - [x] `Init_Soil_Parameters`中`V_SOM`值域在[0, 1]，而非0-100。
 
 ## Researches
 

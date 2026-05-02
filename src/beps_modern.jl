@@ -19,7 +19,7 @@ Run BEPS simulation using the modern `ParamBEPS + StateBEPS` API.
 function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   ps::ParamBEPS, state::StateBEPS,
   lon::FT=120.0, lat::FT=20.0, clumping::FT=0.85,
-  fix_snowpack=true,
+  fix_snowpack=true, fix_annual_Ta=true,
   VARS_EXPORT::Vector{Symbol}=DEFAULT_VARS_EXPORT, kw...) where {FT<:AbstractFloat}
 
   state = deepcopy(state) # 避免外部状态被修改
@@ -49,7 +49,7 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
     _lai = lai[k]
 
     inter_prg_jl(jday, hour, lon, lat, _lai, clumping,
-      Ra, met, ps, state, mid_flux, mid_ET, cache; fix_snowpack, Ta_annual)
+      Ra, met, ps, state, mid_flux, mid_ET, cache; fix_snowpack, fix_annual_Ta, Ta_annual)
 
     fluxes[i] = mid_flux
     fluxes_ET[i] = mid_ET

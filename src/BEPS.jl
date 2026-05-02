@@ -24,8 +24,19 @@ export Soil_c
 export path_proj
 path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))
 
-using Libdl
-libbeps = path_proj("deps/libbeps.$(dlext)")
+using LazyArtifacts
+using Libdl: dlext
+using Base.BinaryPlatforms: HostPlatform, os, arch
+
+const libbeps = let
+  _ext  = dlext
+  _os   = os(HostPlatform())
+  _ar   = arch(HostPlatform()) == "aarch64" ? "arm64" : "x86_64"
+
+  fname = "libbeps-$_os-$_ar.$_ext"
+  local_lib = path_proj("deps", fname)
+  isfile(local_lib) ? local_lib : joinpath(artifact"libbeps", fname)
+end
 
 # import Statistics: mean, std
 # include("DataFrames.jl")

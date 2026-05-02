@@ -6,7 +6,7 @@ kw = (lon=120.5, lat=30.5,
   Tsoil0=2.2, θ0=0.4115, z_snow0=0.0
 )
 
-LAI = readdlm(path_proj("examples/input/p1_LAI.txt"))[:]
+LAI = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
 forcing = deserialize(path_proj("data/p1_forcing"))
 dates = DateTime(2010):Hour(1):DateTime(2010, 12, 31, 23)
 
@@ -18,8 +18,8 @@ end
 @testset "beps_main " begin
   @time df_jl, df_ET_jl, states_jl = main(; version="julia")
   r = sum(df_jl)
-  @test isapprox(r.GPP, 2145.569; atol=0.01)
-  @test isapprox(r.Evap, 62.2334; atol=0.01)
+  @test isapprox(r.GPP, 2146.110; atol=0.01)
+  @test isapprox(r.Evap, 62.5378; atol=0.01)
 end
 
 ##

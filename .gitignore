@@ -29,7 +29,8 @@ __pycache__
 # data
 
 # examples
-deps
+# deps
+deps/BEPS.c
 
 # docs
 *.rda

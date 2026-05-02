@@ -3,7 +3,7 @@ gr(; framestyle=:box)
 
 ##
 forcing = deserialize(path_proj("data/p1_forcing"))
-LAI = readdlm(path_proj("examples/input/p1_LAI.txt"))[:]
+LAI = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
 dates = DateTime(2010):Hour(1):DateTime(2010, 12, 31, 23)
 
 VegType, SoilType = 25, 8

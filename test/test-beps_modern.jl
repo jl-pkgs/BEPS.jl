@@ -1,6 +1,6 @@
 using BEPS, DataFrames, Test, Dates
 
-LAI = readdlm(path_proj("examples/input/p1_LAI.txt"))[:]
+LAI = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
 forcing = deserialize(path_proj("data/p1_forcing"))
 dates = DateTime(2010):Hour(1):DateTime(2010, 12, 31, 23)
 
