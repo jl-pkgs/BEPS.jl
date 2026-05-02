@@ -1,4 +1,4 @@
-export StateSeries, save_state!
+export StateSeries, save_state!, split_vars
 using OrderedCollections
 
 const StateSeries{S<:NamedTuple,V<:NamedTuple} =
@@ -30,6 +30,32 @@ end
     end
 end
 
+save_state!(out::Nothing, st::StateBEPS, t::Int, ::Val{SF}, ::Val{VF}) where {SF,VF} = nothing
+
+
+"""
+    split_vars(vars) -> (sf::Val, vf::Val)
+
+根据 VARS_SCALAR / VARS_VECTOR 将 vars 划分为标量和向量两组，并做合法性检查。
+"""
+function split_vars(vars)
+    vars = Symbol.(vars)
+    known = Set(fieldnames(StateBEPS))
+
+    # 检查字段是否存在于 StateBEPS
+    unknown = filter(v -> v ∉ known, vars)
+    isempty(unknown) || error("字段不存在于 StateBEPS: $unknown")
+
+    # 检查字段是否在可导出列表中
+    exportable = Set((VARS_SCALAR..., VARS_VECTOR...))
+    excluded = filter(v -> v ∉ exportable, vars)
+    isempty(excluded) || @warn "字段在排除列表中，无法导出: $excluded"
+
+    sf = Val(Tuple(v for v in vars if v ∈ Set(VARS_SCALAR)))
+    vf = Val(Tuple(v for v in vars if v ∈ Set(VARS_VECTOR)))
+    sf, vf
+end
+
 Base.Dict(nt::NamedTuple) = OrderedDict(pairs(nt))
 
 function Base.getindex(out::StateSeries, i::Int)
@@ -48,7 +74,7 @@ function _print_section(io, nt, prefix)
         data = nt[fname]
         mb = round(Base.summarysize(data) / 1024^2, digits=2)
         print(io, "$(prefix)$(c)─ ")
-        printstyled(io, rpad(string(fname), nw); bold=true, color = :blue)
+        printstyled(io, rpad(string(fname), nw); bold=true, color=:blue)
         print(io, "  ", typeof(data), " | ", size(data), " | ")
         printstyled(io, "$mb Mb\n"; color=:blue, bold=true, underline=true)
     end

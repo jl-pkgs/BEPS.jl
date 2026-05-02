@@ -137,6 +137,18 @@ end
 end
 
 
+const VARS_SCALAR = Tuple(
+    f for (f, T) in zip(fieldnames(StateBEPS), fieldtypes(StateBEPS))
+    if T <: AbstractFloat && f ∉ (:Qhc_o,)
+)
+
+const VARS_VECTOR = Tuple(
+    f for (f, T) in zip(fieldnames(StateBEPS), fieldtypes(StateBEPS))
+    if T == Vector{Float64} && f ∉ (:dz, :f_root)
+)
+# :θ_prev, :Tsoil_p
+const VARS_STATE = (VARS_SCALAR..., VARS_VECTOR...)
+
 # 从 Soil 构造 SoilState（兼容旧代码）
 function StateBEPS(soil::Soil)
   @unpack n_layer, dz, z_water, z_snow, r_rain_g, f_soilwater,
@@ -168,4 +180,6 @@ function State2Soil!(soil::Soil, st::StateBEPS)
   return soil
 end
 
+
 export Soil, StateBEPS, State2Soil!
+export VARS_SCALAR, VARS_VECTOR, VARS_STATE
