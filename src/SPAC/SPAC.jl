@@ -4,7 +4,7 @@ import DataFrames: DataFrame
 # include("../SPAC/SPAC.jl")
 
 export s_coszs, lai2, VCmax
-export fill_met!, meteo_pack_jl
+export meteo_pack_jl
 export snow_density
 
 include("Leaf.jl")

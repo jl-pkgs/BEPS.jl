@@ -62,6 +62,6 @@ function cal_cp(Ta::FT, RH::FT)::FT where {FT<:Real}
 end
 
 export pow, cal_ea, cal_es,
-  cal_slope, cal_lambda, cal_cp, ea2q, RH2q,
+  cal_slope, cal_lambda, cal_cp, ea2q, RH2q, q2RH,
   cal_Rln,
   blackbody
