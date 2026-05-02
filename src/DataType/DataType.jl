@@ -17,11 +17,12 @@ include("BEPS_State.jl")
 include("Params/Params.jl")
 
 include("Met.jl")
+include("macro.jl")
 include("OUTPUT.jl")
 include("setup.jl")
 
 
-@with_kw mutable struct Radiation
+@with_kw mutable struct Radiation <: AbstractFlux
   Rs_o_df::FT = 0.0
   Rs_u_df::FT = 0.0
 
@@ -66,8 +67,8 @@ end
 # export TSoil
 
 
-## fill values
-const TypeDF = Union{Results,Met,OutputET}
+## fill valuesFlux
+const TypeDF = Union{Flux,Met,ETFlux}
 
 ## put struct into a data.frame
 function Base.getindex(x::T, i::Int)::FT where {T<:TypeDF}
@@ -77,16 +78,18 @@ end
 
 Base.length(x::T) where {T<:TypeDF} = fieldcount(T)
 
-function fill_res!(df::DataFrame, Res::T, k::Int) where {T<:TypeDF}
-  n = length(Res)
-  for i in 1:n
-    df[k, i] = Res[i]
+@generated function fill_res!(df::DataFrame, res::T, k::Int) where {T<:TypeDF}
+  fs = fieldnames(T)
+  assigns = Vector{Any}(undef, length(fs))
+  for (i, f) in pairs(fs)
+    # QuoteNode 让字段名作为常量符号 → DataFrames 列直接定位 + 静态 getfield
+    assigns[i] = :(@inbounds df[!, $(QuoteNode(f))][k] = getfield(res, $(QuoteNode(f))))
   end
-  return nothing
+  return Expr(:block, assigns..., :(return nothing))
 end
 
 
 export Leaf, Soil, AbstractSoil, 
-  Met, Results, Cpools, OutputET, Radiation
+  Met, Flux, Cpools, ETFlux, Radiation
 
 export FT, init_dbl, set!

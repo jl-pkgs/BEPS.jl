@@ -1,4 +1,4 @@
-@with_kw mutable struct Results
+@with_kw mutable struct Flux <: AbstractFlux
   gpp_o_sunlit::Cdouble = 0.0
   gpp_u_sunlit::Cdouble = 0.0
   gpp_o_shaded::Cdouble = 0.0
@@ -24,7 +24,7 @@
 end
 
 
-@with_kw mutable struct OutputET
+@with_kw mutable struct ETFlux <: AbstractFlux
   Trans_o::Cdouble = 0.0
   Trans_u::Cdouble = 0.0
   Eil_o::Cdouble = 0.0     # Ei of liquid
@@ -46,7 +46,7 @@ end
 end
 
 
-function update_ET!(x::OutputET, mid_res::Results, Ta)
+function update_ET!(x::ETFlux, mid_res::Flux, Ta)
   Lv_liquid = (2.501 - 0.00237 * Ta) * 1000000  # The latent heat of water vaporization in j/kg
   
   x.Trans = (x.Trans_o + x.Trans_u) * step
@@ -68,3 +68,9 @@ function update_ET!(x::OutputET, mid_res::Results, Ta)
   mid_res.LH    = x.LH
   mid_res.SH    = x.SH
 end
+
+
+# ── 时间序列容器（用 @DefFluxSeries 自动展开为 Vector{FT} 字段）──────────────
+# @DefFluxSeries FluxSeries = Flux
+# @DefFluxSeries ETSeries     = ETFlux
+# export FluxSeries, ETSeries

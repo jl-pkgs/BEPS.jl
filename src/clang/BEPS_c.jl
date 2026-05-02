@@ -19,8 +19,8 @@ include("module.jl")
 # include("beps_main.jl")
 # include("debug_Rln.jl")
 
-# function plantresp(LC, mid_res::Results, lai_yr, lai, Tair, T_soil, CosZs)
-#     ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Results}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
+# function plantresp(LC, mid_res::Flux, lai_yr, lai, Tair, T_soil, CosZs)
+#     ccall((:plantresp, libbeps), Cvoid, (Cint, Ptr{Flux}, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
 #         LC, Ref(mid_res), lai_yr, lai, Tair, T_soil, CosZs)
 # end
 
@@ -28,11 +28,11 @@ function inter_prg_c(jday, rstep, CosZs::T,
   Ra::Radiation, lai::T, Ω::T, 
   meteo::Met, parameter::Vector{T},
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
-  mid_res::Results, mid_ET::OutputET, cache::LeafCache; debug=false, kw...) where {T<:Real}
+  mid_res::Flux, mid_ET::ETFlux, cache::LeafCache; debug=false, kw...) where {T<:Real}
 
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
-      Ptr{Met}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil_c}, Ptr{Results}, Ptr{OutputET}),
+      Ptr{Met}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil_c}, Ptr{Flux}, Ptr{ETFlux}),
     jday, rstep, lai, Ω, parameter,
     Ref(meteo), CosZs, var_o, var_n, Ref(soilp), Ref(mid_res), Ref(mid_ET))
 end
@@ -47,7 +47,7 @@ end
 
 
 # function soilresp(Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cv, Cp, npp_yr, coef, SoilType, soilp, mid_res)
-#     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil_c}, Ptr{Results}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cv, Cp, npp_yr, coef, SoilType, soilp, mid_res)
+#     ccall((:soilresp, libbeps), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cfloat, Ptr{Cdouble}, Cint, Ptr{Soil_c}, Ptr{Flux}), Ccd, Cssd, Csmd, Cfsd, Cfmd, Csm, Cm, Cv, Cp, npp_yr, coef, SoilType, soilp, mid_res)
 # end
 function ReadParamVeg(lc::Int=1)
   parameter1 = zeros(Cdouble, 48)

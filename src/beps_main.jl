@@ -9,14 +9,14 @@ function besp_main(d::DataFrame, lai::Vector;
 
   met = Met()
   d = standardize_forcing_columns(d)
-  mid_res = Results()
-  mid_ET = OutputET()
+  mid_res = Flux()
+  mid_ET = ETFlux()
   Ra = Radiation()
   cache = LeafCache()
 
   n = size(d, 1)
-  vars = fieldnames(Results) |> collect
-  vars_ET = fieldnames(OutputET) |> collect
+  vars = fieldnames(Flux) |> collect
+  vars_ET = fieldnames(ETFlux) |> collect
 
   df_out = DataFrame(zeros(n, length(vars)), vars)
   df_ET = DataFrame(zeros(n, length(vars_ET)), vars_ET)

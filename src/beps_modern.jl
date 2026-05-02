@@ -4,11 +4,23 @@
 Run BEPS simulation using the modern `ParamBEPS + StateBEPS` API.
 
 # Arguments
-- `d`       : forcing DataFrame
-- `lai`     : daily LAI vector
-- `model`   : `ParamBEPS` parameter object; if `nothing`, built from `VegType`/`SoilType`
-- `VegType` : vegetation type code (used when `model=nothing`)
-- `SoilType`: soil type code (used when `model=nothing`)
+- `d`   : hourly forcing `DataFrame`. Required columns:
+
+  | Column   | Unit    | Description                        |
+  |----------|---------|------------------------------------|
+  | `day`    | —       | Day of year (1–366)                |
+  | `hour`   | —       | Hour of day (1–24)                 |
+  | `Rs`     | W m⁻²   | Downward shortwave radiation       |
+  | `Tair`   | °C      | Air temperature                    |
+  | `rain`   | mm h⁻¹  | Precipitation                      |
+  | `Uz`     | m s⁻¹   | Wind speed                         |
+  | `qair`   | g kg⁻¹  | Specific humidity *(or `RH` [%])*  |
+  | `Rln_in` | W m⁻²   | Downward longwave radiation *(optional)* |
+
+- `lai`     : daily LAI vector (length = number of days)
+- `model`   : `ParamBEPS` object; if `nothing`, built from `VegType`/`SoilType`
+- `VegType` : IGBP vegetation type (used when `model=nothing`)
+- `SoilType`: USDA soil texture class (used when `model=nothing`)
 
 # Returns
 `(df_out, df_ET, output_Tsoil, output_θ)`
@@ -21,7 +33,6 @@ function beps_modern(d::DataFrame, lai::Vector;
   r_drainage::FT=0.5, r_root_decay::FT=0.95,
   fix_snowpack=true, verbose=true, kw...) where {FT<:AbstractFloat}
 
-  d = standardize_forcing_columns(d)
   Ta = Float64(d.Tair[1])
 
   # 构建 ParamBEPS 和 StateBEPS
@@ -36,14 +47,14 @@ function beps_modern(d::DataFrame, lai::Vector;
   end
 
   met = Met()
-  mid_res = Results()
-  mid_ET = OutputET()
+  mid_res = Flux()
+  mid_ET = ETFlux()
   Ra = Radiation()
   cache = LeafCache()
 
   ntime = size(d, 1)
-  vars = fieldnames(Results) |> collect
-  vars_ET = fieldnames(OutputET) |> collect
+  vars = fieldnames(Flux) |> collect
+  vars_ET = fieldnames(ETFlux) |> collect
 
   df_out = DataFrame(zeros(ntime, length(vars)), vars)
   df_ET = DataFrame(zeros(ntime, length(vars_ET)), vars_ET)
@@ -72,3 +83,7 @@ function beps_modern(d::DataFrame, lai::Vector;
 
   df_out, df_ET, output_Tsoil, output_θ
 end
+
+# ETSeries
+# FluxSeries
+# StateSeries
