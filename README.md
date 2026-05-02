@@ -111,6 +111,10 @@ See [examples/example_01.qmd](examples/example_01.qmd) for details.
     G_soil = G_snow * (T_soil_surf - T_soil1_last) / z_soil1   # wrong
     G_soil = κ_soil1 * (T_soil_surf - T_soil1_last) / Δz_soil1 # correct
     ```
+
+### 2026-05-02
+  - [x] `inter_prg`中`UpdateHeatFlux(state, _Ta_annual, kstep)`，第二参数应传入Ta_annual而非Tair，对G会引起较大误差。
+
 ## Researches
 
 <!-- - [ ] 研究土壤温度和空气温度之间的关系，为sentinel-2遥感数据反演提供依据
