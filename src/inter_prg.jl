@@ -9,8 +9,9 @@ The inter-module function between main program and modules
 - `soilp`     : soil coefficients according to land cover types and soil textures
 - `mid_flux`   : results struct
 """
-function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω::T,
-  forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
+function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
+  lai::T, Ω::T,
+  Ra::Radiation, forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
   mid_flux::Flux, mid_ET::ETFlux, cache::LeafCache;
   fix_snowpack::Bool=true, kw...) where {T}
 
@@ -19,6 +20,7 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, GPP, LAI, PAI = cache
 
+  CosZs::T = s_coszs(jday, hour, lat, lon)
   # ===== 1. 参数提取和计算 =====
   (; α_canopy_vis, α_canopy_nir,
     α_soil_sat, α_soil_dry, z_canopy_o, z_canopy_u, z_wind,
@@ -207,7 +209,7 @@ Extracted from `inter_prg_jl` to improve readability and maintainability.
 function solve_canopy_energy_balance!(
   cache::LeafCache, met::NamedTuple, forcing::Met,
   geo_params, snow_params, biophys_params,
-  Tc, Ra::Radiation, H_canopy_o::Float64, CosZs::T, f_soilwater::T, frac_water::Layer2{T}
+  Tc::Layer3{T}, Ra::Radiation, H_canopy_o::Float64, CosZs::T, f_soilwater::T, frac_water::Layer2{T}
 ) where {T}
 
   # Unpack required variables

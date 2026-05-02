@@ -3,19 +3,15 @@ const DEFAULT_VARS_EXPORT = [
     :z_water, :ρ_snow, :z_snow, :r_rain_g, :f_soilwater,
     :θ, :Tsoil_c, :ETi]
 
-function besp_main(d::DataFrame, lai::Vector;
+function besp_main(forcing::MetSeries, lai::Vector, dates;
     lon::FT=120.0, lat::FT=20.0,
     VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
     Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
     r_drainage::FT=0.5, r_root_decay::FT=0.95,
-    use_lrad::Bool=false,
     VARS_EXPORT::Vector{Symbol}=DEFAULT_VARS_EXPORT,
-    version="julia", fix_snowpack=true,
-    verbose=true, kw...) where {FT<:AbstractFloat}
+    version="julia", fix_snowpack=true, kw...) where {FT<:AbstractFloat}
 
-    d = standardize_forcing_columns(d)
-    ntime = size(d, 1)
-
+    ntime = forcing.ntime
     met = Met()
     mid_flux = Flux()
     mid_ET = ETFlux()
@@ -29,7 +25,7 @@ function besp_main(d::DataFrame, lai::Vector;
     # states = nothing
 
     ## 初始化参数和状态变量
-    Ta = d.Tair[1]
+    Ta = forcing.Tair[1]
 
     # 使用统一的 setup 函数初始化
     soil, state, params = setup_model(VegType, SoilType;
@@ -38,25 +34,26 @@ function besp_main(d::DataFrame, lai::Vector;
 
     theta = par2theta(params.veg; clumping, VegType)
 
+    jdays = dayofyear.(dates)
+    hours = hour.(dates) .+ 1  # 转为1-based (1:24)
+
     for i = 1:ntime
-        jday = d.day[i]
-        hour = d.hour[i]
-        CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
+        # add a progress
+        jday = jdays[i]
+        hour = hours[i]
 
-        _day = ceil(Int, i / 24)
-        (mod(_day, 50) == 0 && (hour == 1) && verbose) && println("Day = $_day")
-
-        _lai = lai[_day] * theta[3] / clumping # re-calculate LAI & renew clump index
-        fill_met!(met, d, i; use_lrad) # 驱动数据
+        fill_met!(met, forcing, i) # 驱动数据
+        k = ceil(Int, i / 24)
+        _lai = lai[k] * theta[3] / clumping # re-calculate LAI & renew clump index
 
         # /***** start simulation modules *****/
         if version == "julia"
-            inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping,
-                met, params, state, mid_flux, mid_ET, cache; fix_snowpack)
+            inter_prg_jl(jday, hour, lon, lat, _lai, clumping,
+                Ra, met, params, state, mid_flux, mid_ET, cache; fix_snowpack)
             save_state!(states, state, i, SF, VF)
         elseif version == "c"
-            inter_prg_c(jday, hour, CosZs, Ra, _lai, clumping,
-                met, theta, state, state_n, soil, mid_flux, mid_ET, cache;)
+            inter_prg_c(jday, hour, lon, lat, _lai, clumping,
+                Ra, met, theta, state, state_n, soil, mid_flux, mid_ET, cache;)
             state .= state_n # state variables
         end
 

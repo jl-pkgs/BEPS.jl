@@ -72,7 +72,7 @@ function beps_modern(d::DataFrame, lai::Vector;
     _lai = lai[_day]
     fill_met!(met, d, i)
 
-    inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping, met, ps, state,
+    inter_prg_jl(jday, hour, lon, lat, _lai, clumping, Ra, met, ps, state,
       mid_res, mid_ET, cache; fix_snowpack)
 
     output_Tsoil[i, :] .= state.Tsoil_c[1:layer]

@@ -24,12 +24,13 @@ include("module.jl")
 #         LC, Ref(mid_res), lai_yr, lai, Tair, T_soil, CosZs)
 # end
 
-function inter_prg_c(jday, rstep, CosZs::T,
-  Ra::Radiation, lai::T, Ω::T, 
-  meteo::Met, parameter::Vector{T},
+function inter_prg_c(jday, rstep, lon::T, lat::T,
+  lai::T, Ω::T,
+  Ra::Radiation, meteo::Met, parameter::Vector{T},
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
   mid_res::Flux, mid_ET::ETFlux, cache::LeafCache; debug=false, kw...) where {T<:Real}
 
+  CosZs::T = s_coszs(jday, rstep, lat, lon)
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
       Ptr{Met}, Cdouble, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Soil_c}, Ptr{Flux}, Ptr{ETFlux}),

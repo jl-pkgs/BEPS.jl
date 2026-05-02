@@ -1,4 +1,4 @@
-using BEPS, DataFrames, Test
+using BEPS, DataFrames, Test, Dates
 using BEPS: path_proj
 
 function nanmax(x)
@@ -7,21 +7,30 @@ function nanmax(x)
     maximum(x)
 end
 
-lai = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
 kw = (lon=120.5, lat=30.5,
     VegType=25, SoilType=8,
     clumping=0.85,
     Tsoil0=2.2, θ0=0.4115, z_snow0=0.0
 )
 
-d = deserialize(path_proj("data/p1_meteo"))
-d.tem = d.tem .- 5.0
-# @time df_c, df_ET_c, states_c = besp_main(d, lai; kw..., version="c")
+LAI = readdlm(path_proj("examples/input/p1_LAI.txt"))[:]
+forcing = deserialize(path_proj("data/p1_forcing"))
+dates = DateTime(2010):Hour(1):DateTime(2010, 12, 31, 23)
+
+## tidy forcing
+@testset "beps_main " begin
+    @time df_jl, df_ET_jl, states_jl = besp_main(forcing, LAI, dates; kw..., version="julia", verbose=false, fix_snowpack=false)
+    r = sum(df_jl)
+    @test isapprox(r.GPP, 2145.569; atol=0.01)
+    @test isapprox(r.Evap, 62.2334; atol=0.01)
+end
+# :ok
+
 ##
 @testset "besp_main julia" begin
-    df_jl, df_ET_jl, states_jl = besp_main(d, lai; kw..., version="julia", verbose=false, fix_snowpack=false)
-    @time df_jl, df_ET_jl, states_jl = besp_main(d, lai; kw..., version="julia", fix_snowpack=false)
-    @time df_c, df_ET_c, states_c = besp_main(d, lai; kw..., version="c")
+    df_jl, df_ET_jl, states_jl = besp_main(forcing, LAI, dates; kw..., version="julia", fix_snowpack=false)
+    @time df_jl, df_ET_jl, states_jl = besp_main(forcing, LAI, dates; kw..., version="julia", fix_snowpack=false)
+    @time df_c, df_ET_c, states_c = besp_main(forcing, LAI, dates; kw..., version="c")
     r = sum(df_jl)
 
     # @test abs(r.GPP - 2369.3039241523384) < 0.01
@@ -46,7 +55,6 @@ d.tem = d.tem .- 5.0
 end
 
 ## performance
-# @profview df_jl, df_ET_jl, states_jl = besp_main(d, lai; kw..., version="julia", fix_snowpack=false);
-"ok"
+# @profview df_jl, df_ET_jl, states_jl = besp_main(d, LAI; kw..., version="julia", fix_snowpack=false);
 
-# @time df_jl, df_ET_jl, states_jl = besp_main(d, lai; kw..., version="julia", fix_snowpack=false);
+# @time df_jl, df_ET_jl, states_jl = besp_main(d, LAI; kw..., version="julia", fix_snowpack=false);

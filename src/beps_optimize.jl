@@ -17,7 +17,7 @@ function beps_optimize(d::DataFrame, lai::Vector, model::ParamBEPS, obs::Abstrac
     try
       df_out, df_ET, _, _ = beps_modern(d, lai; model=m, kwargs...)
     catch e
-      e isa DomainError || @warn "beps_optimize: unexpected error" exception=e
+      e isa DomainError || @warn "beps_optimize: unexpected error" exception = e
       return Inf  # 参数违反物理约束时返回大值
     end
 

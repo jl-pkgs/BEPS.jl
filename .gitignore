@@ -7,7 +7,6 @@
 Manifest.toml
 
 .vscode
-
 deps/BEPC.c
 */backup
 # test
@@ -27,7 +26,7 @@ docs/reference
 .ipynb_checkpoints
 
 __pycache__
-data
+# data
 
 examples
 deps
