@@ -11,7 +11,7 @@ forcing = deserialize(path_proj("data/p1_forcing"))
 dates = DateTime(2010):Hour(1):DateTime(2010, 12, 31, 23)
 
 function main(; version="julia")
-  besp_main(forcing, LAI, dates; kw..., version, verbose=false, fix_snowpack=false, fix_Ta_annual=false)
+  beps_main(forcing, LAI, dates; kw..., version, verbose=false, fix_snowpack=false, fix_Ta_annual=false)
 end
 
 ## tidy forcing
@@ -23,7 +23,7 @@ end
 end
 
 ##
-@testset "besp_main julia" begin
+@testset "beps_main julia" begin
   df_jl, df_ET_jl, states_jl = main(; version="julia")
   @time df_jl, df_ET_jl, states_jl = main(; version="julia")
   @time df_c, df_ET_c, states_c = main(; version="c")
@@ -51,6 +51,6 @@ end
 end
 
 ## performance
-# @profview df_jl, df_ET_jl, states_jl = besp_main(d, LAI; kw..., version="julia", fix_snowpack=false);
+# @profview df_jl, df_ET_jl, states_jl = beps_main(d, LAI; kw..., version="julia", fix_snowpack=false);
 
-# @time df_jl, df_ET_jl, states_jl = besp_main(d, LAI; kw..., version="julia", fix_snowpack=false);
+# @time df_jl, df_ET_jl, states_jl = beps_main(d, LAI; kw..., version="julia", fix_snowpack=false);

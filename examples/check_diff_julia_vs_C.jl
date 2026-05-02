@@ -15,11 +15,11 @@ ps = ParamBEPS(VegType, SoilType)
 Ta = Float64(forcing.Tair[1])
 state, _ = setup(ps; Ta, Tsoil=2.2, θ0=0.4115, z_snow=0.0)
 
-df_jl, df_ET_jl, states_jl = besp_main(forcing, LAI, dates; ps, state, kw..., version="julia", verbose=false)
+df_jl, df_ET_jl, states_jl = beps_main(forcing, LAI, dates; ps, state, kw..., version="julia", verbose=false)
 
 ## 1. 测试C与Julia版本的结果是否一致
-@time df_jl, df_ET_jl, states_jl = besp_main(forcing, LAI, dates; ps, state, kw..., version="julia")
-@time df_c, df_ET_c, states_c = besp_main(forcing, LAI, dates; ps, state, kw..., version="c")
+@time df_jl, df_ET_jl, states_jl = beps_main(forcing, LAI, dates; ps, state, kw..., version="julia")
+@time df_c, df_ET_c, states_c = beps_main(forcing, LAI, dates; ps, state, kw..., version="c")
 r = sum(df_jl)
 
 df_diff = abs.(df_jl .- df_c)

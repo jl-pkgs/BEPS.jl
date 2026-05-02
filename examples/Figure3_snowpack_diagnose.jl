@@ -36,8 +36,8 @@ function plot_Figure3(fout)
   savefig(fout)
 end
 
-df_out, df_ET_jl, Tsoil, θ = besp_main(d, lai, par;version="julia")
+df_out, df_ET_jl, Tsoil, θ = beps_main(d, lai, par;version="julia")
 plot_Figure3("docs/images/Figure3_BEPS_snowpack_Julia_v0.1.7.png")
 
-df_out, df_ET_jl, Tsoil, θ = besp_main(d, lai, par; version="julia", fix_snowpack=false)
+df_out, df_ET_jl, Tsoil, θ = beps_main(d, lai, par; version="julia", fix_snowpack=false)
 plot_Figure3("docs/images/Figure3_BEPS_snowpack_BEPS_v4.10.png")

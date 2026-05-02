@@ -45,7 +45,7 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
   soil_type=8, Tsoil=2.2,
   soilwater=0.4115, snowdepth=0.0)
 
-@time df_jl, df_ET_jl, Tg = besp_main(d, lai, par; version="julia");
+@time df_jl, df_ET_jl, Tg = beps_main(d, lai, par; version="julia");
 ```
 
 > Figure1: The bias of Julia version compared with C, `bias = (Julia - C)/ C`.

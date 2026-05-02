@@ -13,12 +13,12 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
   soil_type=8, Tsoil=2.2,
   soilwater=0.4115, snowdepth=0.0)
 
-@testset "besp_main julia" begin
+@testset "beps_main julia" begin
   d = deserialize(path_proj("data/p1_meteo"))
   d.tem = d.tem .- 5 # gpp_u_sunlit的计算误差变大  
 
-  @time df_jl, df_ET_jl = besp_main(d, lai, par; version="julia")
-  @time df_c, df_ET_c = besp_main(d, lai, par; version="c")
+  @time df_jl, df_ET_jl = beps_main(d, lai, par; version="julia")
+  @time df_c, df_ET_c = beps_main(d, lai, par; version="c")
   # r = sum(df_jl)
 
   df_diff = abs.(df_jl .- df_c)

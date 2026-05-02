@@ -16,7 +16,7 @@ using ModelParams: of_RMSE
 
 @reexport using Serialization: deserialize, serialize
 @reexport using DelimitedFiles: readdlm
-export besp_main
+export beps_main
 export beps_modern
 export beps_optimize
 export Soil_c

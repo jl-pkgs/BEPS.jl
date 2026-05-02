@@ -5,7 +5,6 @@ gr(framestyle=:box)
 
 function build_forcing(; Tair_offset=0.0)
   d_forcing = fread("./examples/input/p1_meteo.txt")
-
   (; Rs, Tair, q, Prcp, Uz) = d_forcing
   Tair = Tair .+ Tair_offset
 
@@ -34,7 +33,7 @@ ps = ParamBEPS(VegType, SoilType)
 Ta = Float64(forcing.Tair[1])
 state, _ = setup(ps; Ta, Tsoil=2.2, θ0=0.4115, z_snow=0.0)
 
-df_jl, df_ET_jl, states_jl = besp_main(forcing, LAI, dates; ps, state, kw...)
+df_jl, df_ET_jl, states_jl = beps_main(forcing, LAI, dates; ps, state, kw...)
 
 # 土壤温度的变化
 depths = [0.05, 0.10, 0.20, 0.40, 1.25] |> cumsum |> x -> round.(x, digits=4)

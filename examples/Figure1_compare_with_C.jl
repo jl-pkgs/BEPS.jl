@@ -15,8 +15,8 @@ state0, _ = setup(ps; Ta, Tsoil=2.2, θ0=0.4115, z_snow=0.0)
 
 
 ## Compare with C
-@time df_jl, df_ET_jl, states_jl = besp_main(forcing, LAI, dates; ps, state=state0, kw..., version="julia")
-@time df_c, df_ET_c, states_c = besp_main(forcing, LAI, dates; ps, state=state0, kw..., version="c")
+@time df_jl, df_ET_jl, states_jl = beps_main(forcing, LAI, dates; ps, state=state0, kw..., version="julia")
+@time df_c, df_ET_c, states_c = beps_main(forcing, LAI, dates; ps, state=state0, kw..., version="c")
 
 sum(df_jl)
 sum(df_c)
@@ -45,5 +45,5 @@ plot(ps_plots..., layout=(3, 4), size=(1400, 800))
 # savefig("images/Figure1_bias_of_julia-version.png")
 
 # # using ProfileView
-# # @profview_allocs df_jl, df_ET_jl, _ = besp_main(forcing, LAI, dates; ps, state=state0, kw..., version="julia");
-# # @profview df_jl, df_ET_jl, _ = besp_main(forcing, LAI, dates; ps, state=state0, kw..., version="julia");
+# # @profview_allocs df_jl, df_ET_jl, _ = beps_main(forcing, LAI, dates; ps, state=state0, kw..., version="julia");
+# # @profview df_jl, df_ET_jl, _ = beps_main(forcing, LAI, dates; ps, state=state0, kw..., version="julia");
