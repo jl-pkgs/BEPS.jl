@@ -4,25 +4,23 @@ function besp_main(d::DataFrame, lai::Vector;
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
   r_drainage::FT=0.5, r_root_decay::FT=0.95,
   use_lrad::Bool=false,
-  version="julia", fix_snowpack=true, 
+  version="julia", fix_snowpack=true,
   verbose=true, kw...) where {FT<:AbstractFloat}
 
-  met = Met()
   d = standardize_forcing_columns(d)
-  mid_res = Flux()
+  ntime = size(d, 1)
+
+  met = Met()
+  mid_flux = Flux()
   mid_ET = ETFlux()
   Ra = Radiation()
   cache = LeafCache()
 
-  n = size(d, 1)
-  vars = fieldnames(Flux) |> collect
-  vars_ET = fieldnames(ETFlux) |> collect
+  fluxes = FluxSeries(; ntime)
+  fluxes_ET = ETSeries(; ntime)
 
-  df_out = DataFrame(zeros(n, length(vars)), vars)
-  df_ET = DataFrame(zeros(n, length(vars_ET)), vars_ET)
-
-  output_Tsoil = zeros(n, layer) ## 返回变量
-  output_θ = zeros(n, layer)
+  output_Tsoil = zeros(ntime, layer) ## 返回变量
+  output_θ = zeros(ntime, layer)
 
   ## 初始化参数和状态变量
   Ta = d.Tair[1]
@@ -34,7 +32,7 @@ function besp_main(d::DataFrame, lai::Vector;
 
   theta = par2theta(params.veg; clumping, VegType)
 
-  for i = 1:n
+  for i = 1:ntime
     jday = d.day[i]
     hour = d.hour[i]
     CosZs = s_coszs(jday, hour, lat, lon) # cos_solar zenith angle
@@ -47,19 +45,18 @@ function besp_main(d::DataFrame, lai::Vector;
 
     # /***** start simulation modules *****/
     if version == "julia"
-      inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping, 
-        met, params, state, mid_res, mid_ET, cache; fix_snowpack)
+      inter_prg_jl(jday, hour, CosZs, Ra, _lai, clumping,
+        met, params, state, mid_flux, mid_ET, cache; fix_snowpack)
     elseif version == "c"
-      inter_prg_c(jday, hour, CosZs, Ra, _lai, clumping, 
-        met, theta, state, state_n, soil, mid_res, mid_ET, cache;)
+      inter_prg_c(jday, hour, CosZs, Ra, _lai, clumping,
+        met, theta, state, state_n, soil, mid_flux, mid_ET, cache;)
       state .= state_n # state variables
     end
 
     output_Tsoil[i, :] .= soil.Tsoil_c[1:layer]
     output_θ[i, :] .= soil.θ[1:layer]
-
-    fill_res!(df_out, mid_res, i)
-    fill_res!(df_ET, mid_ET, i)
+    fluxes[i] = mid_flux
+    fluxes_ET[i] = mid_ET
   end
-  df_out, df_ET, output_Tsoil, output_θ
+  DataFrame(fluxes), DataFrame(fluxes_ET), output_Tsoil, output_θ
 end

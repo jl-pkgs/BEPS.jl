@@ -6,7 +6,7 @@ using UnPack
 import Parameters: @with_kw, @with_kw_noshow
 using Printf
 using Reexport
-using DataFrames: DataFrame
+import DataFrames: DataFrame
 
 using StaticArrays
 using Statistics
@@ -35,7 +35,7 @@ include("BEPS_modules.jl")
 
 include("clang/BEPS_c.jl")
 @reexport import BEPS.clang;
-import BEPS.clang: inter_prg_c, photosynthesis_c, Soil_c, 
+import BEPS.clang: inter_prg_c, photosynthesis_c, Soil_c,
   snowpack_stage1, snowpack_stage2, snowpack_stage3
 using BEPS.clang
 

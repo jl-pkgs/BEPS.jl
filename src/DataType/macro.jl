@@ -8,18 +8,12 @@ abstract type AbstractStateSeries{FT} <: AbstractSeries{FT} end
 
 # ── 通用写入：series[i] = struct，按字段名静态展开 ─────────────────────────────
 # 仿 setindex! 模式：编译期取两侧字段交集 → 内联赋值
-@generated function Base.setindex!(series::SR, r::S, i::Int) where {SR<:AbstractFluxSeries, S<:AbstractFlux}
+@generated function Base.setindex!(series::SR, r::S, i::Int) where {FT<:AbstractFloat,
+  SR<:AbstractSeries{FT}, S<:Union{AbstractFlux, AbstractState{FT}}}
   fs = intersect(fieldnames(SR), fieldnames(S))
   assigns = [:(@inbounds getfield(series, $(QuoteNode(f)))[i] = getfield(r, $(QuoteNode(f)))) for f in fs]
   return Expr(:block, assigns..., :(series))
 end
-
-@generated function Base.setindex!(series::SR, r::S, i::Int) where {SR<:AbstractStateSeries, S<:AbstractState}
-  fs = intersect(fieldnames(SR), fieldnames(S))
-  assigns = [:(@inbounds getfield(series, $(QuoteNode(f)))[i] = getfield(r, $(QuoteNode(f)))) for f in fs]
-  return Expr(:block, assigns..., :(series))
-end
-
 
 # ── Series 定义宏 ─────────────────────────────────────────────────────────────
 # 用法:
@@ -126,3 +120,19 @@ end
 
 export AbstractFlux, AbstractState, AbstractFluxSeries, AbstractStateSeries, AbstractSeries
 export @DefFluxSeries, @DefStateSeries, @DefState, @DefFlux
+
+
+function Base.Matrix(res::AbstractSeries{T}) where {T<:Real}
+  TYPE = typeof(res)
+  names = fieldnames(TYPE)[2:end] |> collect
+  data = map(i -> getfield(res, i), names)
+  data = cat(data..., dims=2)
+  data
+end
+
+function DataFrame(res::AbstractSeries{T}) where {T<:Real}
+  TYPE = typeof(res)
+  names = fieldnames(TYPE)[2:end] |> collect
+  data = Matrix(res)
+  DataFrame(data, names)
+end

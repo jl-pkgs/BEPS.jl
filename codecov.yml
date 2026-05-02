@@ -3,6 +3,7 @@ ignore:
   - "*/debug/*"
   - "src/*/deprecated"
   - "src/*/*/deprecated"
+  - "src/DataType/Params/deprecated/*"
   - "src/*/temp"
   - "src/*/backup/*"
   - "src/clang/*"

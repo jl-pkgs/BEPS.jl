@@ -22,38 +22,6 @@ include("OUTPUT.jl")
 include("setup.jl")
 
 
-@with_kw mutable struct Radiation <: AbstractFlux
-  Rs_o_df::FT = 0.0
-  Rs_u_df::FT = 0.0
-
-  Rs_o_dir::FT = 0.0
-  Rs_u_dir::FT = 0.0
-
-  Rns_o_df::FT = 0.0
-  Rns_u_df::FT = 0.0
-  Rns_g_df::FT = 0.0
-
-  Rns_o_dir::FT = 0.0
-  Rns_u_dir::FT = 0.0
-  Rns_g_dir::FT = 0.0
-
-  Rs_df::FT = 0.0
-  Rs_dir::FT = 0.0
-end
-
-@with_kw mutable struct Cpools
-  Ccd::NTuple{3,Cdouble} = nzero(3)
-  Cssd::NTuple{3,Cdouble} = nzero(3)
-  Csmd::NTuple{3,Cdouble} = nzero(3)
-  Cfsd::NTuple{3,Cdouble} = nzero(3)
-  Cfmd::NTuple{3,Cdouble} = nzero(3)
-  Csm::NTuple{3,Cdouble} = nzero(3)
-  Cm::NTuple{3,Cdouble} = nzero(3)
-  Cs::NTuple{3,Cdouble} = nzero(3)
-  Cp::NTuple{3,Cdouble} = nzero(3)
-end
-
-
 # # current not used
 # @with_kw mutable struct TSoil
 #   T_ground::Cdouble = 0.0
@@ -68,7 +36,7 @@ end
 
 
 ## fill valuesFlux
-const TypeDF = Union{Flux,Met,ETFlux}
+const TypeDF = Union{Flux,ETFlux,Met}
 
 ## put struct into a data.frame
 function Base.getindex(x::T, i::Int)::FT where {T<:TypeDF}
@@ -89,7 +57,7 @@ Base.length(x::T) where {T<:TypeDF} = fieldcount(T)
 end
 
 
-export Leaf, Soil, AbstractSoil, 
+export Leaf, Soil, AbstractSoil,
   Met, Flux, Cpools, ETFlux, Radiation
 
 export FT, init_dbl, set!

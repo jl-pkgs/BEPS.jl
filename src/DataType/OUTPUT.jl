@@ -28,10 +28,10 @@ end
   Trans_o::Cdouble = 0.0
   Trans_u::Cdouble = 0.0
   Eil_o::Cdouble = 0.0     # Ei of liquid
-  Eil_u::Cdouble = 0.0 
+  Eil_u::Cdouble = 0.0
   EiS_o::Cdouble = 0.0     # Ei of solid
   EiS_u::Cdouble = 0.0
-  Evap_soil::Cdouble = 0.0 
+  Evap_soil::Cdouble = 0.0
   Evap_SW::Cdouble = 0.0   # evaporation from water pond
   Evap_SS::Cdouble = 0.0   # evaporation from snow pack
   Qhc_o::Cdouble = 0.0
@@ -48,7 +48,7 @@ end
 
 function update_ET!(x::ETFlux, mid_res::Flux, Ta)
   Lv_liquid = (2.501 - 0.00237 * Ta) * 1000000  # The latent heat of water vaporization in j/kg
-  
+
   x.Trans = (x.Trans_o + x.Trans_u) * step
 
   x.Evap = (x.Eil_o + x.Eil_u +
@@ -64,13 +64,46 @@ function update_ET!(x::ETFlux, mid_res::Flux, Ta)
 
   # fill values to res
   mid_res.Trans = x.Trans
-  mid_res.Evap  = x.Evap
-  mid_res.LH    = x.LH
-  mid_res.SH    = x.SH
+  mid_res.Evap = x.Evap
+  mid_res.LH = x.LH
+  mid_res.SH = x.SH
+end
+
+@with_kw mutable struct Radiation <: AbstractFlux
+  Rs_o_df::Cdouble = 0.0
+  Rs_u_df::Cdouble = 0.0
+
+  Rs_o_dir::Cdouble = 0.0
+  Rs_u_dir::Cdouble = 0.0
+
+  Rns_o_df::Cdouble = 0.0
+  Rns_u_df::Cdouble = 0.0
+  Rns_g_df::Cdouble = 0.0
+
+  Rns_o_dir::Cdouble = 0.0
+  Rns_u_dir::Cdouble = 0.0
+  Rns_g_dir::Cdouble = 0.0
+
+  Rs_df::Cdouble = 0.0
+  Rs_dir::Cdouble = 0.0
+end
+
+@with_kw mutable struct Cpools
+  Ccd::NTuple{3,Cdouble} = nzero(3)
+  Cssd::NTuple{3,Cdouble} = nzero(3)
+  Csmd::NTuple{3,Cdouble} = nzero(3)
+  Cfsd::NTuple{3,Cdouble} = nzero(3)
+  Cfmd::NTuple{3,Cdouble} = nzero(3)
+  Csm::NTuple{3,Cdouble} = nzero(3)
+  Cm::NTuple{3,Cdouble} = nzero(3)
+  Cs::NTuple{3,Cdouble} = nzero(3)
+  Cp::NTuple{3,Cdouble} = nzero(3)
 end
 
 
 # ── 时间序列容器（用 @DefFluxSeries 自动展开为 Vector{FT} 字段）──────────────
-# @DefFluxSeries FluxSeries = Flux
-# @DefFluxSeries ETSeries     = ETFlux
-# export FluxSeries, ETSeries
+@DefFluxSeries FluxSeries = Flux
+@DefFluxSeries ETSeries = ETFlux
+@DefFluxSeries RadSeries = Radiation
+
+export FluxSeries, ETSeries, RadSeries
