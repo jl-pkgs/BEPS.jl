@@ -12,7 +12,7 @@ Run BEPS simulation using the modern `ParamBEPS + StateBEPS` API.
   | `hour`   | —       | Hour of day (1–24)                 |
   | `Rs`     | W m⁻²   | Downward shortwave radiation       |
   | `Tair`   | °C      | Air temperature                    |
-  | `rain`   | mm h⁻¹  | Precipitation                      |
+  | `Prcp`   | mm h⁻¹  | Precipitation                      |
   | `Uz`     | m s⁻¹   | Wind speed                         |
   | `qair`   | g kg⁻¹  | Specific humidity *(or `RH` [%])*  |
   | `Rln_in` | W m⁻²   | Downward longwave radiation *(optional)* |

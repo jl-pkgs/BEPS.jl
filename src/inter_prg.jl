@@ -7,11 +7,11 @@ The inter-module function between main program and modules
 - `param`     : parameter array according to land cover types
 - `CosZs`     : cosine of solar zenith angle
 - `soilp`     : soil coefficients according to land cover types and soil textures
-- `mid_res`   : results struct
+- `mid_flux`   : results struct
 """
 function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω::T,
   forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
-  mid_res::Flux, mid_ET::ETFlux, cache::LeafCache;
+  mid_flux::Flux, mid_ET::ETFlux, cache::LeafCache;
   fix_snowpack::Bool=true, kw...) where {T}
 
   @unpack Cc_new, Cs_old, Cs_new, Ci_old,
@@ -31,7 +31,7 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
 
   # ===== 2. 气象变量初始化 =====
   (; Rs, Rln_in, Tair, RH, Uz) = forcing
-  precip = forcing.rain / step
+  precip = forcing.Prcp / step
   met = meteo_pack_jl(Tair, RH) # 变量类型转换
 
   # ===== 3. 表面状态初始化 =====
@@ -179,20 +179,20 @@ function inter_prg_jl(jday::Int, hour::Int, CosZs::T, Ra::Radiation, lai::T, Ω:
   # ===== 6. 输出结果汇总 =====
   @pack! mid_ET = Trans_o, Trans_u, Eil_o, Eil_u, EiS_o, EiS_u,
   Evap_soil, Evap_SW, Evap_SS, Qhc_o, Qhc_u, Qhg
-  update_ET!(mid_ET, mid_res, Tair)
+  update_ET!(mid_ET, mid_flux, Tair)
 
-  mid_res.Net_Rad = radiation_o + radiation_u + radiation_g
-  mid_res.gpp_o_sunlit = GPP.o_sunlit
-  mid_res.gpp_u_sunlit = GPP.u_sunlit
-  mid_res.gpp_o_shaded = GPP.o_shaded
-  mid_res.gpp_u_shaded = GPP.u_shaded
+  mid_flux.Net_Rad = radiation_o + radiation_u + radiation_g
+  mid_flux.gpp_o_sunlit = GPP.o_sunlit
+  mid_flux.gpp_u_sunlit = GPP.u_sunlit
+  mid_flux.gpp_o_shaded = GPP.o_shaded
+  mid_flux.gpp_u_shaded = GPP.u_shaded
 
-  mid_res.z_water = z_water
-  mid_res.z_snow = z_snow
-  mid_res.ρ_snow = ρ_snow[]
+  mid_flux.z_water = z_water
+  mid_flux.z_snow = z_snow
+  mid_flux.ρ_snow = ρ_snow[]
 
   GPP = GPP.o_sunlit + GPP.o_shaded + GPP.u_sunlit + GPP.u_shaded
-  mid_res.GPP = GPP * 12 * step * 1e-6  # [umol m-2 s-1] -> [gC m-2]
+  mid_flux.GPP = GPP * 12 * step * 1e-6  # [umol m-2 s-1] -> [gC m-2]
   nothing
 end
 

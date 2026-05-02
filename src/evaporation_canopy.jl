@@ -1,18 +1,18 @@
 function evaporation_canopy_jl(T_leaf::Leaf, Ta::Float64, RH::Float64,
   Gwater::Leaf, lai::Leaf,
-  perc_water::Layer2{Float64}, 
+  perc_water::Layer2{Float64},
   perc_snow::Layer3{Float64})
-  # perc_water_o::Float64, perc_water_u::Float64, 
+  # perc_water_o::Float64, perc_water_u::Float64,
   # perc_snow_o::Float64, perc_snow_u::Float64)
 
   # LHw = Leaf()  # latent heat from leaves W/m2, caused by evaporation of intercepted rain
   # LHs = Leaf()  # latent heat from leaves W/m2, caused by evaporation of intercepted snow
   met = meteo_pack_jl(Ta, RH)
   λ = met.λ # 2.5*e6 J / kg
-  
+
   # leaf level latent heat caused by evaporation or sublimation
   LHw_o_sunlit = perc_water.o * latent_heat(Ta, T_leaf.o_sunlit, Gwater.o_sunlit, met)
-  LHw_o_shaded = perc_water.o * latent_heat(Ta, T_leaf.o_shaded, Gwater.o_shaded, met)  
+  LHw_o_shaded = perc_water.o * latent_heat(Ta, T_leaf.o_shaded, Gwater.o_shaded, met)
   LHw_u_sunlit = perc_water.u * latent_heat(Ta, T_leaf.u_sunlit, Gwater.u_sunlit, met)
   LHw_u_shaded = perc_water.u * latent_heat(Ta, T_leaf.u_shaded, Gwater.u_shaded, met)
 
