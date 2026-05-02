@@ -1,7 +1,7 @@
 using Test
 using BEPS
 
-function nanmax(x)
+function _nanmaximum(x)
   x = collect(x)
   x = x[.!isnan.(x)]
   maximum(x)
@@ -26,7 +26,7 @@ par = (lon=120.5, lat=30.5, landcover=25, clumping=0.85,
   l = max(df_diff_perc)
   @show l
   @test true
-  # @test nanmax(l) < 1.5 # SH, 1.48%的误差, current 0.09%
+  # @test _nanmaximum(l) < 1.5 # SH, 1.48%的误差, current 0.09%
 end
 
 # > 需要核对是哪个变量引起的

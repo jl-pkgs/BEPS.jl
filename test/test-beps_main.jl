@@ -1,10 +1,4 @@
-using BEPS, DataFrames, Test, Dates
-
-function nanmax(x)
-    x = collect(x)
-    x = x[.!isnan.(x)]
-    maximum(x)
-end
+using BEPS, DataFrames, Dates, Test
 
 kw = (lon=120.5, lat=30.5,
     VegType=25, SoilType=8,
@@ -46,11 +40,11 @@ end
     end
     l = maximum(df_diff_perc)
     @show l
-    @show nanmax(l)
+    @show _nanmaximum(l)
     @test true
 
-    # @test nanmax(l) < 1.5 # SH, 1.48%的误差, current 0.09%
-    @test nanmax(l) < 2.5 # GPP, 2.38%的误差, current 0.09%
+    # @test _nanmaximum(l) < 1.5 # SH, 1.48%的误差, current 0.09%
+    @test _nanmaximum(l) < 2.5 # GPP, 2.38%的误差, current 0.09%
 end
 
 ## performance

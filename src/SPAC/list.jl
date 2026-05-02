@@ -19,11 +19,14 @@
 # Base.names(x::LArray) = symnames(typeof(x))
 
 
-function Base.sum(df::DataFrame)
+import DataFrames: AbstractDataFrame
+
+function Base.sum(df::AbstractDataFrame)
   vals = [sum(df[!, c]) for c in names(df)]
   keys = names(df)
   NamedTuple{Tuple(Symbol.(keys))}(vals)
 end
+
 
 # for test
 function nanmaximum(x::AbstractVector)
@@ -31,36 +34,19 @@ function nanmaximum(x::AbstractVector)
   !isempty(inds) ? maximum(x[inds]) : NaN
 end
 
-function Base.maximum(df::DataFrame)
+function Base.maximum(df::AbstractDataFrame)
   vals = [nanmaximum(df[!, c]) for c in names(df)]
   keys = names(df)
   NamedTuple{Tuple(Symbol.(keys))}(vals)
 end
 
-# Base.:+(x::AbstractVector, y::AbstractVector) = x .+ y
-# Base.:-(x::AbstractVector, y::AbstractVector) = x .- y
-# Base.:*(x::AbstractVector, y::AbstractVector) = x .* y
-# Base.:/(x::AbstractVector, y::AbstractVector) = x ./ y
+function _nanmaximum(x)
+  x = collect(x)
+  x = x[.!isnan.(x)]
+  maximum(x)
+end
 
-# Base.:+(x::AbstractVector{T}, y::T) where {T<:Real} = x .+ y
-# Base.:-(x::AbstractVector{T}, y::T) where {T<:Real} = x .- y
-# Base.:*(x::AbstractVector{T}, y::T) where {T<:Real} = x .* y
-# Base.:/(x::AbstractVector{T}, y::T) where {T<:Real} = x ./ y
-
-# Base.:+(x::AbstractVector{T1}, y::T2) where {T1<:Real,T2<:Real} = x .+ y
-# Base.:-(x::AbstractVector{T1}, y::T2) where {T1<:Real,T2<:Real} = x .- y
-# Base.:*(x::AbstractVector{T1}, y::T2) where {T1<:Real,T2<:Real} = x .* y
-# Base.:/(x::AbstractVector{T1}, y::T2) where {T1<:Real,T2<:Real} = x ./ y
-
-# Base.:+(x::T, y::AbstractVector{T}) where {T<:Real} = x .+ y
-# Base.:-(x::T, y::AbstractVector{T}) where {T<:Real} = x .- y
-# Base.:*(x::T, y::AbstractVector{T}) where {T<:Real} = x .* y
-# Base.:/(x::T, y::AbstractVector{T}) where {T<:Real} = x ./ y
-
-# Base.:+(x::T1, y::AbstractVector{T2}) where {T1<:Real,T2<:Real} = x .+ y
-# Base.:-(x::T1, y::AbstractVector{T2}) where {T1<:Real,T2<:Real} = x .- y
-# Base.:*(x::T1, y::AbstractVector{T2}) where {T1<:Real,T2<:Real} = x .* y
-# Base.:/(x::T1, y::AbstractVector{T2}) where {T1<:Real,T2<:Real} = x ./ y
+export _nanmaximum
 
 # import CSV
 # fread(f) = DataFrame(CSV.File(f))

@@ -1,11 +1,6 @@
 using BEPS, Test
 
-function nanmax(x)
-  x = collect(x)
-  x = x[.!isnan.(x)]
-  maximum(x)
-end
-
+include("test-macro.jl")
 include("test-StateSeries.jl")
 include("dev/test-aerodynamic_conductance.jl")
 include("test-photosynthesis_standalone.jl")
