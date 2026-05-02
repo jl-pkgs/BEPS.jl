@@ -1,5 +1,4 @@
 using Test, BEPS
-using BEPS: path_proj
 
 function nanmax(x)
   x = collect(x)
@@ -11,8 +10,9 @@ include("test-StateSeries.jl")
 include("dev/test-aerodynamic_conductance.jl")
 include("test-photosynthesis_standalone.jl")
 include("test-beps_main.jl")
-# include("test-beps_modern.jl")
-# include("test-optimization.jl")
+include("test-beps_modern.jl")
+include("test-optimization.jl")
+
 include("test-ModelParams.jl")
 include("test-utilize.jl")
 include("modules/modules.jl")

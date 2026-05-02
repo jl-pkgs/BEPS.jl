@@ -122,6 +122,10 @@ export AbstractFlux, AbstractState, AbstractFluxSeries, AbstractStateSeries, Abs
 export @DefFluxSeries, @DefStateSeries, @DefState, @DefFlux
 
 
+function Base.getindex(s::T, r::AbstractUnitRange{Int}) where {FT, T<:AbstractSeries{FT}}
+  T(; ntime=length(r), (f => getfield(s, f)[r] for f in fieldnames(T) if f !== :ntime)...)
+end
+
 function Base.Matrix(res::AbstractSeries{T}) where {T<:Real}
   TYPE = typeof(res)
   names = fieldnames(TYPE)[2:end] |> collect

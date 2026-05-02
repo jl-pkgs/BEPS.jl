@@ -79,23 +79,23 @@ end
   Gs_old::Leaf = Leaf(init)
 
   # to the reference height above the canopy
-  Gc::Leaf = Leaf(init)  # total conductance for CO2 from the intercellular space of the leaves
-  Gh::Leaf = Leaf(init)  # total conductance for heat transfer from the leaf surface 
-  Gw::Leaf = Leaf(init)  # total conductance for water from the intercellular space of the leaves
-  Gww::Leaf = Leaf(init) # total conductance for water from the surface of the leaves
+  Gc    ::Leaf = Leaf(init)  # total conductance for CO2 from the intercellular space of the leaves
+  Gh    ::Leaf = Leaf(init)  # total conductance for heat transfer from the leaf surface 
+  Gw    ::Leaf = Leaf(init)  # total conductance for water from the intercellular space of the leaves
+  Gww   ::Leaf = Leaf(init) # total conductance for water from the surface of the leaves
 
   Gs_new::Leaf = Leaf(init)
-  Ac::Leaf = Leaf(init)
+  Ac    ::Leaf = Leaf(init)
   Ci_new::Leaf = Leaf(init)
 
-  Rn::Leaf = Leaf(init)
-  Rns::Leaf = Leaf(init)
-  Rnl::Leaf = Leaf(init)
+  Rn    ::Leaf = Leaf(init)
+  Rns   ::Leaf = Leaf(init)
+  Rnl   ::Leaf = Leaf(init)
 
   leleaf::Leaf = Leaf(init)
-  GPP::Leaf = Leaf(init)
-  LAI::Leaf = Leaf(init)
-  PAI::Leaf = Leaf(init)
+  GPP   ::Leaf = Leaf(init)
+  LAI   ::Leaf = Leaf(init)
+  PAI   ::Leaf = Leaf(init)
 end
 
 LeafCache(init) = LeafCache(; init)

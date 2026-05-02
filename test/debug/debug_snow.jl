@@ -1,6 +1,5 @@
 using Test
 using BEPS
-using BEPS: path_proj
 
 function nanmax(x)
   x = collect(x)

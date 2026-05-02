@@ -1,5 +1,4 @@
 using BEPS, DataFrames, Test, Dates
-using BEPS: path_proj
 
 function nanmax(x)
     x = collect(x)
