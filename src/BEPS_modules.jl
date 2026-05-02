@@ -42,10 +42,8 @@ include("snowpack.jl")
 include("netRadiation.jl")
 include("photosynthesis.jl")
 
-# 独立光合作用模块
-include("Photosynthesis/photosynthesis.jl")
-
 include("inter_prg.jl")
+include("standalone/Photosynthesis/photosynthesis.jl")
 
 
 # 25: C3 农作物 (C3 Crops)

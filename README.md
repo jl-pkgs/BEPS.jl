@@ -19,19 +19,19 @@ Boreal Ecosystem Productivity Simulator in Julia
 
 ## Install
 
+- For users
+
+  ```bash
+  # In Julia
+  ] add https://github.com/jl-pkgs/BEPS.jl
+  ```
+
 - For developers
 
   ```bash
   git clone https://github.com/jl-pkgs/BEPS.jl
   cd BEPS.jl/deps
   git clone https://github.com/jl-pkgs/BEPS.c
-  ```
-
-- For users
-
-  ```bash
-  # In Julia
-  ] add https://github.com/jl-pkgs/BEPS.jl
   ```
 
 ## Usage

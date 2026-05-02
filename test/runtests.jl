@@ -1,4 +1,4 @@
-using Test, BEPS
+using BEPS, Test
 
 function nanmax(x)
   x = collect(x)
