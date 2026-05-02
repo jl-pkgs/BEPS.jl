@@ -2,7 +2,9 @@ const FW_VERSION = 1
 
 const MAX_LAYERS = 10
 
-const DEPTH_F = 6
+# 8m的振幅残余约3%，年均温假设基本成立，物理上合理。
+# CLM 等大模型用10–40m，DEPTH_F=6 偏保守但可接受。
+const DEPTH_F = 6.0 # [m], 锚点（中心）距最深层底部6m，锚点采用T_air_annual
 
 const NOERROR = 0
 
@@ -31,8 +33,6 @@ const kloop = 10
 const MAX_Loop = 11
 
 const layer = 5
-
-const depth_f = 6
 
 const CO2_air::Float64 = 380.0    # ppm
 

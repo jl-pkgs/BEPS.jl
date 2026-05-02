@@ -28,7 +28,7 @@ docs/reference
 __pycache__
 # data
 
-examples
+# examples
 deps
 
 # docs
@@ -47,3 +47,6 @@ backup
 *.sh
 log.txt
 .gitnexus
+
+*.png
+TODO.md

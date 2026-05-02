@@ -13,7 +13,8 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   lai::T, Ω::T,
   Ra::Radiation, forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
   mid_flux::Flux, mid_ET::ETFlux, cache::LeafCache;
-  fix_snowpack::Bool=true, kw...) where {T}
+  fix_Ta_annual::Bool=true,
+  fix_snowpack::Bool=true, Ta_annual::Float64=10.0, kw...) where {T}
 
   @unpack Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
@@ -160,7 +161,8 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
 
     # /*****  Sensible heat flux by X. Luo  *****/
     Qhc_o, Qhc_u, Qhg = sensible_heat_jl(Tc_new, curr.T_surf, Tair, RH, Gh, Gheat_g, PAI)
-    UpdateHeatFlux(state, Tair, kstep)
+    _Ta_annual = fix_Ta_annual ? Ta_annual : Tair
+    UpdateHeatFlux(state, _Ta_annual, kstep) # fix kdd, v20260502
 
     # /*****  Soil water module by L. He  *****/
     Root_Water_Uptake(state, Trans_o, Trans_u, Evap_soil)

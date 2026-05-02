@@ -36,6 +36,7 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   SF, VF = split_vars(VARS_EXPORT)
   states = StateSeries(SF, VF, layer, ntime)
 
+  Ta_annual = mean(forcing.Tair)
   jdays = dayofyear.(dates)
   hours = hour.(dates)
 
@@ -47,8 +48,8 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
     k = ceil(Int, i / 24)
     _lai = lai[k]
 
-    inter_prg_jl(jday, hour, lon, lat, _lai, clumping, 
-      Ra, met, ps, state, mid_flux, mid_ET, cache; fix_snowpack)
+    inter_prg_jl(jday, hour, lon, lat, _lai, clumping,
+      Ra, met, ps, state, mid_flux, mid_ET, cache; fix_snowpack, Ta_annual)
 
     fluxes[i] = mid_flux
     fluxes_ET[i] = mid_ET

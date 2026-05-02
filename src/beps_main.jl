@@ -9,7 +9,10 @@ function besp_main(forcing::MetSeries, lai::Vector, dates;
     Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
     r_drainage::FT=0.5, r_root_decay::FT=0.95,
     VARS_EXPORT::Vector{Symbol}=DEFAULT_VARS_EXPORT,
-    version="julia", fix_snowpack=true, kw...) where {FT<:AbstractFloat}
+    version="julia",
+    fix_snowpack=true,
+    fix_Ta_annual=true,
+    kw...) where {FT<:AbstractFloat}
 
     ntime = forcing.ntime
     met = Met()
@@ -34,6 +37,7 @@ function besp_main(forcing::MetSeries, lai::Vector, dates;
 
     theta = par2theta(params.veg; clumping, VegType)
 
+    Ta_annual = mean(forcing.Tair)
     jdays = dayofyear.(dates)
     hours = hour.(dates) .+ 1  # 转为1-based (1:24)
 
@@ -49,7 +53,7 @@ function besp_main(forcing::MetSeries, lai::Vector, dates;
         # /***** start simulation modules *****/
         if version == "julia"
             inter_prg_jl(jday, hour, lon, lat, _lai, clumping,
-                Ra, met, params, state, mid_flux, mid_ET, cache; fix_snowpack)
+                Ra, met, params, state, mid_flux, mid_ET, cache; fix_Ta_annual, fix_snowpack, Ta_annual)
             save_state!(states, state, i, SF, VF)
         elseif version == "c"
             inter_prg_c(jday, hour, lon, lat, _lai, clumping,
