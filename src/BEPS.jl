@@ -20,6 +20,7 @@ export beps_modern
 export beps_optimize
 export Soil_c
 
+export path_proj
 path_proj(f...) = normpath(joinpath(@__DIR__, "..", f...))
 
 using Libdl

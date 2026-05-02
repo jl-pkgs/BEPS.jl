@@ -20,6 +20,7 @@ include("Met.jl")
 include("macro.jl")
 include("OUTPUT.jl")
 include("setup.jl")
+include("StateSeries.jl")
 
 
 # # current not used
