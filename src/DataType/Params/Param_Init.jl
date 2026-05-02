@@ -52,7 +52,7 @@ function InitParam_Soil(SoilType::Int, N::Int, FT::Type)
   θ_sat = fill(FT(p.θ_sat), n) # [%]
   θ_vfc = fill(FT(p.θ_vfc), n) # [%]
   θ_vwp = fill(FT(p.θ_vwp), n) # [%]
-  ψ_sat = FT.(-p.ψ_sat[1:n])   # [m]
+  ψ_sat = FT.(p.ψ_sat[1:n])    # [m], positive suction at saturation (Campbell 1974 convention)
 
   SOIL_THERMAL_DENSITY = [1300.0, 1500.0, 1517.0, 1517.0, 1517.0] # [kg m-3]
   SOIL_ORGANIC_MATTER = [0.05, 0.02, 0.01, 0.01, 0.003]           # volume fraction, 0-1
