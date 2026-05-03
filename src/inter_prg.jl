@@ -231,6 +231,13 @@ function solve_canopy_energy_balance!(
 
   Rs = forcing.Rs # Directly use shortwave radiation
 
+  # /*****  短波辐射（迭代内不变，提前计算一次）  *****/
+  PAI_o_sum = PAI.o_sunlit + PAI.o_shaded
+  PAI_u_sum = PAI.u_sunlit + PAI.u_shaded
+  Rns_o, Rns_u, Rns_g = netRadiation_SW!(Rs, CosZs, lai_o, lai_u, pai_o, pai_u, PAI, Ω,
+    α_v_sw[], α_n_sw[], α_v, α_n,
+    perc_snow_o, perc_snow_u, frac_snow.g, Rns, Ra)
+
   radiation_o = radiation_u = radiation_g = ra_g = 0.0
   n_iter = 0
 
@@ -238,8 +245,8 @@ function solve_canopy_energy_balance!(
     n_iter += 1
     # /***** Aerodynamic conductance module by G.Mo  *****/
     ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
-      aerodynamic_conductance_jl(z_canopy_o, z_canopy_u, z_wind, Ω, Tair, Uz, H_canopy_o,
-        pai_o, pai_u)
+      aerodynamic_conductance_jl(z_canopy_o, z_canopy_u, z_wind,
+          Ω, Tair, Uz, H_canopy_o, pai_o, pai_u)
 
     # 热量传输导度 [mol/m²/s]
     init_leaf_dbl2(Gh,
@@ -251,19 +258,13 @@ function solve_canopy_energy_balance!(
       1.0 / (1.0 / Ga_u + 1.0 / Gb_u + 100))
 
     # 上下层冠层平均温度 [°C]
-    Tc.o = (Tc_old.o_sunlit * PAI.o_sunlit + Tc_old.o_shaded * PAI.o_shaded) /
-           (PAI.o_sunlit + PAI.o_shaded)
-    Tc.u = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) /
-           (PAI.u_sunlit + PAI.u_shaded)
+    Tc.o = (Tc_old.o_sunlit * PAI.o_sunlit + Tc_old.o_shaded * PAI.o_shaded) / PAI_o_sum
+    Tc.u = (Tc_old.u_sunlit * PAI.u_sunlit + Tc_old.u_shaded * PAI.u_shaded) / PAI_u_sum
 
-    # /*****  Net radiation at canopy and leaf level module by X.Luo  *****/
-    radiation_o, radiation_u, radiation_g = netRadiation_jl(
-      Rs, CosZs, Tc,
-      lai_o, lai_u, pai_o, pai_u, PAI,
-      Ω, Tair, RH, Rln_in,
-      α_v_sw[], α_n_sw[], α_v, α_n,
-      perc_snow_o, perc_snow_u, frac_snow.g,
-      Rn, Rns, Rnl, Ra)
+    # /*****  长波辐射（依赖 Tc，每次迭代更新）  *****/
+    radiation_o, radiation_u, radiation_g = netRadiation_LW!(
+      Tc, lai_o, lai_u, pai_o, pai_u, PAI, Ω, Tair, RH,
+      Rln_in, Rns_o, Rns_u, Rns_g, Rns, Rnl, Rn)
 
     # /*****  Photosynthesis module by B. Chen  *****/
     update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u) # 水汽导度

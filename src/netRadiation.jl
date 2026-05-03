@@ -7,14 +7,34 @@
 - `percent_snow_g`    : percentage of snow on ground (by mass)
 """
 function netRadiation_jl(Rs_global::FT, CosZs::FT,
-  T::Layer3{FT}, 
+  T::Layer3{FT},
   lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
   lai::Leaf,
   Ω::FT, Tair::FT, RH::FT, Rln_in::FT,
   α_snow_v::FT, α_snow_n::FT, α_v::Layer3{FT}, α_n::Layer3{FT},
   percArea_snow_o::FT, percArea_snow_u::FT, perc_snow_g::FT,
-  Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
-  
+  Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation) where {FT<:Real}
+
+  Rns_o, Rns_u, Rns_g = netRadiation_SW!(Rs_global, CosZs,
+    lai_o, lai_u, lai_os, lai_us, lai, Ω,
+    α_snow_v, α_snow_n, α_v, α_n,
+    percArea_snow_o, percArea_snow_u, perc_snow_g,
+    Rns_Leaf, Ra)
+
+  netRadiation_LW!(T, lai_o, lai_u, lai_os, lai_us, lai, Ω, Tair, RH, Rln_in,
+    Rns_o, Rns_u, Rns_g, Rns_Leaf, Rnl_Leaf, Rn_Leaf)
+end
+
+
+# 短波辐射计算（迭代过程中不随温度变化，每小时只需在迭代前调用一次）
+function netRadiation_SW!(Rs_global::FT, CosZs::FT,
+  lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
+  lai::Leaf,
+  Ω::FT,
+  α_snow_v::FT, α_snow_n::FT, α_v::Layer3{FT}, α_n::Layer3{FT},
+  percArea_snow_o::FT, percArea_snow_u::FT, perc_snow_g::FT,
+  Rns_Leaf::Leaf, Ra::Radiation) where {FT<:Real}
+
   # calculate α of canopy in this step
   α_v_os::FT = α_v.o * (1.0 - percArea_snow_o) + α_snow_v * percArea_snow_o  # visible, overstory
   α_n_os::FT = α_n.o * (1.0 - percArea_snow_o) + α_snow_n * percArea_snow_o  # near infrared
@@ -32,7 +52,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   # separate global solar radiation into direct and diffuse one
   # solar zenith angle small, all diffuse radiation
   ratio_cloud = (CosZs < 0.001) ? 0.0 : Rs_global / (1367 * CosZs)  # Luo2018, A4
-  
+
   if (ratio_cloud > 0.8)
     Ra.Rs_df = 0.13 * Rs_global  # Luo2018, A2
   else
@@ -51,10 +71,10 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   cosQ_o::FT = 0.537 + 0.025 * lai_o  # Luo2018, A10, a representative zenith angle for diffuse radiation transmission
   cosQ_u::FT = 0.537 + 0.025 * lai_u
 
-  τ_o_df::FT = exp(-0.5 * Ω * lai_o / cosQ_o)
+  τ_o_df::FT  = exp(-0.5 * Ω * lai_o  / cosQ_o)
   τ_os_df::FT = exp(-0.5 * Ω * lai_os / cosQ_o)  # considering stem
 
-  τ_u_df::FT = exp(-0.5 * Ω * lai_u / cosQ_u)
+  τ_u_df::FT  = exp(-0.5 * Ω * lai_u  / cosQ_u)
   τ_us_df::FT = exp(-0.5 * Ω * lai_us / cosQ_u)
 
   # net short direct radiation on canopy and ground
@@ -86,13 +106,6 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
   Rns_u = Ra.Rns_u_dir + Ra.Rns_u_df
   Rns_g = Ra.Rns_g_dir + Ra.Rns_g_df
 
-  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(Tair, RH, T, lai_o, lai_u, Ω, Rln_in)
-
-  # 计算植被和地面的总净辐射
-  Rn_o = Rns_o + Rnl_o
-  Rn_u = Rns_u + Rnl_u
-  Rn_g = Rns_g + Rnl_g
-
   if Rs_global > 0.0 && CosZs > 0.0 # only happens in day time, when sun is out
     Rs_o_dir = 0.5 * Ra.Rs_dir / CosZs
     Rs_o_dir = min(Rs_o_dir, 0.7 * 1362)
@@ -110,17 +123,37 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
 
   # overstorey sunlit leaves
   Rns_Leaf.o_sunlit = (Rs_o_dir + Rs_o_df) * (1.0 - α_o)
-  Rnl_Leaf.o_sunlit = lai.o_sunlit > 0.0 ? Rnl_o / lai_os : Rnl_o
-
   # overstorey shaded leaf
   Rns_Leaf.o_shaded = Rs_o_df * (1.0 - α_o) # diffuse
-  Rnl_Leaf.o_shaded = lai.o_shaded > 0.0 ? Rnl_o / lai_os : Rnl_o
-
   # understorey sunlit leaf
   Rns_Leaf.u_sunlit = (Rs_u_dir + Rs_u_df) * (1.0 - α_u)
-  Rnl_Leaf.u_sunlit = lai.u_sunlit > 0.0 ? Rnl_u / lai_us : Rnl_u
-
   Rns_Leaf.u_shaded = Rs_u_df * (1.0 - α_u)
+
+  return Rns_o, Rns_u, Rns_g
+end
+
+
+# 长波辐射更新（每次迭代调用，因冠层温度 T 随迭代变化）
+function netRadiation_LW!(T::Layer3{FT},
+  lai_o::FT, lai_u::FT, lai_os::FT, lai_us::FT,
+  lai::Leaf,
+  Ω::FT, Tair::FT, RH::FT, Rln_in::FT,
+  Rns_o::FT, Rns_u::FT, Rns_g::FT,
+  Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Rn_Leaf::Leaf) where {FT<:Real}
+
+  Rnl_o, Rnl_u, Rnl_g = cal_Rln_Longwave(Tair, RH, T, lai_o, lai_u, Ω, Rln_in)
+
+  # 计算植被和地面的总净辐射
+  Rn_o = Rns_o + Rnl_o
+  Rn_u = Rns_u + Rnl_u
+  Rn_g = Rns_g + Rnl_g
+
+  # overstorey sunlit leaves
+  Rnl_Leaf.o_sunlit = lai.o_sunlit > 0.0 ? Rnl_o / lai_os : Rnl_o
+  # overstorey shaded leaf
+  Rnl_Leaf.o_shaded = lai.o_shaded > 0.0 ? Rnl_o / lai_os : Rnl_o
+  # understorey sunlit leaf
+  Rnl_Leaf.u_sunlit = lai.u_sunlit > 0.0 ? Rnl_u / lai_us : Rnl_u
   Rnl_Leaf.u_shaded = lai.u_shaded > 0.0 ? Rnl_u / lai_us : Rnl_u
 
   Rn_Leaf.o_sunlit = Rns_Leaf.o_sunlit + Rnl_Leaf.o_sunlit
@@ -134,7 +167,7 @@ function netRadiation_jl(Rs_global::FT, CosZs::FT,
 end
 
 
-function cal_Rln_Longwave(Tair::FT, RH::FT, T::Layer3{FT}, 
+function cal_Rln_Longwave(Tair::FT, RH::FT, T::Layer3{FT},
   lai_o::FT, lai_u::FT, Ω::FT, Rln_in::FT) where {FT<:Real}
 
   # indicators to describe leaf distribution angles in canopy. slightly related with LAI
@@ -169,6 +202,6 @@ function cal_Rln_Longwave(Tair::FT, RH::FT, T::Layer3{FT},
 
   Rnl_g = ϵ_g * ((Rl_air * τ_o_df + Rl_o * (1.0 - τ_o_df)) * τ_u_df + Rl_u * (1.0 - τ_u_df)) -
           Rl_g + (1.0 - ϵ_u) * Rl_g * (1.0 - τ_u_df)
-  
+
   Rnl_o, Rnl_u, Rnl_g
 end
