@@ -42,7 +42,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   met = meteo_pack_jl(Tair, RH) # 变量类型转换
 
   # ===== 3. 表面状态初始化 =====
-  init_leaf_dbl(Tc_old, Tair - 0.5)
+  Tc_old .= Tair - 0.5
 
   # 雪水状态 [kg/m² or m]
   m_snow_pre, m_water_pre = state.m_snow, state.m_water
@@ -113,7 +113,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
     # 感热通量初值用于空气动力学导度计算 [W/m²]
     H_canopy_o = Qhc_o  # 使用上一步的值
 
-    init_leaf_dbl(Ci_old, 0.7 * CO2_air)
+    Ci_old .= 0.7 * CO2_air
     init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
 
     perc_snow_o = A_snow.o / lai_o / 2 # 上层冠层雪覆盖分数
@@ -138,7 +138,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
       Gww, PAI, frac_water, frac_snow)
 
     rainfall_stage2_jl(Eil_o, Eil_u, m_water; kstep) # X. Luo
-    set!(m_water_pre, m_water)
+    m_water_pre .= m_water
 
     snowpack_stage2_jl(EiS_o, EiS_u, m_snow; kstep) # X. Luo
 
@@ -161,7 +161,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
     # /*****  Snowpack stage 3 by X. Luo  *****/
     z_snow, z_water = snowpack_stage3_jl(Tair, curr.T_snow0, prev.T_snow0,
       ρ_snow[], z_snow, z_water, m_snow; kstep)
-    set!(m_snow_pre, m_snow)
+    m_snow_pre .= m_snow
     state.z_snow = z_snow
 
     # /*****  Sensible heat flux by X. Luo  *****/
@@ -181,8 +181,8 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
 
   # ===== 5. 时间步结束：状态更新 =====
   state.Qhc_o = Qhc_o
-  set!(state.m_water, m_water)
-  set!(state.m_snow, m_snow)
+  state.m_water .= m_water
+  state.m_snow .= m_snow
   state.ρ_snow = ρ_snow[]
 
   # ===== 6. 输出结果汇总 =====
@@ -252,16 +252,16 @@ function solve_canopy_energy_balance!(
 
   # 光合作用相关常量，不随迭代改变
   if !is_daytime
-    init_leaf_dbl(Gs_new, 0.0001)
-    init_leaf_dbl(Ac, 0.0)
-    init_leaf_dbl(Ci_new, CO2_air * 0.7)
+    Gs_new .= 0.0001
+    Ac .= 0.0
+    Ci_new .= CO2_air * 0.7
 
-    init_leaf_dbl(Cs_new, CO2_air)
-    init_leaf_dbl(Cc_new, CO2_air * 0.7 * 0.8)
+    Cs_new .= CO2_air
+    Cc_new .= CO2_air * 0.7 * 0.8
 
-    set!(Ci_old, Ci_new)
-    set!(Cs_old, Cs_new)
-    set!(Gs_old, Gs_new)
+    Ci_old .= Ci_new
+    Cs_old .= Cs_new
+    Gs_old .= Gs_new
   end
 
   T_leaf_K = Tair + 273.13 # TODO, 认为leaf温度为Tair, error root
@@ -310,9 +310,9 @@ function solve_canopy_energy_balance!(
         Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
         Gs_new, Ac, Ci_new; version="julia", pc) # TODO: 未来若采用T_leaf, 则应移除pc
 
-      set!(Ci_old, Ci_new)
-      set!(Cs_old, Cs_new)
-      set!(Gs_old, Gs_new)
+      Ci_old .= Ci_new
+      Cs_old .= Cs_new
+      Gs_old .= Gs_new
     end
 
     update_Gw!(Gw, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
@@ -335,10 +335,10 @@ function solve_canopy_energy_balance!(
       break               # 收敛，退出循环
     else
       if (n_iter > maxn)  # 迭代未收敛，使用气温作为冠层温度
-        init_leaf_dbl(Tc_old, Tair)
+        Tc_old .= Tair
         break
       else
-        set!(Tc_old, Tc_new)
+        Tc_old .= Tc_new
       end
     end
   end

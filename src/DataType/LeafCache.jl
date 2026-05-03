@@ -1,3 +1,5 @@
+export LeafCache
+
 @with_kw mutable struct LeafCache
   init::Float64 = 0.0
   pc::PhotoConsts{Float64} = PhotoConsts(10.0 + 273.15) # 默认10°, 计算光合常量
