@@ -26,9 +26,9 @@ docs/reference
 .ipynb_checkpoints
 
 __pycache__
-# data
 
-# examples
+data
+examples
 # deps
 deps/BEPS.c
 

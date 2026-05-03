@@ -225,7 +225,7 @@ function solve_canopy_energy_balance!(
 ) where {T}
 
   # Unpack required variables
-  @unpack pc, Ra, Cc_new, Cs_old, Cs_new, Ci_old,
+  @unpack pc, ac, Ra, Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, PAI = cache
@@ -241,6 +241,8 @@ function solve_canopy_energy_balance!(
   # /*****  短波辐射（迭代内不变，提前计算一次）  *****/
   PAI_o_sum = PAI.o_sunlit + PAI.o_shaded
   PAI_u_sum = PAI.u_sunlit + PAI.u_shaded
+  is_daytime = CosZs > 0
+
   Rns_o, Rns_u, Rns_g = netRadiation_SW!(Rs, CosZs, lai_o, lai_u, pai_o, pai_u, PAI, Ω,
     α_v_sw[], α_n_sw[], α_v, α_n,
     perc_snow_o, perc_snow_u, frac_snow.g, Rns, Ra)
@@ -249,7 +251,7 @@ function solve_canopy_energy_balance!(
   n_iter = 0
 
   # 光合作用相关常量，不随迭代改变
-  if (CosZs <= 0)
+  if !is_daytime
     init_leaf_dbl(Gs_new, 0.0001)
     init_leaf_dbl(Ac, 0.0)
     init_leaf_dbl(Ci_new, CO2_air * 0.7)
@@ -264,13 +266,21 @@ function solve_canopy_energy_balance!(
 
   T_leaf_K = Tair + 273.13 # TODO, 认为leaf温度为Tair, error root
   PhotoConsts!(pc, T_leaf_K) # 计算光合的常量
+  AeroConsts!(ac, z_canopy_o, z_canopy_u, z_wind, Ω, Tair, Uz, pai_o)
 
   while true
     n_iter += 1
     # /***** Aerodynamic conductance module by G.Mo  *****/
-    ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u =
-      aerodynamic_conductance_jl(z_canopy_o, z_canopy_u, z_wind,
-          Ω, Tair, Uz, H_canopy_o, pai_o, pai_u)
+    # ra_o, ra_u, ra_g, Ga_o, Gb_o, Ga_u, Gb_u = aerodynamic_conductance_jl(
+    #   z_canopy_o, z_canopy_u, z_wind,
+    #   Ω, Tair, Uz, H_canopy_o, pai_o, pai_u)
+    ra_o, ra_u, ra_g = ra_updateH(
+      H_canopy_o, z_wind, z_canopy_o, z_canopy_u,
+      ac.ustar, ac.coef_L, ac.gamma_u, ac.exp_u, ac.exp_g_u)
+    Ga_o = 1.0 / ra_o
+    Ga_u = 1.0 / (ra_o + ra_u)
+    Gb_o = 1.0 / ac.rb_o
+    Gb_u = 1.0 / ac.rb_u
 
     # 热量传输导度 [mol/m²/s]
     init_leaf_dbl2(Gh,
@@ -294,7 +304,7 @@ function solve_canopy_energy_balance!(
     update_Gw!(Gw, Gs_old, Ga_o, Ga_u, Gb_o, Gb_u) # 水汽导度
     latent_heat!(leleaf, Gw, VPD, Δ, Tc_old, Tair, ρₐ, cp, γ)
 
-    if (CosZs > 0)
+    if is_daytime
       photosynthesis(Tc_old, Rns, Ci_old, leleaf,
         Tair, ea, f_soilwater, g0_w, g1_w,
         Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,

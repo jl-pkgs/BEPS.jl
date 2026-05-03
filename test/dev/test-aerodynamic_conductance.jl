@@ -4,7 +4,10 @@ using Test, BEPS
 include("diagnose_ra.jl")
 
 module AC_V1
+  using Parameters: @with_kw
+  using UnPack: @pack!
   const FT = Float64
+  include(normpath(joinpath(@__DIR__, "../../src/DataType/AeroConsts.jl")))
   include(normpath(joinpath(@__DIR__, "../../src/aerodynamic_conductance.jl")))
 end
 
