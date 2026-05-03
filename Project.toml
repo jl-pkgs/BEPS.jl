@@ -1,6 +1,6 @@
 name = "BEPS"
 uuid = "28258c4d-138d-4793-867a-264e32c782b1"
-version = "0.1.9"
+version = "0.1.10"
 authors = ["Dongdong Kong <kongdd@users.noreply.github.com>"]
 
 [deps]
@@ -9,7 +9,6 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
-Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 FieldMetadata = "bf96fef3-21d2-5d20-8afa-0e7d4c32a885"
 Functors = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"

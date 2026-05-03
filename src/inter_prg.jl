@@ -12,7 +12,9 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   lai::T, Ω::T,
   forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
   mid_flux::Flux, mid_ET::ETFlux, cache::LeafCache;
-  kstep::Float64=360.0,
+  # 内循环参数
+  kstep::Float64=360.0, atol::Float64 = 0.02, maxn::Int=10,
+  # 过程参数
   fix_sm::Bool=false, fix_Tsoil::Bool=false,
   fix_Ta_annual::Bool=true,
   fix_snowpack::Bool=true, Ta_annual::Float64=10.0,
@@ -125,7 +127,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
 
     radiation_o, radiation_u, radiation_g, ra_g, _ = solve_canopy_energy_balance!(
       cache, met, forcing, geo_params, snow_params, biophys_params,
-      Tc, Ra, H_canopy_o, CosZs, f_soilwater, frac_water
+      Tc, Ra, H_canopy_o, CosZs, f_soilwater, frac_water; atol, maxn
     )
     multiply!(GPP, Ac, LAI)
 
@@ -208,13 +210,18 @@ end
     solve_canopy_energy_balance!(cache, met, forcing, geo_params, snow_params, biophys_params,
         Tc, Ra, H_canopy_o, CosZs, f_water)
 
+# Arguments
+- `atol`: Absolute tolerance for Tc convergence (default: 0.02°C)
+- `max`: Maximum number of iterations (default: 10)
+
 Iteratively solves the canopy energy balance to determine canopy temperatures and fluxes.
 Extracted from `inter_prg_jl` to improve readability and maintainability.
 """
 function solve_canopy_energy_balance!(
   cache::LeafCache, met::NamedTuple, forcing::Met,
   geo_params, snow_params, biophys_params,
-  Tc::Layer3{T}, Ra::Radiation, H_canopy_o::Float64, CosZs::T, f_soilwater::T, frac_water::Layer2{T}
+  Tc::Layer3{T}, Ra::Radiation, H_canopy_o::Float64, CosZs::T, f_soilwater::T, frac_water::Layer2{T};
+  atol::Float64 = 0.02, maxn::Int=10
 ) where {T}
 
   # Unpack required variables
@@ -301,13 +308,13 @@ function solve_canopy_energy_balance!(
     H_canopy_o = H_o_sunlit * PAI.o_sunlit + H_o_shaded * PAI.o_shaded
 
     # 检查冠层温度是否收敛 (精度0.02°C)
-    if (abs(Tc_new.o_sunlit - Tc_old.o_sunlit) < 0.02 &&
-        abs(Tc_new.o_shaded - Tc_old.o_shaded) < 0.02 &&
-        abs(Tc_new.u_sunlit - Tc_old.u_sunlit) < 0.02 &&
-        abs(Tc_new.u_shaded - Tc_old.u_shaded) < 0.02)
+    if (abs(Tc_new.o_sunlit - Tc_old.o_sunlit) < atol &&
+        abs(Tc_new.o_shaded - Tc_old.o_shaded) < atol &&
+        abs(Tc_new.u_sunlit - Tc_old.u_sunlit) < atol &&
+        abs(Tc_new.u_shaded - Tc_old.u_shaded) < atol)
       break
     else
-      if (n_iter > 22)  # 迭代未收敛，使用气温作为冠层温度
+      if (n_iter > maxn)  # 迭代未收敛，使用气温作为冠层温度
         init_leaf_dbl(Tc_old, Tair)
         break
       else
@@ -315,6 +322,5 @@ function solve_canopy_energy_balance!(
       end
     end
   end
-
   return radiation_o, radiation_u, radiation_g, ra_g, H_canopy_o
 end
