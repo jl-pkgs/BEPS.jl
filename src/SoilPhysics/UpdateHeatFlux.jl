@@ -1,6 +1,6 @@
 # Function to update soil heat flux
-function UpdateHeatFlux(st::S, Tair_annual_mean::Float64, period_in_seconds::Float64) where {
-  S<:Union{StateBEPS,Soil}}
+function UpdateHeatFlux(st::S, Tair_annual_mean::Float64, period_in_seconds::Float64;
+  fix_Tsoil::Bool=false) where {S<:Union{StateBEPS,Soil}}
 
   (; G, Tsoil_c, Tsoil_p, κ, dz) = st
   n = st.n_layer
@@ -16,11 +16,14 @@ function UpdateHeatFlux(st::S, Tair_annual_mean::Float64, period_in_seconds::Flo
   end
 
   source = 0.0
-  for i in 1:n
-    Tsoil_c[i] = Tsoil_p[i] + (G[i] - G[i+1] + source) / (st.Cv[i] * dz[i]) * period_in_seconds
-    Tsoil_c[i] = clamp(Tsoil_c[i], -50.0, 50.0)
+  if !fix_Tsoil
+    for i in 1:n
+      Tsoil_c[i] = Tsoil_p[i] + (G[i] - G[i+1] + source) / (st.Cv[i] * dz[i]) * period_in_seconds
+      Tsoil_c[i] = clamp(Tsoil_c[i], -50.0, 50.0)
+    end
   end
-  Update_ice_ratio(st)
+
+  Update_ice_ratio(st)       # 冻融状态依赖观测温度，始终更新
   Tsoil_p[1:n] .= Tsoil_c[1:n]
 end
 

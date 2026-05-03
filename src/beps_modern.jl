@@ -13,6 +13,8 @@ Run BEPS simulation using the modern `ParamBEPS + StateBEPS` API.
 - `clumping`    : canopy clumping index (default 0.85)
 - `sm_obs`      : observed soil moisture [m³/m³], `nlayer × ntime` matrix; when provided,
                   `UpdateSoilMoisture` is skipped and each hourly θ is prescribed from data
+- `Tsoil_obs`   : observed soil temperature [°C], `nlayer × ntime` matrix; when provided,
+                  `UpdateHeatFlux` skips Tsoil update, ice_ratio still updated from obs temps
 - `VARS_EXPORT` : state variables to save (default `DEFAULT_VARS_EXPORT`)
 
 # Returns
@@ -23,6 +25,7 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   lon::FT=120.0, lat::FT=20.0, clumping::FT=0.85,
   fix_snowpack=true, fix_annual_Ta=true,
   sm_obs::Union{Nothing, AbstractMatrix}=nothing,
+  Tsoil_obs::Union{Nothing, AbstractMatrix}=nothing,
   VARS_EXPORT::Vector{Symbol}=DEFAULT_VARS_EXPORT, kw...) where {FT<:AbstractFloat}
 
   state = deepcopy(state) # 避免外部状态被修改
@@ -43,6 +46,7 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   hours = hour.(dates)
 
   fix_sm = sm_obs !== nothing
+  fix_Tsoil = Tsoil_obs !== nothing
 
   for i = 1:ntime
     jday = jdays[i]
@@ -52,13 +56,17 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
       state.θ_prev .= state.θ
       state.θ[1:5] .= @view sm_obs[:, i]
     end
+    if fix_Tsoil
+      state.Tsoil_p .= state.Tsoil_c
+      state.Tsoil_c[1:5] .= @view Tsoil_obs[:, i]
+    end
 
     fill_met!(met, forcing, i) # 驱动数据
     k = ceil(Int, i / 24)
     _lai = lai[k]
 
     inter_prg_jl(jday, hour, lon, lat, _lai, clumping,
-      met, ps, state, mid_flux, mid_ET, cache; fix_snowpack, fix_annual_Ta, Ta_annual, fix_sm)
+      met, ps, state, mid_flux, mid_ET, cache; fix_snowpack, fix_annual_Ta, Ta_annual, fix_sm, fix_Tsoil)
 
     fluxes[i] = mid_flux
     fluxes_ET[i] = mid_ET
