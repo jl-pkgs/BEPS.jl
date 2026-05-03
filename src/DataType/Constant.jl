@@ -6,19 +6,11 @@ const MAX_LAYERS = 10
 # CLM 等大模型用10–40m，DEPTH_F=6 偏保守但可接受。
 const DEPTH_F = 6.0 # [m], 锚点（中心）距最深层底部6m，锚点采用T_air_annual
 
-const NOERROR = 0
-
-const ERROR = 1
-
-const PI::Float64 = 3.1415926
-
 # const zero::Float64 = 1.0e-10
 
 const RTIMES = 24
 
 const step::Float64 = 3600.0
-
-const MAX_Loop = 11
 
 const layer = 5
 
@@ -28,8 +20,6 @@ const ρₐ::Float64 = 1.292    # density of air, kg m-3
 
 const ρ_w::Float64 = 1025.0;  # density of water, kg m-3
 
-const Cpd::Float64 = 1004.65;
-
 const λ_snow::Float64 = 2.83 * 1e6 # J/kg
 
 # the latent heat of evaporation from solid (snow/ice) at air temperature=Ta, in j+kkk/kg
@@ -37,11 +27,6 @@ const Lv_solid::Float64 = 2.83 * 1000000;
 
 
 ## DB ----------------
-
-const pi180::Float64 = 0.017453292  # pi divided by 180, radians per degree
-const pi9::Float64 = 2.864788976
-const PI2::Float64 = 6.283185307  # 2 times pi
-const PI4::Float64 = 12.5663706
 
 ###
 const rugc::Float64 = 8.314  # J mole-1 K-1
