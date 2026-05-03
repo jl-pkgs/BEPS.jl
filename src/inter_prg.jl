@@ -20,7 +20,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   fix_snowpack::Bool=true, Ta_annual::Float64=10.0,
   kw...) where {T}
 
-  @unpack Ra, Cc_new, Cs_old, Cs_new, Ci_old,
+  @unpack Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, GPP, LAI, PAI = cache
@@ -127,7 +127,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
 
     radiation_o, radiation_u, radiation_g, ra_g, _ = solve_canopy_energy_balance!(
       cache, met, forcing, geo_params, snow_params, biophys_params,
-      Tc, Ra, H_canopy_o, CosZs, f_soilwater, frac_water; atol, maxn
+      Tc, H_canopy_o, CosZs, f_soilwater, frac_water; atol, maxn
     )
     multiply!(GPP, Ac, LAI)
 
@@ -208,7 +208,7 @@ end
 
 """
     solve_canopy_energy_balance!(cache, met, forcing, geo_params, snow_params, biophys_params,
-        Tc, Ra, H_canopy_o, CosZs, f_water)
+        Tc, H_canopy_o, CosZs, f_water)
 
 # Arguments
 - `atol`: Absolute tolerance for Tc convergence (default: 0.02°C)
@@ -220,12 +220,12 @@ Extracted from `inter_prg_jl` to improve readability and maintainability.
 function solve_canopy_energy_balance!(
   cache::LeafCache, met::NamedTuple, forcing::Met,
   geo_params, snow_params, biophys_params,
-  Tc::Layer3{T}, Ra::Radiation, H_canopy_o::Float64, CosZs::T, f_soilwater::T, frac_water::Layer2{T};
+  Tc::Layer3{T}, H_canopy_o::Float64, CosZs::T, f_soilwater::T, frac_water::Layer2{T};
   atol::Float64 = 0.02, maxn::Int=10
 ) where {T}
 
   # Unpack required variables
-  @unpack Cc_new, Cs_old, Cs_new, Ci_old,
+  @unpack pc, Ra, Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, PAI = cache
@@ -248,6 +248,7 @@ function solve_canopy_energy_balance!(
   radiation_o = radiation_u = radiation_g = ra_g = 0.0
   n_iter = 0
 
+  # 光合作用相关常量，不随迭代改变
   if (CosZs <= 0)
     init_leaf_dbl(Gs_new, 0.0001)
     init_leaf_dbl(Ac, 0.0)
@@ -260,6 +261,9 @@ function solve_canopy_energy_balance!(
     set!(Cs_old, Cs_new)
     set!(Gs_old, Gs_new)
   end
+
+  T_leaf_K = Tair + 273.13 # TODO, 认为leaf温度为Tair, error root
+  PhotoConsts!(pc, T_leaf_K) # 计算光合的常量
 
   while true
     n_iter += 1
@@ -294,8 +298,8 @@ function solve_canopy_energy_balance!(
       photosynthesis(Tc_old, Rns, Ci_old, leleaf,
         Tair, ea, f_soilwater, g0_w, g1_w,
         Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
-        Gs_new, Ac, Ci_new; version="julia")
-        
+        Gs_new, Ac, Ci_new; version="julia", pc) # TODO: 未来若采用T_leaf, 则应移除pc
+
       set!(Ci_old, Ci_new)
       set!(Cs_old, Cs_new)
       set!(Gs_old, Gs_new)
@@ -318,7 +322,7 @@ function solve_canopy_energy_balance!(
         abs(Tc_new.o_shaded - Tc_old.o_shaded) < atol &&
         abs(Tc_new.u_sunlit - Tc_old.u_sunlit) < atol &&
         abs(Tc_new.u_shaded - Tc_old.u_shaded) < atol)
-      break
+      break               # 收敛，退出循环
     else
       if (n_iter > maxn)  # 迭代未收敛，使用气温作为冠层温度
         init_leaf_dbl(Tc_old, Tair)

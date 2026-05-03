@@ -19,7 +19,7 @@ export
 function photosynthesis_c(T_leaf_p::Cdouble, rad_leaf::Cdouble, e_air::Cdouble,
   g_lb_w::Cdouble, vc_opt::Cdouble,
   f_soilwater::Cdouble, b_h2o::Cdouble, m_h2o::Cdouble,
-  cii::Cdouble, T_leaf_c::Cdouble, LH_leaf::Cdouble)
+  cii::Cdouble, T_leaf_c::Cdouble, LH_leaf::Cdouble; ignored...)
 
   Gs_w = init_dbl()
   aphoto = init_dbl()
@@ -38,7 +38,7 @@ function netRadiation_c(shortRad_global, CosZs,
   T::Layer3{FT},
   lai_o, lai_u, lai_os, lai_us, lai::Leaf, Ω, Tair, RH,
   α_snow_v, α_snow_n, α_v::Layer3{FT}, α_n::Layer3{FT},
-  percArea_snow_o, percArea_snow_u, perc_snow_g, 
+  percArea_snow_o, percArea_snow_u, perc_snow_g,
   Rn_Leaf::Leaf, Rns_Leaf::Leaf, Rnl_Leaf::Leaf, Ra::Radiation)
 
   netRad_o = init_dbl()
@@ -48,7 +48,7 @@ function netRadiation_c(shortRad_global, CosZs,
   ccall((:netRadiation, libbeps), Cvoid,
     (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble,
       Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Leaf}, Ptr{Leaf}),
-    shortRad_global, CosZs, T.o, T.u, T.g, 
+    shortRad_global, CosZs, T.o, T.u, T.g,
     lai_o, lai_u, lai_os, lai_us, lai, Ω, Tair, RH, α_snow_v, α_snow_n, percArea_snow_o, percArea_snow_u, perc_snow_g,
     α_v.o, α_n.o, α_v.u, α_n.u, α_v.g, α_n.g,
     netRad_o, netRad_u, netRad_g, Ref(Rn_Leaf), Ref(Rns_Leaf))

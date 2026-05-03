@@ -1,5 +1,3 @@
-include("photosynthesis_helper.jl")
-
 """
 A = Ag - Rd, net photosynthesis is the difference between gross photosynthesis
 and dark respiration. Note photorespiration is already factored into Ag.
@@ -42,11 +40,18 @@ since transfer is going on only one side of a leaf.
 @fastmath function photosynthesis_jl(T_leaf_p::T, Rsn_leaf::T, ea::T,
   gb_w::T, Vcmax25::T,
   β_soil::T, g0_w::T, g1_w::T, cii::T,
-  T_leaf::T, LH_leaf::T, ca::T=CO2_air) where {T<:Cdouble}
-  # 
-  PPFD::T = 4.55 * 0.5 * Rsn_leaf # incident photosynthetic photon flux density (PPFD) umol m-2 s-1
+  T_leaf::T, LH_leaf::T, ca::T=CO2_air;
+  pc::Union{Nothing,PhotoConsts{T}}=nothing) where {T<:Cdouble}
+
+  PPFD = 4.55 * 0.5 * Rsn_leaf # incident photosynthetic photon flux density (PPFD) umol m-2 s-1
   (2PPFD < 1) && (PPFD = 0.0)
   T_leaf_K = T_leaf + 273.13
+
+  if isnothing(pc)
+    Γ, K, Rd_factor, Jmax_factor, Vcmax_factor = init_photo_consts(T_leaf_K)
+  else
+    (; Γ, K, Rd_factor, Jmax_factor, Vcmax_factor) = pc
+  end
 
   λ = leaf_lambda(T_leaf_p) # [J kg-1], ~2.5MJ kg-1
   rᵥ = 1.0 / gb_w
@@ -58,25 +63,16 @@ since transfer is going on only one side of a leaf.
   g1_c = g1_w / 1.6
 
   rh_leaf = SFC_VPD(T_leaf_K, LH_leaf, λ, rᵥ, ρₐ)
-  tprime25 = T_leaf_K - TK25  # temperature difference
 
-  Kc = kc25 * fTᵥ(ekc, tprime25, TK25, T_leaf_K)
-  Ko = ko25 * fTᵥ(eko, tprime25, TK25, T_leaf_K)
-  tau = tau25 * fTᵥ(ektau, tprime25, TK25, T_leaf_K)
-  Γ = 0.5 * o2 / tau * 1000.0  # [mmol mol-1] -> umol mol-1
-
-  K = Kc * (1.0 + o2 / Ko)
   Rd25 = Vcmax25 * 0.004657    # leaf dark respiration (umol m-2 s-1)
-
   # Bin Chen: Reduce respiration by 40% in light according to Amthor
   (2PPFD > 10) && (Rd25 *= 0.4)
-  Rd = Rd25 * fTᵥ(erd, tprime25, TK25, T_leaf_K)
+  Rd = Rd25 * Rd_factor
 
   #	jmopt = 29.1 + 1.64*Vcmax25; Chen 1999, Eq. 7
   jmopt = 2.39 * Vcmax25 - 14.2
-
-  Jmax = TBOLTZ(jmopt, ejm, toptjm, T_leaf_K)    # Apply temperature correction to JMAX
-  Vcmax = TBOLTZ(Vcmax25, evc, toptvc, T_leaf_K)  # Apply temperature correction to vcmax
+  Jmax = jmopt * Jmax_factor      # Apply temperature correction to JMAX
+  Vcmax = Vcmax25 * Vcmax_factor  # Apply temperature correction to vcmax
 
   # Farquhar and von Cammerer (1981)
   # /*if (jmax > 0) Jₓ = qalpha * iphoton / sqrt(1. +(qalpha2 * iphoton * iphoton / (jmax * jmax)));
@@ -144,7 +140,7 @@ end
 
 """
 If `Wj` or `Wc` are less than Rd then A would probably be less than 0. This
-would yield a negative stomatal conductance. 
+would yield a negative stomatal conductance.
 
 In this case, assume `gs` equals the cuticular value `g0`. This assumptions
 yields a quadratic rather than cubic solution for A.

@@ -51,6 +51,5 @@ end
 end
 
 ## performance
-# @profview df_jl, df_ET_jl, states_jl = beps_main(d, LAI; kw..., version="julia", fix_snowpack=false);
-
-# @time df_jl, df_ET_jl, states_jl = beps_main(d, LAI; kw..., version="julia", fix_snowpack=false);
+# @time df_c, df_ET_c, states_c = main(; version="julia");
+# @profview df_jl, df_ET_jl, states_jl = main(; version="julia")

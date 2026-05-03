@@ -41,6 +41,7 @@ include("snowpack.jl")
 
 include("netRadiation.jl")
 include("photosynthesis.jl")
+include("photosynthesis_helper.jl")
 
 include("inter_prg.jl")
 include("standalone/Photosynthesis/photosynthesis.jl")
@@ -55,7 +56,7 @@ function lai2!(veg::ParamVeg{T}, Ω::T, CosZs::T, lai::T,
   lai_u = !veg.has_understory ? 0.01 : 1.18 * exp(-0.99 * lai_o)
   lai_u > lai_o && (lai_u = 0.01)
 
-  stem_o = veg.LAI_max_o * 0.2 # 
+  stem_o = veg.LAI_max_o * 0.2 #
   stem_u = veg.LAI_max_u * 0.2
   lai2!(Ω, CosZs, stem_o, stem_u, lai_o, lai_u, LAI, PAI)
   lai_o, lai_u, stem_o, stem_u
