@@ -5,17 +5,18 @@ The inter-module function between main program and modules
 
 - `clumping`  : clumping index
 - `param`     : parameter array according to land cover types
-- `CosZs`     : cosine of solar zenith angle
 - `soilp`     : soil coefficients according to land cover types and soil textures
-- `mid_flux`   : results struct
+- `mid_flux`  : results struct
 """
 function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   lai::T, Ω::T,
   forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
   mid_flux::Flux, mid_ET::ETFlux, cache::LeafCache;
+  kstep::Float64=360.0,
+  fix_sm::Bool=false, fix_Tsoil::Bool=false,
   fix_Ta_annual::Bool=true,
   fix_snowpack::Bool=true, Ta_annual::Float64=10.0,
-  fix_sm::Bool=false, fix_Tsoil::Bool=false, kw...) where {T}
+  kw...) where {T}
 
   @unpack Ra, Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
@@ -77,9 +78,10 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   clamp!(prev, curr, Tair)
   clamp!(curr, curr, Tair)
 
-  # ===== 4. 亚小时循环 (10步/小时, 360秒/步) =====
-  @inbounds for k = 2:kloop+1
-    k > 2 && (prev .= curr) # 更新 prev 为上一子时间步的值（k≥3时）
+  # ===== 4. 亚小时循环 =====
+  kloop = round(Int, step / kstep) # default, 360秒/步, 10步/小时
+  @inbounds for k = 1:kloop
+    k > 1 && (prev .= curr) # 更新 prev 为上一子时间步的值（k≥3时）
 
     !fix_snowpack && (ρ_snow[] = 0.0) # TODO: exact as C
     α_v_sw[], α_n_sw[] = 0.0, 0.0
@@ -87,10 +89,10 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
     # /*****  Snowpack stage 1 by X. Luo  *****/
     z_snow = snowpack_stage1_jl(Tair, precip, lai_o, lai_u, Ω,
       m_snow_pre, m_snow, frac_snow, A_snow,
-      z_snow, ρ_snow, α_v_sw, α_n_sw)
+      z_snow, ρ_snow, α_v_sw, α_n_sw; kstep)
 
     # /*****  Rainfall stage 1 by X. Luo  *****/
-    r_rain_g = rainfall_stage1_jl(Tair, precip, frac_water, m_water, m_water_pre, lai_o, lai_u, Ω)
+    r_rain_g = rainfall_stage1_jl(Tair, precip, frac_water, m_water, m_water_pre, lai_o, lai_u, Ω; kstep)
 
     # 土壤反照率计算 [-]
     α_g = if state.θ_prev[2] < θ_vwp[2] * 0.5
@@ -133,10 +135,10 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
     Eil_o, Eil_u, EiS_o, EiS_u = evaporation_canopy_jl(Tc_new, Tair, RH,
       Gww, PAI, frac_water, frac_snow)
 
-    rainfall_stage2_jl(Eil_o, Eil_u, m_water) # X. Luo
+    rainfall_stage2_jl(Eil_o, Eil_u, m_water; kstep) # X. Luo
     set!(m_water_pre, m_water)
 
-    snowpack_stage2_jl(EiS_o, EiS_u, m_snow) # X. Luo
+    snowpack_stage2_jl(EiS_o, EiS_u, m_snow; kstep) # X. Luo
 
     # /*****  Evaporation from soil module by X. Luo  *****/
     # ra_g 是地表到参考高度的总阻抗 (地表→下层冠层→上层冠层→参考高度)
@@ -146,17 +148,17 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
     Evap_soil, Evap_SW, Evap_SS, z_water, z_snow =
       evaporation_soil_jl(Tair, prev.T_surf, RH, radiation_g, Gheat_g,
         frac_snow, z_water, z_snow, mass_water_g, m_snow,
-        ρ_snow[], state.θ_prev[1], θ_sat[1])
+        ρ_snow[], state.θ_prev[1], θ_sat[1]; kstep)
 
     # /*****  Surface temperature by X. Luo  *****/
     state.G[1] = surface_temperature!(state, ps, prev, curr,
       radiation_g, Tc.u, Tair, RH, z_snow, z_water,
       ρ_snow[], frac_snow.g, Gheat_g,
-      Evap_soil, Evap_SW, Evap_SS)
+      Evap_soil, Evap_SW, Evap_SS; kstep)
 
     # /*****  Snowpack stage 3 by X. Luo  *****/
     z_snow, z_water = snowpack_stage3_jl(Tair, curr.T_snow0, prev.T_snow0,
-      ρ_snow[], z_snow, z_water, m_snow)
+      ρ_snow[], z_snow, z_water, m_snow; kstep)
     set!(m_snow_pre, m_snow)
     state.z_snow = z_snow
 

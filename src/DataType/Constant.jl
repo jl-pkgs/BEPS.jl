@@ -14,21 +14,9 @@ const PI::Float64 = 3.1415926
 
 # const zero::Float64 = 1.0e-10
 
-const l_sta = 105
-
-const l_end = 105
-
-const p_sta = 101
-
-const p_end = 101
-
 const RTIMES = 24
 
 const step::Float64 = 3600.0
-
-const kstep::Float64 = 360.0
-
-const kloop = 10
 
 const MAX_Loop = 11
 
@@ -45,7 +33,7 @@ const Cpd::Float64 = 1004.65;
 const λ_snow::Float64 = 2.83 * 1e6 # J/kg
 
 # the latent heat of evaporation from solid (snow/ice) at air temperature=Ta, in j+kkk/kg
-const Lv_solid::Float64 = 2.83 * 1000000;  
+const Lv_solid::Float64 = 2.83 * 1000000;
 
 
 ## DB ----------------

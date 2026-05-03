@@ -1,8 +1,8 @@
-using Test
-using BEPS
-import BEPS: kstep, Params2Soil!, Soil2Params!, State2Soil!, UpdateRootFraction!, Init_Soil_T_θ!
+using BEPS, Test
+import BEPS: Params2Soil!, Soil2Params!, State2Soil!, UpdateRootFraction!, Init_Soil_T_θ!
 import BEPS: UpdateThermal_κ, UpdateThermal_Cv, Update_ice_ratio, UpdateHeatFlux, UpdateSoilMoisture, Root_Water_Uptake, Init_Soil_var
 
+kstep = 360.0
 
 function Base.getindex(x::Union{Soil,Soil_c}, i::Integer)
   names = fieldnames(typeof(x))

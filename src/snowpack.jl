@@ -46,7 +46,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
   area_snow::Layer2{Float64},
   z_snow::Float64,
   ρ_snow::Ref{Float64},
-  albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64})
+  albedo_v_snow::Ref{Float64}, albedo_n_snow::Ref{Float64}; kstep=360.0)
 
   # m_snow_pre = Layer3(m_snow)
   massMax_snow_o = 0.1 * lai_o
@@ -111,7 +111,7 @@ function snowpack_stage1_jl(Tair::Float64, prcp::Float64,
 end
 
 
-function snowpack_stage2_jl(evapo_snow_o::Float64, evapo_snow_u::Float64, m_snow::Layer3{Float64})
+function snowpack_stage2_jl(evapo_snow_o::Float64, evapo_snow_u::Float64, m_snow::Layer3{Float64}; kstep=360.0)
   # kstep::Float64 = kstep  # length of step
   m_snow.o = max(0.0, m_snow.o - evapo_snow_o * kstep)
   m_snow.u = max(0.0, m_snow.u - evapo_snow_u * kstep)
@@ -143,7 +143,7 @@ It is assumed sublimation happens before the melting and freezing process.
 - depth: [m]
 """
 function snowpack_stage3_jl(Tair::Float64, Tsnow::Float64, Tsnow_last::Float64, ρ_snow::Float64,
-  z_snow::Float64, z_water::Float64, m_snow::Layer3{Float64})
+  z_snow::Float64, z_water::Float64, m_snow::Layer3{Float64}; kstep=360.0)
 
   zs_sup = z_snow  # already considered sublimation
   ms_sup = m_snow.g

@@ -25,7 +25,8 @@ function surface_temperature_jl!(
   z_soil1::FT, κ_soil1::FT, Cv_soil1::FT, Cv_soil0::FT, Gheat_g::FT,
   E_soil::FT, E_water_g::FT, E_snow_g::FT,
   G_soil1::FT, T_soil1_last::FT, T_soil0_last::FT,
-  last::SnowLand{FT}, current::SnowLand{FT}
+  last::SnowLand{FT}, current::SnowLand{FT};
+  kstep=360.0
 ) where {FT<:AbstractFloat}
   # 从 last_in 读取上一步的温度
   T_surf_last = last.T_surf
@@ -136,7 +137,7 @@ function surface_temperature!(
   state::AbstractSoil, ps::ParamBEPS{FT},
   Tsnow_p::SnowLand{FT}, Tsnow_c::SnowLand{FT},
   radiation_g::FT, Tc_u::FT, T_air::FT, RH::FT, z_snow::FT, z_water::FT, ρ_snow::FT, f_snow_g::FT, Gheat_g::FT,
-  Evap_soil::FT, Evap_SW::FT, Evap_SS::FT) where {FT<:AbstractFloat}
+  Evap_soil::FT, Evap_SW::FT, Evap_SS::FT; kstep=360.0) where {FT<:AbstractFloat}
 
   UpdateThermal_κ(state, ps)  # Soil Thermal Conductivity module by L. He
   UpdateThermal_Cv(state, ps)
@@ -154,7 +155,7 @@ function surface_temperature!(
     state.G[1],
     state.Tsoil_p[2],      # T_soil1: 第一层土壤温度 [°C]
     state.Tsoil_p[1],      # T_soil0:
-    Tsnow_p, Tsnow_c)
+    Tsnow_p, Tsnow_c; kstep)
 
   state.Tsoil_c[1] = T_soil0 # 更新 soil 的当前温度状态
   return G

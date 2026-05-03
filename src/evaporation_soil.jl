@@ -6,18 +6,17 @@
 """
 function evaporation_soil_jl(Tair::FT, Tg::FT, RH::FT, Rn_g::FT, Gheat_g::FT,
   # perc_snow_g::Ref{FT}, 
-  perc_snow::Layer3{FT}, 
+  perc_snow::Layer3{FT},
   z_water::FT, z_snow::FT,
   # z_water::Ref{FT}, z_snow::Ref{FT},
   mass_water_g::FT, mass_snow::Layer3{FT},
-  ρ_snow::FT, swc_g::FT, porosity_g::FT) where {FT<:Real}
+  ρ_snow::FT, swc_g::FT, porosity_g::FT; kstep=360.0) where {FT<:Real}
 
   met = meteo_pack_jl(Tg, RH)
   (; ρₐ, cp, VPD, Δ, γ) = met
   λ = cal_lambda(Tair) #
 
   Gwater_g = 1.0 / (4.0 * exp(8.2 - 4.2 * swc_g / porosity_g))
-  # kstep = kstep # 360s, 6min
 
   perc_snow.g = z_snow > 0.02 ? 1.0 : mass_snow.g / (0.025 * ρ_snow)
   perc_snow.g = clamp(perc_snow.g, 0.0, 1.0)
