@@ -3,7 +3,7 @@ export UpdateHeatFlux, UpdateThermal_Cv,
   Update_ice_ratio,
   UpdateThermal_κ,
   soil_water_factor_v2,
-  UpdateSoilMoisture, Root_Water_Uptake
+  UpdateSoilMoisture, update_surface_water!, Root_Water_Uptake
 
 
 get_hydraulic(ps::ParamBEPS) = ps.hydraulic

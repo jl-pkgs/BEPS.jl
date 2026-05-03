@@ -14,7 +14,8 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
   mid_flux::Flux, mid_ET::ETFlux, cache::LeafCache;
   fix_Ta_annual::Bool=true,
-  fix_snowpack::Bool=true, Ta_annual::Float64=10.0, kw...) where {T}
+  fix_snowpack::Bool=true, Ta_annual::Float64=10.0,
+  fix_sm::Bool=false, kw...) where {T}
 
   @unpack Ra, Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
@@ -170,7 +171,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
     state.r_rain_g = r_rain_g
     state.z_water = z_water
 
-    UpdateSoilMoisture(state, ps, kstep)
+    UpdateSoilMoisture(state, ps, kstep; fix_sm)
     z_water = state.z_water
   end  # end of sub-hourly loop
 

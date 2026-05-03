@@ -8,28 +8,25 @@
 # of canopy dew minus surface runoff and evaporation.
 # CLM3.5 uses a zero-flow bottom boundary condition.
 
-# 旧版本：兼容 Soil 结构体
-UpdateSoilMoisture(soil::Soil, kstep::Float64) = UpdateSoilMoisture(soil, soil, kstep)
+"""
+    update_surface_water!(st, ps, kstep) -> inf
 
-# 新版本：JAX 风格 (st, ps) 签名
-function UpdateSoilMoisture(st::S, ps::P, kstep::Float64) where {
-  S<:Union{StateBEPS,Soil},P<:Union{ParamBEPS,Soil}}
+更新地表积水 `state.z_water`：处理降雨入渗和地表径流，返回入渗率 [m/s]。
+与 `UpdateSoilMoisture` 共享相同物理，但不更新 θ，适用于观测土壤水模式。
+"""
+function update_surface_water!(st::S, ps::P, kstep::Float64) where {
+  S<:Union{StateBEPS,Soil}, P<:Union{ParamBEPS,Soil}}
 
   n = st.n_layer
-  dz = st.dz
-
+  (; θ_sat, K_sat, ψ_sat, b) = get_hydraulic(ps)
+  (; θ, f_water, Tsoil_c, dz, z_water, r_rain_g) = st
   r_drainage = ps.r_drainage
-  (; θ_sat, K_sat, ψ_sat, b, θ_vwp) = get_hydraulic(ps)
-  (; f_water, Kavg, Kmid, ψ, θ, θ_prev, Tsoil_c, ETi, r_waterflow, ice_ratio, z_water, r_rain_g) = st
-
-  θ_prev .= θ
 
   @inbounds for i in 1:n+1
     # 注意：Tsoil_c 长度通常是 n，但这里循环到 n+1，需确认 Tsoil_c 实际分配长度。
     # 假设 Tsoil_c 长度足够，或者边界处理
     # Soil struct 定义 dz 为 Vector{Float64} = zeros(10)，所以可以到 n+1 (5+1=6)
     val_T = i <= length(Tsoil_c) ? Tsoil_c[i] : Tsoil_c[end] # 简单边界保护
-
     if val_T > 0.0
       f_water[i] = 1.0
     elseif val_T < -1.0
@@ -41,15 +38,32 @@ function UpdateSoilMoisture(st::S, ps::P, kstep::Float64) where {
 
   # Max infiltration calculation
   # K_sat * (1 + (θ_sat - θ_prev) / dz * ψ_sat / θ_sat * b)
-  inf_max = f_water[1] * K_sat[1] * (1 + (θ_sat[1] - θ_prev[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
+  inf_max = f_water[1] * K_sat[1] * (1 + (θ_sat[1] - θ[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
   inf = max(f_water[1] * (z_water / kstep + r_rain_g), 0)
   inf = clamp(inf, 0, inf_max)
 
   # Ponded water after runoff
   st.z_water = (z_water / kstep + r_rain_g - inf) * kstep * r_drainage
+  return inf
+end
+
+
+# 旧版本：兼容 Soil 结构体
+UpdateSoilMoisture(soil::Soil, kstep::Float64) = UpdateSoilMoisture(soil, soil, kstep)
+
+# 新版本：JAX 风格 (st, ps) 签名
+function UpdateSoilMoisture(st::S, ps::P, kstep::Float64; fix_sm::Bool=false) where {
+  S<:Union{StateBEPS,Soil},P<:Union{ParamBEPS,Soil}}
+
+  n = st.n_layer
+  (; θ_sat, K_sat, ψ_sat, b, θ_vwp) = get_hydraulic(ps)
+  (; dz, f_water, Kavg, Kmid, ψ, θ, θ_prev, ETi, r_waterflow, ice_ratio) = st
+
+  θ_prev .= θ
+  inf = update_surface_water!(st, ps, kstep)
+  fix_sm && return # 如果 fix_sm=true，则只更新地表积水，不改变土壤水分状态
 
   total_t, max_Fb = 0.0, 0.0
-
   @inbounds while total_t < kstep
     # 为了解决相互依赖的关系，循环寻找稳态
     # the unsaturated soil water retention. LHe
