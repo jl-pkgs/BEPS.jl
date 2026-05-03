@@ -26,10 +26,11 @@ include("module.jl")
 
 function inter_prg_c(jday, rstep, lon::T, lat::T,
   lai::T, Ω::T,
-  Ra::Radiation, meteo::Met, parameter::Vector{T},
+  meteo::Met, parameter::Vector{T},
   var_o::Vector{T}, var_n::Vector{T}, soilp::Soil_c,
   mid_res::Flux, mid_ET::ETFlux, cache::LeafCache; debug=false, kw...) where {T<:Real}
 
+  # Ra = cache.Ra, not used
   CosZs::T = s_coszs(jday, rstep, lat, lon)
   ccall((:inter_prg_c, libbeps), Cvoid,
     (Cint, Cint, Cdouble, Cdouble, Ptr{Cdouble},
@@ -113,7 +114,7 @@ function rainfall_stage1(Tair, prcp, m_water_o_last, m_water_u_last, lai_o, lai_
 end
 
 function rainfall_stage1(Tair, prcp, perc_water, m_water, m_water_pre, lai_o, lai_u, Ω)
-  # m_water_o_last, m_water_u_last, 
+  # m_water_o_last, m_water_u_last,
   # perc_water = Layer2{Float64}()
   # m_water = Layer2{Float64}()
   prcp_g = rainfall_stage1_jl(Tair, prcp, perc_water, m_water, m_water_pre, lai_o, lai_u, Ω)
@@ -142,13 +143,13 @@ include("snowpack_stage.jl")
 # end
 
 export inter_prg_c,
-  # Vcmax_Jmax, 
-  # ReadParamVeg, 
-  # readcoef, 
+  # Vcmax_Jmax,
+  # ReadParamVeg,
+  # readcoef,
   # lai2, s_coszs,
-  # latent_heat!, 
+  # latent_heat!,
   # Leaf_Temperatures,
-  # evaporation_canopy, 
+  # evaporation_canopy,
   rainfall_stage1, rainfall_stage2, snowpack_stage1, snowpack_stage2, snowpack_stage3
 export Soil_c
 

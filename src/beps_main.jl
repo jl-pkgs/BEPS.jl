@@ -19,7 +19,6 @@ function beps_main(forcing::MetSeries, lai::Vector, dates;
   met = Met()
   mid_flux = Flux()
   mid_ET = ETFlux()
-  Ra = Radiation()
   cache = LeafCache()
 
   fluxes = FluxSeries(; ntime)
@@ -54,11 +53,11 @@ function beps_main(forcing::MetSeries, lai::Vector, dates;
     # /***** start simulation modules *****/
     if version == "julia"
       inter_prg_jl(jday, hour, lon, lat, _lai, clumping,
-        Ra, met, params, state, mid_flux, mid_ET, cache; fix_Ta_annual, fix_snowpack, Ta_annual)
+        met, params, state, mid_flux, mid_ET, cache; fix_Ta_annual, fix_snowpack, Ta_annual)
       save_state!(states, state, i, SF, VF)
     elseif version == "c"
       inter_prg_c(jday, hour, lon, lat, _lai, clumping,
-        Ra, met, theta, state, state_n, soil, mid_flux, mid_ET, cache;)
+        met, theta, state, state_n, soil, mid_flux, mid_ET, cache;)
       state .= state_n # state variables
     end
 

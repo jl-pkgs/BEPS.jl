@@ -26,7 +26,6 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   met = Met()
   mid_flux = Flux()
   mid_ET = ETFlux()
-  Ra = Radiation()    # Radiation, 临时变量
   cache = LeafCache()
 
   ntime = forcing.ntime
@@ -49,7 +48,7 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
     _lai = lai[k]
 
     inter_prg_jl(jday, hour, lon, lat, _lai, clumping,
-      Ra, met, ps, state, mid_flux, mid_ET, cache; fix_snowpack, fix_annual_Ta, Ta_annual)
+      met, ps, state, mid_flux, mid_ET, cache; fix_snowpack, fix_annual_Ta, Ta_annual)
 
     fluxes[i] = mid_flux
     fluxes_ET[i] = mid_ET

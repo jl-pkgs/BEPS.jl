@@ -11,12 +11,12 @@ The inter-module function between main program and modules
 """
 function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   lai::T, Ω::T,
-  Ra::Radiation, forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
+  forcing::Met, ps::ParamBEPS{T}, state::StateBEPS,
   mid_flux::Flux, mid_ET::ETFlux, cache::LeafCache;
   fix_Ta_annual::Bool=true,
   fix_snowpack::Bool=true, Ta_annual::Float64=10.0, kw...) where {T}
 
-  @unpack Cc_new, Cs_old, Cs_new, Ci_old,
+  @unpack Ra, Cc_new, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, GPP, LAI, PAI = cache
