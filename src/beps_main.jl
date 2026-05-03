@@ -1,5 +1,5 @@
 # see `VARS_SCALAR` and `VARS_VECTOR` for details
-const DEFAULT_VARS_EXPORT = [
+const DEFAULT_STATE_EXPORT = [
   :z_water, :ρ_snow, :z_snow, :r_rain_g, :f_soilwater,
   :θ, :Tsoil_c, :ETi]
 
@@ -11,7 +11,7 @@ function beps_main(forcing::MetSeries, lai::Vector, dates;
   VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
   r_drainage::FT=0.5, r_root_decay::FT=0.95,
-  VARS_EXPORT::Vector{Symbol}=DEFAULT_VARS_EXPORT,
+  VARS_STATE::Vector{Symbol}=DEFAULT_STATE_EXPORT,
   version="julia", fix_snowpack=true, fix_Ta_annual=true,
   kw...) where {FT<:AbstractFloat}
 
@@ -23,7 +23,7 @@ function beps_main(forcing::MetSeries, lai::Vector, dates;
 
   fluxes = FluxSeries(; ntime)
   fluxes_ET = ETSeries(; ntime)
-  SF, VF = split_vars(VARS_EXPORT)
+  SF, VF = split_vars(VARS_STATE)
   states = StateSeries(SF, VF, layer, ntime)
   # states = nothing
 

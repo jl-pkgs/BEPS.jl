@@ -147,7 +147,7 @@ const VARS_VECTOR = Tuple(
     if T == Vector{Float64} && f ∉ (:dz, :f_root)
 )
 # :θ_prev, :Tsoil_p
-const VARS_STATE = (VARS_SCALAR..., VARS_VECTOR...)
+const ALL_VARS_STATE = (VARS_SCALAR..., VARS_VECTOR...)
 
 # 从 Soil 构造 SoilState（兼容旧代码）
 function StateBEPS(soil::Soil)
@@ -182,4 +182,4 @@ end
 
 
 export Soil, StateBEPS, State2Soil!
-export VARS_SCALAR, VARS_VECTOR, VARS_STATE
+export VARS_SCALAR, VARS_VECTOR, ALL_VARS_STATE

@@ -21,7 +21,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   kw...) where {T}
 
   @unpack Cs_old, Cs_new, Ci_old,
-  Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
+  Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gw_wet,
   Ac, Rn, Rns, Rnl,
   leleaf, GPP, LAI, PAI = cache
 
@@ -135,7 +135,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
 
     # /*****  Evaporation and sublimation from canopy by X. Luo  *****/
     Eil_o, Eil_u, EiS_o, EiS_u = evaporation_canopy_jl(Tc_new, Tair, RH,
-      Gww, PAI, frac_water, frac_snow)
+      Gw_wet, PAI, frac_water, frac_snow)
 
     rainfall_stage2_jl(Eil_o, Eil_u, m_water; kstep) # X. Luo
     m_water_pre .= m_water
@@ -226,7 +226,7 @@ function solve_canopy_energy_balance!(
 
   # Unpack required variables
   @unpack pc, ac, Ra, Cs_old, Cs_new, Ci_old,
-  Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
+  Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gw_wet,
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, PAI = cache
 
@@ -285,7 +285,7 @@ function solve_canopy_energy_balance!(
       1.0 / (1.0 / Ga_o + 0.5 / Gb_o),
       1.0 / (1.0 / Ga_u + 0.5 / Gb_u))
     # 水汽传输导度 (湿表面) [mol/m²/s]
-    init_leaf_dbl2(Gww,
+    init_leaf_dbl2(Gw_wet,
       1.0 / (1.0 / Ga_o + 1.0 / Gb_o + 100),
       1.0 / (1.0 / Ga_u + 1.0 / Gb_u + 100))
 
@@ -318,7 +318,7 @@ function solve_canopy_energy_balance!(
 
     # /***** Leaf temperatures module by L. He  *****/
     Leaf_Temperatures_jl(Tair, Δ, γ, VPD, cp,
-      Gw, Gww, Gh, frac_water, frac_snow, Rn, Tc_new)
+      Gw, Gw_wet, Gh, frac_water, frac_snow, Rn, Tc_new)
 
     # 计算上层冠层感热通量用于下次迭代 [W/m²]
     H_o_sunlit = (Tc_new.o_sunlit - Tair) * ρₐ * cp * Gh.o_sunlit

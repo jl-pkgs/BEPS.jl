@@ -20,7 +20,7 @@ using BEPS, DataFrames, Test, Dates
   Ta = Float64(forcing.Tair[1])
   state_true, _ = setup(ps_true; Ta, Tsoil=2.2, θ0=0.4115, z_snow=0.0)
 
-  _, df_ET_true, _ = beps_modern(forcing, LAI, dates; ps=ps_true, state=state_true, kw...)
+  _, df_ET_true, _, _ = beps_modern(forcing, LAI, dates; ps=ps_true, state=state_true, kw...)
   obs_LH = df_ET_true.LH
 
   # 设置初始猜测

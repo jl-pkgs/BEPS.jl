@@ -11,22 +11,25 @@ ps = ParamBEPS(VegType, SoilType)
 Ta = Float64(forcing.Tair[1])
 state0, _ = setup(ps; Ta, Tsoil=2.2, θ0=0.4115, z_snow=0.0)
 
+##
 @testset "beps_modern" begin
 
   # --- 1. 基本运行 ---
   @testset "basic run" begin
-    df, df_ET, states = beps_modern(forcing, LAI, dates; ps, state=state0, kw...)
+    df, df_ET, states, caches = beps_modern(forcing, LAI, dates; ps, state=state0, kw...)
     ntime = forcing.ntime
 
     @test size(df, 1) == ntime
     @test size(df_ET, 1) == ntime
     @test size(states.vectors.Tsoil_c) == (5, ntime)
     @test size(states.vectors.θ) == (5, ntime)
+    @test size(caches.Tc_new) == (ntime, 4)
+    @test size(caches.Gs_new) == (ntime, 4)
   end
 
   # --- 2. 物理边界 ---
   @testset "physical bounds" begin
-    df, df_ET, states = beps_modern(forcing, LAI, dates; ps, state=state0, kw...)
+    df, df_ET, states, caches = beps_modern(forcing, LAI, dates; ps, state=state0, kw...)
 
     @test all(isfinite, states.vectors.Tsoil_c)
     @test all(isfinite, states.vectors.θ)
@@ -34,21 +37,34 @@ state0, _ = setup(ps; Ta, Tsoil=2.2, θ0=0.4115, z_snow=0.0)
     @test all(states.vectors.θ .<= 1)
     @test all(isfinite, df.GPP)
     @test all(df.GPP .>= 0)
+    @test all(isfinite, caches.Tc_new)
+    @test all(isfinite, caches.Gs_new)
   end
 
-  # --- 3. 参数变化影响输出 ---
+  # --- 3. 显式导出 LeafCache 字段 ---
+  @testset "cache export" begin
+    _, _, _, caches = beps_modern(forcing, LAI, dates;
+      ps, state=state0, VARS_CACHE=[:GPP, :LAI], kw...)
+    ntime = forcing.ntime
+
+    @test size(caches.GPP) == (ntime, 4)
+    @test size(caches.LAI) == (ntime, 4)
+    @test all(isfinite, caches.GPP)
+  end
+
+  # --- 4. 参数变化影响输出 ---
   @testset "parameter sensitivity" begin
-    df_ref, _, _ = beps_modern(forcing, LAI, dates; ps, state=state0, kw...)
+    df_ref, _, _, _ = beps_modern(forcing, LAI, dates; ps, state=state0, kw...)
 
     ps2 = deepcopy(ps)
     ps2.veg.VCmax25 *= 2.0
-    df_vcmax, _, _ = beps_modern(forcing, LAI, dates; ps=ps2, state=state0, kw...)
+    df_vcmax, _, _, _ = beps_modern(forcing, LAI, dates; ps=ps2, state=state0, kw...)
 
     @test size(df_vcmax) == size(df_ref)
     @test sum(df_vcmax.GPP) > sum(df_ref.GPP)  # GPP 随 VCmax25 增大
   end
 
-  # --- 4. state0 不被修改 ---
+  # --- 5. state0 不被修改 ---
   @testset "state0 not mutated" begin
     θ_before = copy(state0.θ)
     beps_modern(forcing, LAI, dates; ps, state=state0, kw...)

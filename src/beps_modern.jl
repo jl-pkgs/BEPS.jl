@@ -15,10 +15,12 @@ Run BEPS simulation using the modern `ParamBEPS + StateBEPS` API.
                   `UpdateSoilMoisture` is skipped and each hourly θ is prescribed from data
 - `Tsoil_obs`   : observed soil temperature [°C], `nlayer × ntime` matrix; when provided,
                   `UpdateHeatFlux` skips Tsoil update, ice_ratio still updated from obs temps
-- `VARS_EXPORT` : state variables to save (default `DEFAULT_VARS_EXPORT`)
+- `VARS_STATE` : state variables to save (default `DEFAULT_STATE_EXPORT`)
+- `VARS_CACHE` : `LeafCache` variables to save (default `DEFAULT_CACHE_EXPORT`)
 
 # Returns
-`(df_flux, df_ET, states)` — hourly flux DataFrames and a `StateSeries`
+`(df_flux, df_ET, states, caches)` — hourly flux DataFrames, a `StateSeries`,
+and a `CacheSeries`
 """
 function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   ps::ParamBEPS, state::StateBEPS,
@@ -27,7 +29,8 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   fix_snowpack=true, fix_annual_Ta=true,
   sm_obs::Union{Nothing, AbstractMatrix}=nothing,
   Tsoil_obs::Union{Nothing, AbstractMatrix}=nothing,
-  VARS_EXPORT::Vector{Symbol}=DEFAULT_VARS_EXPORT, kw...) where {FT<:AbstractFloat}
+  VARS_STATE::Vector{Symbol}=DEFAULT_STATE_EXPORT,
+  VARS_CACHE::Vector{Symbol}=DEFAULT_CACHE_EXPORT, kw...) where {FT<:AbstractFloat}
 
   state = deepcopy(state) # 避免外部状态被修改
   met = Met()
@@ -39,8 +42,11 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   fluxes = FluxSeries(; ntime)
   fluxes_ET = ETSeries(; ntime)
 
-  SF, VF = split_vars(VARS_EXPORT)
+  SF, VF = split_vars(VARS_STATE)
   states = StateSeries(SF, VF, layer, ntime)
+
+  CF = split_cache_vars(VARS_CACHE)
+  caches = CacheSeries(CF, 4, ntime)
 
   Ta_annual = mean(forcing.Tair)
   jdays = dayofyear.(dates)
@@ -73,6 +79,7 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
     fluxes[i] = mid_flux
     fluxes_ET[i] = mid_ET
     save_state!(states, state, i, SF, VF)
+    save_cache!(caches, cache, i, CF)
   end
-  DataFrame(fluxes), DataFrame(fluxes_ET), states
+  DataFrame(fluxes), DataFrame(fluxes_ET), states, caches
 end

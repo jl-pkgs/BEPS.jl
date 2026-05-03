@@ -16,7 +16,7 @@ function beps_optimize(forcing::MetSeries, lai::Vector, dates::AbstractVector,
     m = deepcopy(model)
     update!(m, paths, x)
     try
-      df_out, df_ET, _ = beps_modern(forcing, lai, dates; ps=m, state=state0, kwargs...)
+      df_out, df_ET, _, _ = beps_modern(forcing, lai, dates; ps=m, state=state0, kwargs...)
       sim = col_sim ∈ propertynames(df_out) ? df_out[!, col_sim] : df_ET[!, col_sim]
       return of_RMSE(obs, sim)
     catch e

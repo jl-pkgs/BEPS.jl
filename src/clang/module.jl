@@ -87,16 +87,16 @@ function evaporation_canopy_c(tempL::Leaf, Tair::Float64, RH::Float64,
   evapo_water_o[], evapo_water_u[], evapo_snow_o[], evapo_snow_u[]
 end
 
-function Leaf_Temperatures_c(Tair, slope, γ, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs_o, Xcl_o, Xcs_u, Xcl_u, radiation::Leaf, Tc::Leaf)
+function Leaf_Temperatures_c(Tair, slope, γ, VPD_air, Cp_ca, Gw, Gw_wet, Gh, Xcs_o, Xcl_o, Xcs_u, Xcl_u, radiation::Leaf, Tc::Leaf)
   ccall((:Leaf_Temperatures, libbeps), Cvoid, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Leaf, Leaf, Cdouble, Cdouble, Cdouble, Cdouble, Leaf, Ptr{Leaf}),
-    Tair, slope, γ, VPD_air, Cp_ca, Gw, Gww, Gh,
+    Tair, slope, γ, VPD_air, Cp_ca, Gw, Gw_wet, Gh,
     Xcs_o, Xcl_o, Xcs_u, Xcl_u,
     radiation, Ref(Tc))
 end
 
-function Leaf_Temperature_c(Tair, slope, γ, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
+function Leaf_Temperature_c(Tair, slope, γ, VPD_air, Cp_ca, Gw, Gw_wet, Gh, Xcs, Xcl, radiation)
   ccall((:Leaf_Temperature, libbeps), Cdouble, (Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble),
-    Tair, slope, γ, VPD_air, Cp_ca, Gw, Gww, Gh, Xcs, Xcl, radiation)
+    Tair, slope, γ, VPD_air, Cp_ca, Gw, Gw_wet, Gh, Xcs, Xcl, radiation)
 end
 
 function aerodynamic_conductance_c(canopy_height_o::T, canopy_height_u::T,
