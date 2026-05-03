@@ -9,10 +9,10 @@ Boreal Ecosystem Productivity Simulator in Julia
 > Dongdong Kong
 >
 > BEPS.jl is alive in Julia now. All functions have been ported to Julia, and the
-> performance is about 2.5 times faster than C version.
+> performance is about 4.3 times faster than C version (v2026.05.03, Ultra7 155H CPU).
 >
-> - Julia: 0.286327 seconds (822.38 k allocations: 22.998 MiB, 0.85% gc time)
-> - C    : 0.787059 seconds (629.95 k allocations: 13.915 MiB)
+> - Julia: 0.133081 seconds (605.51 k allocations: 27.008 MiB, 2.42% compilation time)
+> - C    : 0.570192 seconds (15.17 k allocations: 9.531 MiB, 3.52% gc time)
 
 > `BEPS.clang` works for Windows, Linux and Mac (v2026.05.02).
 
