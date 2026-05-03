@@ -5,13 +5,16 @@ export LeafCache
   pc::PhotoConsts{Float64} = PhotoConsts(10.0 + 273.15) # 默认10°, 计算光合常量
   ac::AeroConsts{Float64} = AeroConsts()
   Ra::Radiation = Radiation()
-  Cc_new::Leaf = Leaf(init)
+  # Cc_new::Leaf = Leaf(init)
   Cs_old::Leaf = Leaf(init)
   Cs_new::Leaf = Leaf(init)
   Ci_old::Leaf = Leaf(init)
+  Ci_new::Leaf = Leaf(init)
+
   Tc_old::Leaf = Leaf(init)
   Tc_new::Leaf = Leaf(init)
   Gs_old::Leaf = Leaf(init)
+  Gs_new::Leaf = Leaf(init)
 
   # to the reference height above the canopy
   Gc    ::Leaf = Leaf(init)  # total conductance for CO2 from the intercellular space of the leaves
@@ -19,9 +22,7 @@ export LeafCache
   Gw    ::Leaf = Leaf(init)  # total conductance for water from the intercellular space of the leaves
   Gww   ::Leaf = Leaf(init) # total conductance for water from the surface of the leaves
 
-  Gs_new::Leaf = Leaf(init)
   Ac    ::Leaf = Leaf(init)
-  Ci_new::Leaf = Leaf(init)
 
   Rn    ::Leaf = Leaf(init)
   Rns   ::Leaf = Leaf(init)

@@ -20,9 +20,9 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   fix_snowpack::Bool=true, Ta_annual::Float64=10.0,
   kw...) where {T}
 
-  @unpack Cc_new, Cs_old, Cs_new, Ci_old,
+  @unpack Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
-  Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
+  Ac, Rn, Rns, Rnl,
   leleaf, GPP, LAI, PAI = cache
 
   CosZs::T = s_coszs(jday, hour, lat, lon)
@@ -225,7 +225,7 @@ function solve_canopy_energy_balance!(
 ) where {T}
 
   # Unpack required variables
-  @unpack pc, ac, Ra, Cc_new, Cs_old, Cs_new, Ci_old,
+  @unpack pc, ac, Ra, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gww,
   Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
   leleaf, PAI = cache
@@ -255,10 +255,8 @@ function solve_canopy_energy_balance!(
     Gs_new .= 0.0001
     Ac .= 0.0
     Ci_new .= CO2_air * 0.7
-
     Cs_new .= CO2_air
-    Cc_new .= CO2_air * 0.7 * 0.8
-
+    # Cc_new .= CO2_air * 0.7 * 0.8
     Ci_old .= Ci_new
     Cs_old .= Cs_new
     Gs_old .= Gs_new
