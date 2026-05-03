@@ -248,6 +248,19 @@ function solve_canopy_energy_balance!(
   radiation_o = radiation_u = radiation_g = ra_g = 0.0
   n_iter = 0
 
+  if (CosZs <= 0)
+    init_leaf_dbl(Gs_new, 0.0001)
+    init_leaf_dbl(Ac, 0.0)
+    init_leaf_dbl(Ci_new, CO2_air * 0.7)
+
+    init_leaf_dbl(Cs_new, CO2_air)
+    init_leaf_dbl(Cc_new, CO2_air * 0.7 * 0.8)
+
+    set!(Ci_old, Ci_new)
+    set!(Cs_old, Cs_new)
+    set!(Gs_old, Gs_new)
+  end
+
   while true
     n_iter += 1
     # /***** Aerodynamic conductance module by G.Mo  *****/
@@ -282,18 +295,11 @@ function solve_canopy_energy_balance!(
         Tair, ea, f_soilwater, g0_w, g1_w,
         Gb_o, Gb_u, Vcmax_sunlit, Vcmax_shaded,
         Gs_new, Ac, Ci_new; version="julia")
-    else
-      init_leaf_dbl(Gs_new, 0.0001)
-      init_leaf_dbl(Ac, 0.0)
-      init_leaf_dbl(Ci_new, CO2_air * 0.7)
-
-      init_leaf_dbl(Cs_new, CO2_air)
-      init_leaf_dbl(Cc_new, CO2_air * 0.7 * 0.8)
+        
+      set!(Ci_old, Ci_new)
+      set!(Cs_old, Cs_new)
+      set!(Gs_old, Gs_new)
     end
-
-    set!(Ci_old, Ci_new)
-    set!(Cs_old, Cs_new)
-    set!(Gs_old, Gs_new)
 
     update_Gw!(Gw, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
     update_Gc!(Gc, Gs_new, Ga_o, Ga_u, Gb_o, Gb_u)
