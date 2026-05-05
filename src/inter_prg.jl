@@ -20,10 +20,8 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
   fix_snowpack::Bool=true, Ta_annual::Float64=10.0,
   kw...) where {T}
 
-  @unpack Cs_old, Cs_new, Ci_old,
-  Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gw_wet,
-  Ac, Rn, Rns, Rnl,
-  leleaf, GPP, LAI, PAI = cache
+  @unpack Tc_old, Tc_new, Gh, Gw, Gw_wet,
+  GPP, LAI, PAI = cache
 
   CosZs::T = s_coszs(jday, hour, lat, lon)
   # ===== 1. 参数提取和计算 =====
@@ -113,9 +111,6 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
     # 感热通量初值用于空气动力学导度计算 [W/m²]
     H_canopy_o = Qhc_o  # 使用上一步的值
 
-    Ci_old .= 0.7 * CO2_air
-    init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
-
     perc_snow_o = A_snow.o / lai_o / 2 # 上层冠层雪覆盖分数
     perc_snow_u = A_snow.u / lai_u / 2 # 下层冠层雪覆盖分数
 
@@ -129,7 +124,6 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
       cache, met, forcing, geo_params, snow_params, biophys_params,
       Tc, H_canopy_o, CosZs, f_soilwater, frac_water; atol, maxn
     )
-    multiply!(GPP, Ac, LAI)
 
     Trans_o, Trans_u = transpiration_jl(Tc_new, Tair, RH, Gw, LAI) # X. Luo
 
@@ -227,7 +221,7 @@ function solve_canopy_energy_balance!(
   # Unpack required variables
   @unpack pc, ac, Ra, Cs_old, Cs_new, Ci_old,
   Tc_old, Tc_new, Gs_old, Gc, Gh, Gw, Gw_wet,
-  Gs_new, Ac, Ci_new, Rn, Rns, Rnl,
+  Gs_new, Ci_new, Ac, GPP, LAI, Rn, Rns, Rnl,
   leleaf, PAI = cache
 
   (; ρₐ, cp, VPD, ea, Δ, γ) = met
@@ -249,6 +243,9 @@ function solve_canopy_energy_balance!(
 
   radiation_o = radiation_u = radiation_g = ra_g = 0.0
   n_iter = 0
+
+  Ci_old .= 0.7 * CO2_air
+  init_leaf_dbl2(Gs_old, 1.0 / 200.0, 1.0 / 300.0)
 
   # 光合作用相关常量，不随迭代改变
   if !is_daytime
@@ -340,5 +337,6 @@ function solve_canopy_energy_balance!(
       end
     end
   end
+  multiply!(GPP, Ac, LAI)
   return radiation_o, radiation_u, radiation_g, ra_g, H_canopy_o
 end
