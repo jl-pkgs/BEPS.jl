@@ -22,6 +22,11 @@ function is_soil_equal(p_jl, p_c; tol=1e-7, verbose=false)
     x_jl = getfield(p_jl, i)
     x_c = getfield(p_c, i)
 
+    if name_jl == :K_sat
+      # C version uses m/s, Julia uses cm/h
+      x_jl = x_jl ./ 360000.0
+    end
+
     if verbose
       ## 变量名可能不同
       color = name_c == name_jl ? :black : :red

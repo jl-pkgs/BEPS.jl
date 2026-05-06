@@ -10,7 +10,8 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
 
   # Max infiltration calculation
   # K_sat * (1 + (θ_sat - θ_prev) / dz * ψ_sat / θ_sat * b )
-  inf_max = K_sat[1] * (1 + (θ_sat[1] - θ_prev[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
+  K_sat_ms_1 = K_sat[1] / 360000.0
+  inf_max = K_sat_ms_1 * (1 + (θ_sat[1] - θ_prev[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
   inf = max((soil.z_water / kstep + soil.r_rain_g), 0)
   inf = clamp(inf, 0, inf_max)
 
@@ -23,7 +24,7 @@ function UpdateSoilMoisture(soil::Soil, kstep::Float64)
     # Hydraulic conductivity: Bonan, Table 8.2, Campbell 1974, K = K_sat*(θ/θ_sat)^(2b+3)
     for i in 1:n
       ψ[i] = cal_ψ(θ[i], θ_sat[i], ψ_sat[i], b[i])
-      Kmid[i] = cal_K(θ[i], θ_sat[i], K_sat[i], b[i]) # Hydraulic conductivity, [m/s]
+      Kmid[i] = cal_K(θ[i], θ_sat[i], K_sat[i] / 360000.0, b[i]) # Hydraulic conductivity, [m/s]
     end
 
     # Fb, flow speed. Dancy's law. LHE.

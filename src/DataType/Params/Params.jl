@@ -45,19 +45,21 @@ end
 
 # 水力参数
 @bounds @with_kw mutable struct ParamSoilHydraulic{FT<:AbstractFloat}
-  θ_vfc::FT = FT(0.3) | (0.1, 0.4)  # volumetric field capacity
-  θ_vwp::FT = FT(0.1) | (0.1, 0.5)  # volumetric wilting point
-  θ_sat::FT = FT(0.45) | (0.1, 0.6) # volumetric saturation
-  K_sat::FT = FT(1e-5) | (0.1, 0.7) # saturated hydraulic conductivity
-  ψ_sat::FT = FT(-0.5) | (0.1, 0.9) # soil matric potential at saturation
-  b::FT = FT(5.0) | (0.1, 0.4) # Cambell parameter b
+  θ_vfc::FT = FT(0.30) | (0.10, 0.45)   # volumetric field capacity [-]
+  θ_vwp::FT = FT(0.10) | (0.02, 0.30)   # volumetric wilting point [-]
+  θ_sat::FT = FT(0.45) | (0.25, 0.70)   # volumetric saturation [-]
+
+  K_sat::FT = FT(5.0) | (0.01, 50.0)   # saturated hydraulic conductivity [cm h-1]
+
+  ψ_sat::FT = FT(-0.5) | (-2.0, -0.01)  # matric potential at saturation [m]
+  b::FT = FT(5.0) | (1.5, 15.0)    # Campbell parameter [-]
 end
 
 # 热力参数
 @bounds @with_kw mutable struct ParamSoilThermal{FT<:AbstractFloat}
-  κ_dry::FT = FT(0.2) | (0.05, 0.5)          # dry soil thermal conductivity [W m-1 K-1]
-  ρ_soil::FT = FT(1300.0) | (1000.0, 2000.0) # soil bulk density [kg m-3]
-  V_SOM::FT = FT(0.02) | (0.0, 0.3)          # organic matter volume fraction [-]
+  κ_dry::FT = FT(0.2) | (0.05, 0.5)      # dry soil thermal conductivity [W m-1 K-1]
+  ρ_soil::FT = FT(1300.0) | (800.0, 1800.0) # soil bulk density [kg m-3]
+  V_SOM::FT = FT(0.02) | (0.0, 0.3)      # organic matter volume fraction [-]
 end
 
 @make_layers_struct ParamSoilHydraulic

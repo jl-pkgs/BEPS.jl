@@ -1,4 +1,4 @@
-# LSM of Xuanze Zhang
+# 参考CLM3.5的方案
 # 
 # Soil moisture is predicted from a 5-layer model (as with soil
 # temperature), in which the vertical soil moisture transport is governed
@@ -38,7 +38,8 @@ function update_surface_water!(st::S, ps::P, kstep::Float64) where {
 
   # Max infiltration calculation
   # K_sat * (1 + (θ_sat - θ_prev) / dz * ψ_sat / θ_sat * b)
-  inf_max = f_water[1] * K_sat[1] * (1 + (θ_sat[1] - θ[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
+  K_sat_ms_1 = K_sat[1] / 360000.0
+  inf_max = f_water[1] * K_sat_ms_1 * (1 + (θ_sat[1] - θ[1]) / dz[1] * ψ_sat[1] * b[1] / θ_sat[1])
   inf = max(f_water[1] * (z_water / kstep + r_rain_g), 0)
   inf = clamp(inf, 0, inf_max)
 
@@ -70,7 +71,7 @@ function UpdateSoilMoisture(st::S, ps::P, kstep::Float64; fix_sm::Bool=false) wh
     # Hydraulic conductivity: Bonan, Table 8.2, Campbell 1974, K = K_sat*(θ/θ_sat)^(2b+3)
     for i in 1:n
       ψ[i] = cal_ψ(θ[i], θ_sat[i], ψ_sat[i], b[i])
-      Kmid[i] = f_water[i] * cal_K(θ[i], θ_sat[i], K_sat[i], b[i]) # Hydraulic conductivity, [m/s]
+      Kmid[i] = f_water[i] * cal_K(θ[i], θ_sat[i], K_sat[i] / 360000.0, b[i]) # Hydraulic conductivity, [m/s]
     end
 
     # Fb, flow speed. Dancy's law. LHE.

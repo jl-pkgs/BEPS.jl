@@ -48,7 +48,7 @@ function InitParam_Soil(SoilType::Int, N::Int, FT::Type)
   n = min(N, 5)
   b = FT.(p.b[1:n])            # [-], campbell's b parameter
 
-  K_sat = FT.(p.K_sat[1:n])    # [m s-1], 应该把它转为[cm h-1]
+  K_sat = FT.(p.K_sat[1:n])    # [cm h-1]
   θ_sat = fill(FT(p.θ_sat), n) # [%]
   θ_vfc = fill(FT(p.θ_vfc), n) # [%]
   θ_vwp = fill(FT(p.θ_vwp), n) # [%]
