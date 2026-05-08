@@ -36,7 +36,7 @@ function inter_prg_jl(jday::Int, hour::Int, lon::T, lat::T,
 
   # ===== 2. 气象变量初始化 =====
   (; Rs, Rln_in, Tair, RH, Uz) = forcing
-  precip = forcing.Prcp / step
+  precip = forcing.Prcp / step / 1000  # [mm/hr] → [m/s]
   met = meteo_pack_jl(Tair, RH) # 变量类型转换
 
   # ===== 3. 表面状态初始化 =====

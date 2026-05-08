@@ -46,6 +46,17 @@ function aero_exp_terms(canopy_height_o::T, canopy_height_u::T, z_wind::T, clump
   density_air = 1.225
   g = 9.8
 
+  lai_o_pow075 = pow_075(lai_o)
+  gamma_u = 0.1 + lai_o_pow075
+  exp_u = exp_u_terms(canopy_height_o, canopy_height_u, gamma_u)
+  exp_g_u = exp_g_terms(canopy_height_o, canopy_height_u)
+  Le = lai_o * clumping
+  Le_cuberoot = cuberoot(Le)
+
+  if !(isfinite(wind_sp) && wind_sp > 0)
+    return zero(T), zero(T), T(200.0), T(200.0), lai_o_pow075, Le_cuberoot, gamma_u, exp_u, exp_g_u
+  end
+
   # displacement height (m)
   d = 0.8 * canopy_height_o
   # roughness length (m)
@@ -54,17 +65,10 @@ function aero_exp_terms(canopy_height_o::T, canopy_height_u::T, z_wind::T, clump
   ustar = wind_sp * k / log_zh_z0 # friction velocity (m/s)
   coef_L = -(k * g) / (density_air * cp * (Tair + 273.3) * ustar^3)
 
-  lai_o_pow075 = pow_075(lai_o)
-  gamma_u = 0.1 + lai_o_pow075
-  exp_u = exp_u_terms(canopy_height_o, canopy_height_u, gamma_u)
-  exp_g_u = exp_g_terms(canopy_height_o, canopy_height_u)
-
   nu_lower = (13.3 + Tair * 0.07) / 1000000
   alfaw = (18.9 + Tair * 0.07) / 1000000
   uh = 1.1 * ustar / k
 
-  Le = lai_o * clumping
-  Le_cuberoot = cuberoot(Le)
   gamma_o = (0.167 + 0.179 * uh) * Le_cuberoot
   ud = uh * exp(-gamma_o * (1 - d / canopy_height_o))
   Nu_o = cal_Nu(ud, nu_lower)
@@ -101,6 +105,10 @@ part so the main aerodynamic function stays easier to read.
 """
 function ra_updateH(SH_o_p::FT, z_wind, canopy_height_o::FT, canopy_height_u::FT,
   ustar::FT, coef_L::FT, gamma_u::FT, exp_u::FT, exp_g_u::FT)
+
+  if !(isfinite(ustar) && ustar > 0 && isfinite(coef_L))
+    return FT(200.0), FT(200.0), FT(600.0)
+  end
 
   n = FT(5.0)
   d = 0.8 * canopy_height_o

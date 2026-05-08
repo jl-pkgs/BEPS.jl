@@ -34,14 +34,14 @@ function aerodynamic_conductance_jl(canopy_height_o::FT, canopy_height_u::FT,
   nu_lower::FT = (13.3 + Tair * 0.07) / 1000000  # viscosity (cm2/s)
   alfaw::FT = (18.9 + Tair * 0.07) / 1000000
 
-  @fastmath if wind_sp == 0
+  @fastmath if !(isfinite(wind_sp) && wind_sp > 0)
     G_o_a = 1 / 200.0
     G_o_b = 1 / 200.0
-    G_u_a = 1 / 200.0
+    G_u_a = 1 / 400.0
     G_u_b = 1 / 200.0
-    ra_g = 300.0
-    ra_u = 0.0
-    ra_o = 0.0
+    ra_g = 600.0
+    ra_u = 200.0
+    ra_o = 200.0
   else
     d::FT = 0.8 * canopy_height_o  # displacement height (m)
     z0::FT = 0.08 * canopy_height_o # roughness length (m)

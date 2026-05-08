@@ -1,48 +1,50 @@
 @with_kw mutable struct Flux <: AbstractFlux
-  gpp_o_sunlit::Cdouble = 0.0
-  gpp_u_sunlit::Cdouble = 0.0
-  gpp_o_shaded::Cdouble = 0.0
-  gpp_u_shaded::Cdouble = 0.0
+  # Component gpp_* fields are instantaneous rates on ground area.
+  # Convert to hourly [gC m-2] with `x * 12 * step * 1e-6`.
+  gpp_o_sunlit::Cdouble = 0.0  # [μmol m-2 s-1]
+  gpp_u_sunlit::Cdouble = 0.0  # [μmol m-2 s-1]
+  gpp_o_shaded::Cdouble = 0.0  # [μmol m-2 s-1]
+  gpp_u_shaded::Cdouble = 0.0  # [μmol m-2 s-1], 若需[gC m-2]，需[12 * step * 1e-6]
 
-  plant_resp::Cdouble = 0.0
-  npp_o::Cdouble = 0.0
-  npp_u::Cdouble = 0.0
-  GPP::Cdouble = 0.0
-  NPP::Cdouble = 0.0
-  NEP::Cdouble = 0.0
-  soil_resp::Cdouble = 0.0
-  Net_Rad::Cdouble = 0.0
+  plant_resp::Cdouble = 0.0    # [gC m-2]
+  npp_o::Cdouble = 0.0         # [gC m-2]
+  npp_u::Cdouble = 0.0         # [gC m-2]
+  GPP::Cdouble = 0.0           # [gC m-2], hourly total; = Σgpp * 12 * step * 1e-6
+  NPP::Cdouble = 0.0           # [gC m-2]
+  NEP::Cdouble = 0.0           # [gC m-2]
+  soil_resp::Cdouble = 0.0     # [gC m-2]
+  Net_Rad::Cdouble = 0.0       # [W m-2]
 
-  SH::Cdouble = 0.0
-  LH::Cdouble = 0.0
-  Trans::Cdouble = 0.0
-  Evap::Cdouble = 0.0
+  SH::Cdouble = 0.0            # [W m-2]
+  LH::Cdouble = 0.0            # [W m-2]
+  Trans::Cdouble = 0.0         # [mm], hourly total
+  Evap::Cdouble = 0.0          # [mm], hourly total
 
-  z_water::Cdouble = 0.0
-  z_snow::Cdouble = 0.0
-  ρ_snow::Cdouble = 0.0
+  z_water::Cdouble = 0.0       # [m], ponded water depth
+  z_snow::Cdouble = 0.0        # [m], snow depth
+  ρ_snow::Cdouble = 0.0        # [kg m-3], snow density
 end
 
 
 @with_kw mutable struct ETFlux <: AbstractFlux
-  Trans_o::Cdouble = 0.0
-  Trans_u::Cdouble = 0.0
-  Eil_o::Cdouble = 0.0     # Ei of liquid
-  Eil_u::Cdouble = 0.0
-  EiS_o::Cdouble = 0.0     # Ei of solid
-  EiS_u::Cdouble = 0.0
-  Evap_soil::Cdouble = 0.0
-  Evap_SW::Cdouble = 0.0   # evaporation from water pond
-  Evap_SS::Cdouble = 0.0   # evaporation from snow pack
-  Qhc_o::Cdouble = 0.0
-  Qhc_u::Cdouble = 0.0
-  Qhg::Cdouble = 0.0
+  Trans_o::Cdouble = 0.0       # [kg m-2 s-1], overstory transpiration rate
+  Trans_u::Cdouble = 0.0       # [kg m-2 s-1], understory transpiration rate
+  Eil_o::Cdouble = 0.0         # [kg m-2 s-1], Ei of liquid (overstory)
+  Eil_u::Cdouble = 0.0         # [kg m-2 s-1], Ei of liquid (understory)
+  EiS_o::Cdouble = 0.0         # [kg m-2 s-1], Ei of solid (overstory)
+  EiS_u::Cdouble = 0.0         # [kg m-2 s-1], Ei of solid (understory)
+  Evap_soil::Cdouble = 0.0     # [kg m-2 s-1], soil evaporation rate
+  Evap_SW::Cdouble = 0.0       # [kg m-2 s-1], evaporation from water pond
+  Evap_SS::Cdouble = 0.0       # [kg m-2 s-1], evaporation from snow pack
+  Qhc_o::Cdouble = 0.0         # [W m-2], sensible heat from overstory canopy
+  Qhc_u::Cdouble = 0.0         # [W m-2], sensible heat from understory canopy
+  Qhg::Cdouble = 0.0           # [W m-2], sensible heat from ground
 
-  # Result part
-  Trans::Cdouble = 0.0
-  Evap::Cdouble = 0.0
-  SH::Cdouble = 0.0
-  LH::Cdouble = 0.0
+  # Result part (hourly totals or instantaneous)
+  Trans::Cdouble = 0.0         # [mm], hourly total transpiration
+  Evap::Cdouble = 0.0          # [mm], hourly total evaporation
+  SH::Cdouble = 0.0            # [W m-2], total sensible heat
+  LH::Cdouble = 0.0            # [W m-2], total latent heat
 end
 
 
