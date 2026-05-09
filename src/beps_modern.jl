@@ -1,5 +1,5 @@
 """
-    beps_modern(forcing, lai, dates; ps, state, ...)
+    simulate(forcing, lai, dates; ps, state, ...)
 
 Run BEPS simulation using the modern `ParamBEPS + StateBEPS` API.
 
@@ -22,7 +22,7 @@ Run BEPS simulation using the modern `ParamBEPS + StateBEPS` API.
 `(df_flux, df_ET, states, caches)` — hourly flux DataFrames, a `StateSeries`,
 and a `CacheSeries`
 """
-function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
+function simulate(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   ps::ParamBEPS, state::StateBEPS,
   lon::FT=120.0, lat::FT=20.0, clumping::FT=0.85,
   kstep::Float64=360.0,
@@ -83,3 +83,8 @@ function beps_modern(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   end
   DataFrame(fluxes), DataFrame(fluxes_ET), states, caches
 end
+
+beps_modern(args...; kwargs...) = simulate(args...; kwargs...)
+
+
+export simulate, beps_modern

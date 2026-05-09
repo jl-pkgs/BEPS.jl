@@ -8,6 +8,8 @@ kw = (lon=120.5, lat=30.5,
 
 LAI = readdlm(path_proj("examples/input/p1_lai.txt"))[:]
 forcing = deserialize(path_proj("data/p1_forcing"))
+forcing.Prcp .= forcing.Prcp .* 1000.0  # 转换为[m] -> [mm]
+
 dates = DateTime(2010):Hour(1):DateTime(2010, 12, 31, 23)
 
 function main(; version="julia")

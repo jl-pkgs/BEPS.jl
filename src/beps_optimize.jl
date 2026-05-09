@@ -7,7 +7,7 @@ function beps_optimize(forcing::MetSeries, lai::Vector, dates::AbstractVector,
   n_pop=nothing, verbose=false, parallel=true,
   kwargs...)
 
-  # state0 初始条件与优化参数无关，只初始化一次；beps_modern 内部会 deepcopy
+  # state0 初始条件与优化参数无关，只初始化一次；simulate 内部会 deepcopy
   Ta = Float64(forcing.Tair[1])
   state0, _ = setup(model; Ta)
   x0, lb, ub, paths = get_opt_info(model)
@@ -16,7 +16,7 @@ function beps_optimize(forcing::MetSeries, lai::Vector, dates::AbstractVector,
     m = deepcopy(model)
     update!(m, paths, x)
     try
-      df_out, df_ET, _, _ = beps_modern(forcing, lai, dates; ps=m, state=state0, kwargs...)
+      df_out, df_ET, _, _ = simulate(forcing, lai, dates; ps=m, state=state0, kwargs...)
       sim = col_sim ∈ propertynames(df_out) ? df_out[!, col_sim] : df_ET[!, col_sim]
       return of_RMSE(obs, sim)
     catch e

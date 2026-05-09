@@ -3,7 +3,7 @@ const DEFAULT_STATE_EXPORT = [
   :z_water, :ρ_snow, :z_snow, :r_rain_g, :f_soilwater,
   :θ, :Tsoil_c, :ETi]
 
-# Please use `beps_modern` instead
+# Please use `simulate` instead
 # This function is only for testing the consistency between C and Julia versions,
 # and will be deprecated in the future.
 function beps_main(forcing::MetSeries, lai::Vector, dates;

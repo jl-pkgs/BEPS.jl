@@ -17,4 +17,4 @@ state, model = setup(model; Ta, Tsoil=Float64(Tsoil0), θ0=Float64(θ0), z_snow=
 state
 
 ## 开干
-df_fluxes, df_ET, states, caches = beps_modern(forcing, lai, dates; ps=model, state)
+df_fluxes, df_ET, states, caches = simulate(forcing, lai, dates; ps=model, state)

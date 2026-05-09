@@ -91,3 +91,17 @@ function Base.show(io::IO, ::MIME"text/plain", out::StateSeries)
     printstyled(io, "─"^N * "")
     return nothing
 end
+
+function Base.show(io::IO, ::MIME"text/plain", out::OrderedDict)
+    # printstyled(io, "─"^N * "\n")
+    # println(io, "─ scalars:")
+    _print_section(io, out, "")
+    # printstyled(io, "─"^N * "\n")
+    # println(io, "─ vectors:")
+    # _print_section(io, out.vectors, "")
+    # printstyled(io, "─"^N * "")
+    return nothing
+end
+
+
+export _print_section
