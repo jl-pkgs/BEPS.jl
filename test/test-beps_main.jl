@@ -1,7 +1,7 @@
 using BEPS, DataFrames, Dates, Test
 
 kw = (lon=120.5, lat=30.5,
-  VegType=25, SoilType=8,
+  VegType="CRO", SoilType="silty_clay_loam",
   clumping=0.85,
   Tsoil0=2.2, θ0=0.4115, z_snow0=0.0
 )

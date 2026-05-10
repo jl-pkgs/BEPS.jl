@@ -15,11 +15,15 @@ function _init_state(ps::ParamBEPS, Tsoil, Ta, θ0, z_snow)
 end
 
 # 初始化 Soil (Julia/C 版本)
-function _init_soil(version::String, VegType::Int, SoilType::Int,
+function _init_soil(version::String, VegType::Union{AbstractString,Integer}, SoilType::Union{AbstractString,Integer},
     r_drainage, r_root_decay, Tsoil, Ta, θ0, z_snow)
   soil = version == "julia" ? Soil() : Soil_c()
   soil.r_drainage = r_drainage
-  Init_Soil_Parameters(soil, VegType, SoilType, r_root_decay)
+
+  VegCode = find_VegType(VegType)
+  SoilCode = find_SoilType(SoilType)
+  
+  Init_Soil_Parameters(soil, VegCode, SoilCode, r_root_decay)
   Init_Soil_T_θ!(soil, Float64(Tsoil), Float64(Ta), Float64(θ0), Float64(z_snow))
   soil
 end
@@ -34,7 +38,7 @@ function setup(soil::Soil; FT=Float64)
 end
 
 "直接构造 (StateBEPS, ParamBEPS)，无需先创建 Soil"
-function setup(VegType::Int, SoilType::Int;
+function setup(VegType::Union{AbstractString,Integer}, SoilType::Union{AbstractString,Integer};
     Ta::Real=20.0, Tsoil::Real=Ta, θ0::Real=0.3, z_snow::Real=0.0,
     r_drainage::Real=0.5, r_root_decay::Real=0.95, N::Int=5, FT::Type=Float64)
   ps = ParamBEPS(VegType, SoilType; N, FT, r_drainage)
@@ -43,7 +47,7 @@ function setup(VegType::Int, SoilType::Int;
 end
 
 "纯关键字参数版本"
-setup(; VegType::Int, SoilType::Int, kw...) = setup(VegType, SoilType; kw...)
+setup(; VegType, SoilType, kw...) = setup(VegType, SoilType; kw...)
 
 "从已有 ParamBEPS 构造状态"
 function setup(ps::ParamBEPS; Ta::Real=20.0, Tsoil::Real=Ta, θ0::Real=0.3, z_snow::Real=0.0)
@@ -53,7 +57,7 @@ end
 
 ## Legacy Setup (setup_model) ==================================================
 "统一 setup，通过 version 区分 Julia/C 版本，返回 (Soil, State, Params)"
-function setup_model(VegType::Int, SoilType::Int;
+function setup_model(VegType::Union{AbstractString,Integer}, SoilType::Union{AbstractString,Integer};
     version::String="julia", Ta::Real=20.0, Tsoil::Real=Ta, θ0::Real=0.3, z_snow::Real=0.0,
     r_drainage::Real=0.5, r_root_decay::Real=0.95, FT::Type=Float64)
   soil = _init_soil(version, VegType, SoilType, r_drainage, r_root_decay, Tsoil, Ta, θ0, z_snow)

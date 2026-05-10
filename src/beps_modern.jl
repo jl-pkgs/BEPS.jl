@@ -11,9 +11,9 @@ Run BEPS simulation using the modern `ParamBEPS + StateBEPS` API.
 - `state`       : `StateBEPS` initial state (copied internally, external value unchanged)
 - `lon`, `lat`  : longitude and latitude [°]
 - `clumping`    : canopy clumping index (default 0.85)
-- `sm_obs`      : observed soil moisture [m³/m³], `nlayer × ntime` matrix; when provided,
+- `SM_obs`      : observed soil moisture [m³/m³], `nlayer × ntime` matrix; when provided,
                   `UpdateSoilMoisture` is skipped and each hourly θ is prescribed from data
-- `Tsoil_obs`   : observed soil temperature [°C], `nlayer × ntime` matrix; when provided,
+- `TS_obs`   : observed soil temperature [°C], `nlayer × ntime` matrix; when provided,
                   `UpdateHeatFlux` skips Tsoil update, ice_ratio still updated from obs temps
 - `VARS_STATE` : state variables to save (default `DEFAULT_STATE_EXPORT`)
 - `VARS_CACHE` : `LeafCache` variables to save (default `DEFAULT_CACHE_EXPORT`)
@@ -24,11 +24,11 @@ and a `CacheSeries`
 """
 function simulate(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   ps::ParamBEPS, state::StateBEPS,
-  lon::FT=120.0, lat::FT=20.0, clumping::FT=0.85,
+  lon::FT=120.0, lat::FT=20.0,
   kstep::Float64=360.0,
   fix_snowpack=true, fix_annual_Ta=true,
-  sm_obs::Union{Nothing, AbstractMatrix}=nothing,
-  Tsoil_obs::Union{Nothing, AbstractMatrix}=nothing,
+  SM_obs::Union{Nothing, AbstractMatrix}=nothing,
+  TS_obs::Union{Nothing, AbstractMatrix}=nothing,
   VARS_STATE::Vector{Symbol}=DEFAULT_STATE_EXPORT,
   VARS_CACHE::Vector{Symbol}=DEFAULT_CACHE_EXPORT, kw...) where {FT<:AbstractFloat}
 
@@ -52,20 +52,21 @@ function simulate(forcing::MetSeries, lai::Vector, dates::AbstractVector;
   jdays = dayofyear.(dates)
   hours = hour.(dates)
 
-  fix_sm = sm_obs !== nothing
-  fix_Tsoil = Tsoil_obs !== nothing
+  fix_sm = SM_obs !== nothing
+  fix_Tsoil = TS_obs !== nothing
 
+  clumping = ps.veg.Ω
   for i = 1:ntime
     jday = jdays[i]
     hour = hours[i]
 
     if fix_sm
       state.θ_prev .= state.θ
-      state.θ[1:5] .= @view sm_obs[:, i]
+      state.θ[1:5] .= @view SM_obs[:, i]
     end
     if fix_Tsoil
       state.Tsoil_p .= state.Tsoil_c
-      state.Tsoil_c[1:5] .= @view Tsoil_obs[:, i]
+      state.Tsoil_c[1:5] .= @view TS_obs[:, i]
     end
 
     fill_met!(met, forcing, i) # 驱动数据

@@ -13,7 +13,7 @@ const StateSeries{S<:NamedTuple,V<:NamedTuple} =
 function StateSeries(::Val{SF}, ::Val{VF}, n_layer::Int, n_time::Int) where {SF,VF}
     Ns, Nv = length(SF), length(VF)
     s = NamedTuple{SF}(ntuple(_ -> Vector{Float64}(undef, n_time), Ns))
-    v = NamedTuple{VF}(ntuple(_ -> Matrix{Float64}(undef, n_layer, n_time), Nv))
+    v = NamedTuple{VF}(ntuple(_ -> Matrix{Float64}(undef, n_time, n_layer), Nv))
     (; scalars=s, vectors=v)
 end
 
@@ -21,7 +21,7 @@ end
     ::Val{SF}, ::Val{VF}) where {SF,VF}
     nlayer = 5
     s_ex = [:(out.scalars.$(SF[i])[t] = st.$(SF[i])) for i in eachindex(SF)]
-    v_ex = [:(copyto!(view(out.vectors.$(VF[i]), :, t), view(st.$(VF[i]), 1:$nlayer)))
+    v_ex = [:(copyto!(view(out.vectors.$(VF[i]), t, :), view(st.$(VF[i]), 1:$nlayer)))
             for i in eachindex(VF)]
     quote
         $(s_ex...)
@@ -60,7 +60,7 @@ Base.Dict(nt::NamedTuple) = OrderedDict(pairs(nt))
 
 function Base.getindex(out::StateSeries, i::Int)
     scalars = map(x -> x[i], out.scalars)
-    vectors = map(x -> x[:, i], out.vectors)
+    vectors = map(x -> x[i, :], out.vectors)
     # Dict(:scalars => Dict(scalars), :vectors => Dict(vectors))
     (; scalars..., vectors...) |> Dict
 end

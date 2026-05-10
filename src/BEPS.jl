@@ -18,7 +18,6 @@ using ModelParams: of_RMSE
 @reexport using DelimitedFiles: readdlm
 export beps_main
 export beps_modern
-export beps_optimize
 export Soil_c
 
 export path_proj
@@ -55,6 +54,7 @@ using BEPS.clang
 # include("beps_inter_prg.jl")
 include("beps_main.jl")
 include("beps_modern.jl")
-include("beps_optimize.jl")
+include("ultilize.jl")
+include("Optim.jl")
 
 end # module BEPS

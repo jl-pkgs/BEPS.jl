@@ -8,7 +8,9 @@ const DEFAULT_STATE_EXPORT = [
 # and will be deprecated in the future.
 function beps_main(forcing::MetSeries, lai::Vector, dates;
   lon::FT=120.0, lat::FT=20.0,
-  VegType::Int=25, SoilType::Int=8, clumping::FT=0.85,
+  VegType::Union{AbstractString,Integer}="default",
+  SoilType::Union{AbstractString,Integer}="silty_clay_loam",
+  clumping::FT=0.85,
   Tsoil0::FT=2.2, θ0::FT=0.4115, z_snow0::FT=0.0,
   r_drainage::FT=0.5, r_root_decay::FT=0.95,
   VARS_STATE::Vector{Symbol}=DEFAULT_STATE_EXPORT,
@@ -31,11 +33,13 @@ function beps_main(forcing::MetSeries, lai::Vector, dates;
   Ta = forcing.Tair[1]
 
   # 使用统一的 setup 函数初始化
+  VegCode = find_VegType(VegType)
+  SoilCode = find_SoilType(SoilType)
+  
   soil, state, params = setup_model(VegType, SoilType;
     version, Ta, Tsoil=Tsoil0, θ0, z_snow=z_snow0, r_drainage, r_root_decay, FT)
   state_n = deepcopy(state)
-
-  theta = par2theta(params.veg; clumping, VegType)
+  theta = par2theta(params.veg; clumping, VegType=VegCode)
 
   Ta_annual = mean(forcing.Tair)
   jdays = dayofyear.(dates)

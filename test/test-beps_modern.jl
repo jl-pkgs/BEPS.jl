@@ -21,8 +21,8 @@ state0, _ = setup(ps; Ta, Tsoil=2.2, θ0=0.4115, z_snow=0.0)
 
     @test size(df, 1) == ntime
     @test size(df_ET, 1) == ntime
-    @test size(states.vectors.Tsoil_c) == (5, ntime)
-    @test size(states.vectors.θ) == (5, ntime)
+    @test size(states.vectors.Tsoil_c) == (ntime, 5)
+    @test size(states.vectors.θ) == (ntime, 5)
     @test size(caches.Tc_new) == (ntime, 4)
     @test size(caches.Gs_new) == (ntime, 4)
   end

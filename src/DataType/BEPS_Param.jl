@@ -13,7 +13,9 @@
 end
 
 # `kw...`: other params like, `r_drainage`
-function ParamBEPS(VegType::Int, SoilType::Int; N::Int=5, FT=Float64, kw...)
+function ParamBEPS(VegType::Union{AbstractString,Integer}, SoilType::Union{AbstractString,Integer};
+  N::Int=5, FT=Float64, kw...)
+
   veg = InitParam_Veg(VegType; FT)
   hydraulic, thermal = InitParam_Soil(SoilType, N, FT)
 
@@ -126,3 +128,23 @@ function Soil2Params!(params::ParamBEPS{FT}, soil::Soil) where {FT}
   end
   return params
 end
+
+
+
+
+using Ipaper: approx
+
+function interp_depths(SM::AbstractMatrix{FT}, z_obs) where {FT<:AbstractFloat}
+  dz::Vector{FT} = FT[0.05, 0.10, 0.20, 0.40, 1.25]
+  z_sim = cumsum(dz) .- dz ./ 2
+
+  ntime = size(SM, 1)
+  R = zeros(FT, ntime, length(z_obs))
+  for i in 1:ntime
+    y_sim = @view SM[i, :]
+    R[i, :] .= approx(z_sim, y_sim, z_obs)
+  end
+  R
+end
+
+export interp_depths

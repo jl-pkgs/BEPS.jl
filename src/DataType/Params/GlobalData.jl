@@ -1,18 +1,26 @@
-using JSON
+export find_SoilType, find_VegType
+export SoilTypes, VegTypes
+export SOIL_PARAMS
 
+using JSON
 const PATH_VEG = joinpath(@__DIR__, "data", "ParamVeg.json")
 const PATH_GEN = joinpath(@__DIR__, "data", "ParamGeneral.json")
 
-_types = ["ENF", "DNF", "DBF", "EBF", "Shrub-SH", "C4", "default"]
-_codes = [1, 2, 6, 9, 13, 40, -1]
+VegTypes = ["ENF", "DNF", "DBF", "EBF", "Shrub-SH", "CRO", "C4", "default"]
+VegCodes = [1, 2, 6, 9, 13, 25, 40, -1]
 
 readGeneralParam() = JSON.parsefile(PATH_GEN)
 
-function readVegRaw(lc::Int=1)
+function veg_name(lc::Integer)
+  type_idx = findfirst(==(Int(lc)), VegCodes)
+  type_idx === nothing ? "default" : VegTypes[type_idx]
+end
+
+veg_param_key(name::AbstractString) = name == "CRO" ? "default" : String(name)
+
+function readVegRaw(lc::Integer=1)
   veg_data = JSON.parsefile(PATH_VEG)
-  type_idx = findfirst(x -> x == lc, _codes)
-  type_str = type_idx !== nothing ? _types[type_idx] : "default"
-  return veg_data[type_str]
+  return veg_data[veg_param_key(veg_name(lc))]
 end
 
 
@@ -85,4 +93,22 @@ const SOIL_PARAMS = [
     κ_dry=4.4)
 ]
 
-export SOIL_PARAMS
+
+SoilTypes = [soil.name for soil in SOIL_PARAMS]
+
+function soil_index(code::Integer)
+  i = Int(code)
+  1 <= i <= length(SOIL_PARAMS) ? i : length(SOIL_PARAMS)
+end
+
+soil_name(code::Integer) = SOIL_PARAMS[soil_index(code)].name
+
+find_SoilType(name::AbstractString) = findfirst(SoilTypes .== name)
+find_SoilType(code::Integer) = soil_index(code)
+
+find_VegType(code::Integer) = Int(code)
+
+function find_VegType(name::AbstractString)
+  I = findfirst(VegTypes .== name)
+  isnothing(I) ? -1 : VegCodes[I]
+end

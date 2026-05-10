@@ -1,20 +1,20 @@
 # const RTIMES = 24.0 # 呼吸作用系数转换常数 (day -> hour)
 
 """
-    InitParam_Veg(lc::Int=1; FT=Float64)
+    InitParam_Veg(lc::AbstractString; FT=Float64)
 
 读取 JSON 配置文件并返回 ParamVeg 结构体。
 """
-function InitParam_Veg(lc::Int=1; FT=Float64)
+function InitParam_Veg(VegType::AbstractString="ENF"; FT=Float64)
   veg_data = JSON.parsefile(PATH_VEG)
   gen_data = JSON.parsefile(PATH_GEN)
 
-  type_idx = findfirst(x -> x == lc, _codes)
-  type_str = type_idx !== nothing ? _types[type_idx] : "default"
-  v = veg_data[type_str]
+  VegCode = find_VegType(VegType)
+  v = veg_data[veg_param_key(VegType)]
 
   return ParamVeg{FT}(
-    has_understory = !(lc == 25 || lc == 40),
+    has_understory = !(VegCode == 25 || VegCode == 40),
+    is_bforest    = VegCode == 6 || VegCode == 9,
     LAI_max_o    = FT(v["LAI_max_o"]),
     LAI_max_u    = FT(v["LAI_max_u"]),
     α_canopy_vis = FT(v["albedo_canopy_vis"]),
@@ -32,17 +32,24 @@ function InitParam_Veg(lc::Int=1; FT=Float64)
   )
 end
 
+InitParam_Veg(VegType::Integer; FT=Float64) = InitParam_Veg(veg_name(VegType); FT)
+
 
 """
-    InitParam_Soil(SoilType::Int, N::Int, FT::Type)
+    InitParam_Soil(SoilType::AbstractString, N::Int, FT::Type)
 
 Initialize soil hydraulic and thermal parameters.
 SoilType: 1=sand, 2=loamy sand, 3=sandy loam, 4=loam, 5=silty loam,
           6=sandy clay loam, 7=clay loam, 8=silty clay loam,
           9=sandy clay, 10=silty clay, 11=clay
 """
-function InitParam_Soil(SoilType::Int, N::Int, FT::Type)
-  idx = (1 <= SoilType <= 11) ? SoilType : 11
+function InitParam_Soil(SoilType::AbstractString, N::Int, FT::Type)
+  idx = find_SoilType(SoilType)
+  InitParam_Soil(idx, N, FT)
+end
+
+function InitParam_Soil(SoilType::Integer, N::Int, FT::Type)
+  idx = find_SoilType(SoilType)
   p = SOIL_PARAMS[idx]
 
   n = min(N, 5)

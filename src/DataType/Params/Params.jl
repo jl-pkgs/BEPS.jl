@@ -27,6 +27,7 @@ include("macro.jl")
   # r_drainage::FT = 0.5     # ? 产流比例
   r_root_decay::FT = Cdouble(0.95) | (0.85, 0.999) # ? 根系分布衰减率, decay_rate_of_root_distribution
 
+  Ω::FT = 0.85 | (0.3, 1.0)             # clumping_index
   z_canopy_o::FT = 1.0 | (0.1, 50.0)    # overstory canopy height [m]
   z_canopy_u::FT = 0.2 | (0.05, 5.0)    # understory canopy height [m]
   z_wind::FT = 2 | (1.0, 100.0)         # wind measurement height [m]
@@ -74,7 +75,7 @@ end
 include("GlobalData.jl")
 include("Param_Init.jl")
 
-include("BEPS_Param.jl")
+include("../BEPS_Param.jl")
 
 include("deprecated/VegHelper.jl")
 include("deprecated/ReadParamVeg.jl")

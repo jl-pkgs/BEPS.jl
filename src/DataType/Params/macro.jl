@@ -119,7 +119,14 @@ function update!(model::S, path::Vector, value::FT; type::Type) where {S,FT}
   end
 end
 
-parameters(model) = get_params(model) |> DataFrame
+function parameters(model; paths=nothing)
+  params = get_params(model) |> DataFrame
+  if !isnothing(paths)
+    inds = indexin(paths, params.path)
+    params = params[inds, :]
+  end
+  return params
+end
 
 function get_opt_info(model)
   df = parameters(model)
@@ -129,3 +136,5 @@ function get_opt_info(model)
   paths = df.path
   return x0, lb, ub, paths
 end
+
+export get_params, parameters, update!
