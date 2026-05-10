@@ -1,22 +1,5 @@
 # 快为第一准则，先把模型跑起来
-using BEPS, RTableTools, DataFrames, Dates, ModelParams
-using Ipaper
-
-
-function agg_daily(df_fluxes, dates)
-  dates_day = Date.(dates)
-
-  GPP_sim = df_fluxes.GPP
-  ET_sim = df_fluxes.Trans + df_fluxes.Evap
-  fun = nansum
-  (;
-    GPP_sim=apply(GPP_sim, 1; by=dates_day, fun),
-    ET_sim=apply(ET_sim, 1; by=dates_day, fun),
-    dates_day=unique_sort(dates_day)
-  )
-end
-
-parse_time(x::AbstractString) = DateTime(x, dateformat"yyyy-mm-ddTHH:MM:SSZ")
+include("main_pkgs.jl")
 
 ## 1. 读取驱动数据
 indir = "Z:/GitHub/jl-pkgs/ChinaFlux2026/data-raw/BEPS"
@@ -38,18 +21,17 @@ rename!(d_forcing, [:Ta_canopy => :Tair, :RH_canopy => :RH, :WS_canopy => :Uz])
 
 dates = parse_time.(d_forcing.time)
 dates_model = dates .- Hour(8) # [local] -> [UTC]
-
 ntime = length(dates)
 
 forcing = MetSeries(; ntime, Rs, Rln_in, Tair, RH, Uz, Prcp)
 
-d_flux = FluxLAI[FluxLAI.site.==SITE, [:GPP, :ET, :LAI_glass_G005]]
-rename!(d_flux, :LAI_glass_G005 => :lai, :GPP => :GPP_obs, :ET => :ET_obs)
-(; lai, GPP_obs, ET_obs) = d_flux
+d_flux = FluxLAI[FluxLAI.site.==SITE, [:GPP, :ET, :LAI_glass_G005, :Hs]]
+rename!(d_flux, :LAI_glass_G005 => :lai, :GPP => :GPP_obs, :ET => :ET_obs, :Hs => :Hs_obs)
+(; lai, GPP_obs, ET_obs, Hs_obs) = d_flux
 
 GPP_obs = -GPP_obs # gC m-2 day-1, [GEE] -> [GPP]
 ET_obs = ET_obs * 1e+06 / 86400 # [MJ m-2] -> [W m-2], ET的最终单位是mm
-
+Hs_obs = Hs_obs * 1e+06 / 86400 # [MJ m-2] -> [W m-2], Hs的最终单位是W m-2
 
 ## 2. 初始化模型参数和状态变量
 # 初始化模型参数
@@ -73,20 +55,19 @@ state
   lon=115.06, lat=26.74, clumping);
 # 0.452331 seconds (1.14 M allocations: 53.704 MiB, 11.91% gc time)
 # > 模型顺利开跑，0.45s跑完2年hourly 17544步长模拟
-(GPP_sim, ET_sim, dates_day) = agg_daily(df_fluxes, dates)
+(GPP_sim, ET_sim, Hs_sim, dates_day) = agg_daily(df_fluxes, dates)
+# fwrite(cbind(; time=dates, df_ET = df_ET .* 3600), "./Project_ChinaFlux/df_ET.csv")
 
-fwrite(cbind(; time=dates, df_ET = df_ET .* 3600), "./Project_ChinaFlux/df_ET.csv")
-
-gof_gpp = GOF(GPP_obs, GPP_sim)
-gof_et = GOF(ET_obs, ET_sim)
-
-DataFrame([
-  (; var="GPP", gof_gpp...),
-  (; var="ET", gof_et...)
+gof = DataFrame([
+  (; var="GPP", GOF(GPP_obs, GPP_sim)...),
+  (; var="ET", GOF(ET_obs, ET_sim)...),
+  (; var="Hs", GOF(Hs_obs, Hs_sim)...)
 ])
+
 
 ##
 using Plots
+gr(; framestyle=:box)
 
 p1 = plot(dates_day, GPP_obs, label="GPP_obs")
 plot!(p1, dates_day, GPP_sim, label="GPP_sim")
@@ -94,5 +75,19 @@ plot!(p1, dates_day, GPP_sim, label="GPP_sim")
 p2 = plot(dates_day, ET_obs, label="ET_obs")
 plot!(p2, dates_day, ET_sim, label="ET_sim")
 
-p = plot(p1, p2)
-savefig(p, "a.png")
+p3 = plot(dates_day, Hs_obs, label="Hs_obs")
+plot!(p3, dates_day, Hs_sim, label="Hs_sim")
+
+p = plot(p1, p2, p3, layout=(3, 1), size=(1400, 900))
+savefig(p, "Figure1_fluxes.png")
+
+## SM
+labels = map(i -> "L$i", 1:5)
+SM_day = agg_daily(states.vectors.θ, dates)
+
+p = plot(dates_day, SM_day; label=labels, size = (1400, 400))
+savefig(p, "Figure1_SM.png")
+
+TS_day = agg_daily(states.vectors.Tsoil_c, dates)
+p = plot(dates_day, TS_day; label=labels, size=(1400, 400))
+savefig(p, "Figure1_TS.png")

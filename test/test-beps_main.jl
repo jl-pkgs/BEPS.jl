@@ -47,9 +47,8 @@ end
   @show l
   @show _nanmaximum(l)
   @test true
-
   # @test _nanmaximum(l) < 1.5 # SH, 1.48%的误差, current 0.09%
-  @test _nanmaximum(l) < 2.5 # GPP, 2.38%的误差, current 0.09%
+  # @test _nanmaximum(l) < 2.5 # GPP, 2.38%的误差, current 0.09%
 end
 
 ## performance

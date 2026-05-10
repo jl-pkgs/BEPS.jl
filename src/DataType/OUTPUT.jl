@@ -15,8 +15,8 @@
   soil_resp::Cdouble = 0.0     # [gC m-2]
   Net_Rad::Cdouble = 0.0       # [W m-2]
 
-  SH::Cdouble = 0.0            # [W m-2]
-  LH::Cdouble = 0.0            # [W m-2]
+  SH::Cdouble = 0.0            # [W m-2], sensible heat flux
+  LH::Cdouble = 0.0            # [W m-2], latent heat flux
   Trans::Cdouble = 0.0         # [mm], hourly total
   Evap::Cdouble = 0.0          # [mm], hourly total
 
