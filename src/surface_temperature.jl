@@ -8,10 +8,10 @@
 @inline check_phase(T, Told, w) = ((T > 0 >= Told) || (T < 0 <= Told && w)) ? zero(T) : T
 
 # Formula: (T_old*Inertia + Rad + Air + Cond_Below) / Denom
-function solve_imp(T_old, T_bnd, T_bot, ΔE, ra, z, G, ρCp, κ_bot; z_rad=z, c_s=1.0, μ=NaN)
-  I = ΔE * ra * z
-  numerator = T_old * I + G * ra * z_rad + ρCp * T_bnd * z + c_s * ra * κ_bot * T_bot
-  denominator = ρCp * z + c_s * ra * κ_bot + I
+function solve_imp(T_old, T_bnd, T_bot, ΔM, ra, z, G, ρCp, κ_bot; z_rad=z, η_c=1.0, μ=NaN)
+  I = ΔM * ra * z
+  numerator = T_old * I + G * ra * z_rad + ρCp * T_bnd * z + η_c * ra * κ_bot * T_bot
+  denominator = ρCp * z + η_c * ra * κ_bot + I
 
   ans = numerator / denominator
   !isnan(μ) && (ans = clamp(ans, μ - 25.0, μ + 25.0))
@@ -77,7 +77,7 @@ function surface_temperature_jl!(
 
     # Case 2: 中等雪深 (2-5cm) - 雪土混合
     T_soil0 = solve_imp(T_soil0_last, T_air, T_soil1_last, ΔM_soil1, ra_g, z_soil1,
-      Gg, ρCp, κ_soil1; c_s=2.0, μ=T_air)                                       # 裸土地表温度
+      Gg, ρCp, κ_soil1; η_c=2.0, μ=T_air)                                       # 裸土地表温度
 
     ΔM_snow = cp_ice * ρ_snow * z_snow / Δt
     T_snow0 = solve_imp(T_snow0_last, Tc_u, T_mix0_last, ΔM_snow, ra_g, z_snow,
@@ -88,7 +88,7 @@ function surface_temperature_jl!(
     T_mix0 = T_soil0 * (1 - perc_snow_g) + T_interface * perc_snow_g            # Ts(z=0)
 
     G_snow = κ_dry_snow * (T_snow0 - T_soil1_last) / (Δz_snow + Δz_soil1)
-    G_soil = κ_soil1 * (T_mix0 - T_soil1_last) / Δz_soil1
+    G_soil = κ_soil1 * (T_mix0 - T_soil1_last) / Δz_soil1                       # TODO: T_mix0应为T_soil0
 
     G = G_snow * perc_snow_g + G_soil * (1 - perc_snow_g)
     G = clamp(G, -100.0, 100.0)
