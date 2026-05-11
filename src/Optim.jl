@@ -1,7 +1,9 @@
-export InitState0, predict, loss, optim, BEPS_GOF
+export InitState0, predict, goodness, loss, optim, BEPS_GOF
 
 using ModelParams: sceua, of_KGE, of_NSE, GOF
+import DataFrames: AbstractDataFrame
 
+include("check_forcing.jl")
 
 function InitState0(model::ParamBEPS{FT}, forcing::MetSeries{FT}) where {FT<:AbstractFloat}
   Ta = forcing.Tair[1]
@@ -13,7 +15,7 @@ end
 
 
 function predict(theta::Vector{FT}, model::ParamBEPS{FT}, 
-  forcing::MetSeries{FT}, lai::Vector{FT}, dates::Vector{DateTime}; 
+  forcing::MetSeries{FT}, lai::Vector{FT}, dates_UTC::Vector{DateTime}; 
   paths, lon::FT, lat::FT) where {FT<:AbstractFloat}
 
   model = deepcopy(model)
@@ -22,25 +24,34 @@ function predict(theta::Vector{FT}, model::ParamBEPS{FT},
   BEPS.update!(model, paths, theta)
 
   state = InitState0(model, forcing)
-  df_fluxes, df_ET, states, caches = simulate(forcing, lai, dates;
+  df_fluxes, df_ET, states, caches = simulate(forcing, lai, dates_UTC;
     ps=model, state, lon, lat)
 
   BEPS.update!(model, paths, theta_prev) # 恢复原参数值
   df_fluxes, df_ET, states, caches
 end
 
-# dates: UTC时间，需转换为当地时间
-function loss(theta::Vector{FT}, model::ParamBEPS{FT}, 
-  forcing::MetSeries{FT}, lai::Vector{FT}, dates::Vector{DateTime}; 
-  paths, lon::FT, lat::FT, depths_SM::Vector{FT}, depths_TS::Vector{FT}, FluxDay::DataFrame) where {FT<:AbstractFloat}
+function goodness(theta::Vector{FT}, model::ParamBEPS{FT},
+  forcing::MetSeries{FT}, lai::Vector{FT}, dates_UTC::Vector{DateTime};
+  paths, lon::FT, lat::FT, depths_SM::Vector{FT}, depths_TS::Vector{FT}, FluxDay::DataFrame, 
+  ignored...) where {FT<:AbstractFloat}
 
-  df_fluxes, df_ET, states, caches = predict(theta, model, forcing, lai, dates; 
+  df_fluxes, df_ET, states, caches = predict(theta, model, forcing, lai, dates_UTC;
     paths, lon, lat)
 
-  dates_local = dates .+ Hour(8) # [UTC] -> [local]
+  dates_local = dates_UTC .+ Hour(8) # [UTC] -> [local]
   gof, data_sim, data_obs = BEPS_GOF(df_fluxes, states, dates_local, FluxDay;
     depths_SM, depths_TS)
-  -mean(gof.Flux[1:2, :NSE])
+  return gof, data_sim, data_obs
+end
+
+# dates: UTC时间，需转换为当地时间
+function loss(theta::Vector{FT}, model::ParamBEPS{FT}, 
+  forcing::MetSeries{FT}, lai::Vector{FT}, dates_UTC::Vector{DateTime}; 
+  goal = :NSE, goal_multiplier = -1, 
+  kw_loss...) where {FT<:AbstractFloat}
+  gof, data_sim, data_obs = goodness(theta, model, forcing, lai, dates_UTC; kw_loss...)
+  mean(gof.Flux[1:2, goal]) * goal_multiplier
 end
 
 
@@ -48,8 +59,8 @@ end
 """
 - `kw`: 
 """
-function optim(model, forcing, lai, dates; paths, maxn=200, kw_loss...)
-  _loss(theta) = loss(theta, model, forcing, lai, dates; paths, kw_loss...)
+function optim(model, forcing, lai, dates_UTC; paths, maxn=200, kw_loss...)
+  _loss(theta) = loss(theta, model, forcing, lai, dates_UTC; paths, kw_loss...)
 
   params = parameters(model; paths)
   lb = map(x -> FT(x[1]), params.bound)
@@ -65,6 +76,9 @@ end
 # GLOBAL: depths_SM, depths_TS
 function BEPS_GOF(df_fluxes, states, dates_hour, FluxALL; depths_SM, depths_TS)
   ## 模拟
+  FluxALL = copy(FluxALL)
+  normalize_flux_obs!(FluxALL)
+  obs_dates = _daily_obs_dates(FluxALL)
   (; lai, GPP_obs, ET_obs, Hs_obs) = FluxALL
   vars_TS = map(i -> Symbol("TS_$(Int(depths_TS[i] * 100))cm"), eachindex(depths_TS))
   vars_SM = map(i -> Symbol("SM_$(Int(depths_SM[i] * 100))cm"), eachindex(depths_SM))
@@ -85,26 +99,32 @@ function BEPS_GOF(df_fluxes, states, dates_hour, FluxALL; depths_SM, depths_TS)
   SM = interp_depths(SM_day, depths_SM)
   TS = interp_depths(TS_day, depths_TS)
 
-  gof_SM = map(i -> (; var=vars_SM[i], GOF(SM_obs[:, i], SM[:, i])...),
-    eachindex(depths_SM)) |> DataFrame
-  gof_TS = map(i -> (; var=vars_TS[i], GOF(TS_obs[:, i], TS[:, i])...),
-    eachindex(depths_TS)) |> DataFrame
-
-  gof_Flux = DataFrame([
-    (; var="GPP", GOF(GPP_obs, GPP)...),
-    (; var="ET", GOF(ET_obs, ET)...),
-    (; var="Hs", GOF(Hs_obs, Hs)...)
-  ])
-
-  gof = (; Flux=gof_Flux, SM=gof_SM, TS=gof_TS)
-
+  sim_dates = dates
+  obs_dates = isnothing(obs_dates) ? sim_dates : obs_dates
   data_sim = hcat(
-    DataFrame(; date=dates, GPP, ET, Hs),
+    DataFrame(; date=sim_dates, GPP, ET, Hs),
     DataFrame(SM, vars_SM),
     DataFrame(TS, vars_TS))
   data_obs = hcat(
-    DataFrame(; date=dates, GPP=GPP_obs, ET=ET_obs, Hs=Hs_obs),
+    DataFrame(; date=obs_dates, GPP=GPP_obs, ET=ET_obs, Hs=Hs_obs),
     DataFrame(SM_obs, vars_SM),
     DataFrame(TS_obs, vars_TS))
+
+  if length(sim_dates) != length(obs_dates) || sim_dates != obs_dates
+    data_sim, data_obs = _align_daily_data(data_sim, data_obs)
+  end
+
+  gof_SM = map(i -> (; var=vars_SM[i], GOF(data_obs[!, vars_SM[i]], data_sim[!, vars_SM[i]])...),
+    eachindex(depths_SM)) |> DataFrame
+  gof_TS = map(i -> (; var=vars_TS[i], GOF(data_obs[!, vars_TS[i]], data_sim[!, vars_TS[i]])...),
+    eachindex(depths_TS)) |> DataFrame
+
+  gof_Flux = DataFrame([
+    (; var="GPP", GOF(data_obs.GPP, data_sim.GPP)...),
+    (; var="ET", GOF(data_obs.ET, data_sim.ET)...),
+    (; var="Hs", GOF(data_obs.Hs, data_sim.Hs)...)
+  ])
+
+  gof = (; Flux=gof_Flux, SM=gof_SM, TS=gof_TS)
   gof, data_sim, data_obs
 end
