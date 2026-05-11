@@ -195,25 +195,25 @@ $ <eq_imp_balance>
 $Delta(z_M)$不是“交界处的厚度”，而是$T^*$代表的控制体参与储热的厚度；$z_c$对应`solve_imp`参数`z`，表示该控制体与下方温度$T_"bot"$进行热交换时采用的距离尺度。因此，式#[@eq_imp_balance]中的$z_c$不应统一改写为$Delta(z_M)$；只有当储热厚度与交换距离相同时，才有$z_c = Delta(z_M)$。
 
 #let dz = "dz"
-#beamer-block[
-  *示例：深雪雪表层温度*。在深雪情形中，雪表层温度`T_snow0`由以下代码求解：
+// #beamer-block[
+//   *示例：深雪雪表层温度*。在深雪情形中，雪表层温度`T_snow0`由以下代码求解：
 
-  ```julia
-  ΔM_snow = cp_ice * ρ_snow * dz_snow_s1 / Δt
-  T_snow0 = solve_imp(..., ra_g, dz_snow_s12, Gg, ρCp, κ_dry_snow;
-                       z_rad=dz_snow_s1)
-  ```
+//   ```julia
+//   ΔM_snow = cp_ice * ρ_snow * dz_snow_s1 / Δt
+//   T_snow0 = solve_imp(..., ra_g, dz_snow_s12, Gg, ρCp, κ_dry_snow;
+//                        z_rad=dz_snow_s1)
+//   ```
 
-  其中，$dz_"snow,s1" = 0.02 "m"$，$dz_"snow,s12" = dz_"snow,s1" + dz_"snow,s2" = 0.04 "m"$。因此：
+//   其中，$dz_"snow,s1" = 0.02 "m"$，$dz_"snow,s12" = dz_"snow,s1" + dz_"snow,s2" = 0.04 "m"$。因此：
 
-  $
-    Delta(z_M) = dz_"snow,s1" = 0.02 "m", quad
-    z_c = dz_"snow,s12" = 0.04 "m", quad
-    z_"rad" = dz_"snow,s1" = 0.02 "m"
-  $
+//   $
+//     Delta(z_M) = dz_"snow,s1" = 0.02 "m", quad
+//     z_c = dz_"snow,s12" = 0.04 "m", quad
+//     z_"rad" = dz_"snow,s1" = 0.02 "m"
+//   $
 
-  这表示：雪表层只有$0.02 "m"$厚的雪参与储热，但其与下方雪层交换热量时采用$0.04 "m"$的距离尺度；同时，地表可用能量只作用在雪表层$0.02 "m"$厚度上。
-]
+//   这表示：雪表层只有$0.02 "m"$厚的雪参与储热，但其与下方雪层交换热量时采用$0.04 "m"$的距离尺度；同时，地表可用能量只作用在雪表层$0.02 "m"$厚度上。
+// ]
 
 #h(2em)
 为得到$T^*$的显式表达式，将式#[@eq_imp_balance]两边同乘$r_a z_c$，消去分母：
@@ -316,16 +316,14 @@ $ <eq_G_int_soil>
 界面储热等于流入通量减去流出通量：
 
 $
-  Delta(M_1) (T_"int" - T_("mix",0)^t)
-  =
+  Delta(M_1) (T_"int" - T_("mix",0)^t) =
   G_snow2int - G_int2soil
 $
 
 代入式#[@eq_G_snow_int]和式#[@eq_G_int_soil]：
 
 $
-  Delta(M_1) (T_"int" - T_("mix",0)^t)
-  =
+  Delta(M_1) (T_"int" - T_("mix",0)^t) =
   kappa_("dry_snow") (T_("snow",0) - T_"int") / z_"snow"
   + kappa_1 (T_("soil",1)^t - T_"int") / Delta(z_("soil"))
 $ <eq_Tint_balance>
@@ -368,10 +366,55 @@ $ <eq_G_surface_patchy>
 
 其中，$f_"snow"$为地表积雪覆盖比例。
 
-=== 3.0.1 深雪
+=== 1.4.3 深雪
 
 #h(2em)
-当$z_"snow" > 0.05 "m"$时，积雪主导地表边界。模型采用三层积雪温度节点：雪表层$T_("snow",0)$、中层$T_("snow",1)$和底层$T_("snow",2)$。其中，雪表层和中层厚度均为$0.02 "m"$，底层厚度为$z_"snow" - 0.04 "m"$。
+当$z_"snow" > 0.05 "m"$时，积雪主导地表边界。模型采用三层积雪温度节点（表#[@table_deepsnow_layers]）。
+
+#[
+  #show table.cell: it => {
+    set par(leading: 0.8em, spacing: 0.5em)
+    set text(size: 11.5pt)
+    set math.text(size: 11pt)
+    it
+  }
+
+  #figure(
+    caption: [
+      三层积雪相关变量。
+    ],
+    table(
+      columns: (2.1cm, 2.4cm, 3.4cm, 3.2cm, 1fr),
+      align: (horizon, horizon, horizon, horizon, horizon),
+      rows: (0.95cm, 1.3cm),
+      // inset: 4pt,
+      [*层位*], [*温度变量*], [*厚度*], [*储热项*], [*主要热通量*],
+      [雪表层],
+      [$T_("snow",0)$],
+      [$d_("snow0") = 0.02 "m"$],
+      [$c_("ice") rho_"snow" d_("snow0")$],
+      [受$G_g$、感热交换影响；$G_"snow,0"$表层向中层传导],
+
+      [雪中层],
+      [$T_("snow",1)$],
+      [$d_("snow1") = 0.02 "m"$],
+      [$c_("ice") rho_"snow" d_("snow1")$],
+      [流入$G_"snow,0"$，流出$G_"snow,1"$],
+
+      [雪底层],
+      [$T_("snow",2)$],
+      [$d_("snow2") = z_"snow" - 0.04 "m"$],
+      [$c_("ice") rho_"snow" d_("snow2")$],
+      [流入$G_"snow,1"$，流出$G_"snow,2"$],
+
+      [雪下土壤表面],
+      [$T_("mix",0)$],
+      [$d_("soil,0") = 0.02 "m"$],
+      [$C_(v,1) d_("soil,0")$],
+      [流入$G_"snow,2"$，流出$G_1^t$],
+    ),
+  ) <table_deepsnow_layers>
+]
 
 雪表温度仍由式#[@eq_solve_imp]隐式求解；中层、底层和雪下土壤表面温度采用显式欧拉格式更新：
 
@@ -408,13 +451,13 @@ $ <eq_Tmix_deepsnow>
 
 $ T_("surf") = T_("snow",0) $
 
-#beamer-block[
-  *深雪节点距离说明*：本节中的雪层传导距离与 `surface_temperature.jl` 当前实现保持一致。`docs/ch02_SoilTemperature/TS_Case03.md` 给出了基于节点中心网格的距离审查推导，可作为后续修订深雪传导距离的依据。
-]
+// #beamer-block[
+//   *深雪节点距离说明*：本节中的雪层传导距离与 `surface_temperature.jl` 当前实现保持一致。`docs/ch02_SoilTemperature/TS_Case03.md` 给出了基于节点中心网格的距离审查推导，可作为后续修订深雪传导距离的依据。
+// ]
 
-== 3.1 土壤层内热传导
+== 1.5 土壤层内热传导
 
-=== 3.1.1 层间热通量
+=== 1.5.1 层间热通量
 
 #h(2em)
 确定地表边界热通量$G_1$后，土壤内部热通量按傅里叶定律计算。第$i$层与第$i+1$层之间的界面通量为：
@@ -429,7 +472,7 @@ $ <eq_G_internal>
 
 该式等价于两层半层热阻串联后的界面传导。若上层温度高于下层，则$G_(i+1) > 0$，表示热量向下传输。
 
-=== 3.1.2 底边界通量
+=== 1.5.2 底边界通量
 
 #h(2em)
 最底层连接深层恒温边界，深层温度以年平均气温$T_("air,ann")$近似。底边界通量为：
@@ -443,22 +486,19 @@ $ <eq_G_bottom>
 
 其中，$D_f$对应`DEPTH_F`。土壤内部界面通量计算后截断至$[-200, 200] "W m"^(-2)$。
 
-=== 3.1.3 温度更新
+=== 1.5.3 温度更新
 
 #h(2em)
 对第$i$层土壤，热量守恒方程为：
 
 $
-  C_(v,i) Delta(z_i) (T_("soil",i)^(t+1) - T_("soil",i)^t) / Delta(t)
-  = G_i - G_(i+1) + S_i^H
+  C_(v,i) Delta(z_i) (T_("soil",i)^(t+1) - T_("soil",i)^t) / Delta(t) = G_i - G_(i+1) + S_i^H
 $ <eq_T_balance>
 
 当前实现取内部热源$S_i^H = 0$，因此温度显式更新为：
 
 $
-  T_("soil",i)^(t+1)
-  =
-  T_("soil",i)^t
+  T_("soil",i)^(t+1) = T_("soil",i)^t
   + (G_i - G_(i+1)) Delta(t) / (C_(v,i) Delta(z_i))
 $ <eq_T_update>
 
@@ -468,7 +508,7 @@ $ T_("soil",i)^(t+1) arrow.r.long "clamp"(T_("soil",i)^(t+1), -50, 50) $
 
 若提供观测土壤温度并设置`fix_Tsoil=true`，模型将跳过式#[@eq_T_update]的温度更新，但仍更新冻融比例。
 
-== 4.1 冻融状态更新
+== 1.6 冻融状态更新
 
 #h(2em)
 土壤冻融状态以冻结比例$f_("ice",i)$表示。若第$i$层土壤温度由非负跨越至负值，且该层尚未完全冻结，则低于$0 degree "C"$的冷却能量用于冻结液态水：
@@ -508,7 +548,7 @@ $ <eq_ice_adjust>
 
 该处理使冻结水量与土壤水储量变化保持一致，并将冻结比例限制在$[0, 1]$范围内。
 
-== 4.2 计算流程小结
+== 1.7 计算流程小结
 
 #h(2em)
 每个次小时步长内，土壤温度模块按以下顺序计算：

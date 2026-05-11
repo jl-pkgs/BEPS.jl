@@ -1,4 +1,4 @@
-#import "@local/modern-cug-report:0.1.3": *
+#import "@preview/modern-cug-report:0.1.3": *
 #show: doc => template(doc, footer: "BEPS.jl", header: "")
 
 #set par(first-line-indent: 2em)

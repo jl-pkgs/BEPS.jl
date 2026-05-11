@@ -6,8 +6,7 @@
 // 依赖本地模板（可选），无模板时将 import 行注释并取消下面两行注释：
 // #set text(font: "Noto Serif CJK SC", lang: "zh", size: 11pt)
 // #set par(justify: true, first-line-indent: 2em)
-
-#import "@local/modern-cug-report:0.1.3": *
+#import "@preview/modern-cug-report:0.1.3": *
 #show: doc => template(doc, footer: "BEPS.jl 光合模块对比", header: "")
 
 #align(center)[
@@ -202,7 +201,7 @@ $
 
 此公式是非矩形双曲线在曲率参数 $theta = 0$ 时的退化形式，
 在低光时近似线性（斜率 $approx 1/2.1 approx 0.48$），
-高光时趋近 $J_"max"$，半饱和点 PPFD$_(1/2) = 2.1 J_"max"$。
+高光时趋近 $J_"max"$，半饱和点 $"PPFD"_(1/2) = 2.1 J_"max"$。
 
 == 4.2 独立模块：非矩形双曲线（Farquhar 1980）
 
@@ -213,7 +212,7 @@ $
 解为：
 
 $
-  J = frac(alpha I + J_"max" - sqrt((alpha I + J_"max")^2 - 4 theta_2 alpha I J_"max")}{2 theta_2)
+  J = frac(alpha I + J_"max" - sqrt((alpha I + J_"max")^2 - 4 theta_2 alpha I J_"max"), 2 theta_2)
 $
 
 其中量子效率 $alpha = 0.3$，曲率参数 $theta_2 = 0.7$。
@@ -256,7 +255,7 @@ $
   A_"n,k" = -2sqrt(Q) cos frac(psi + 2 k pi, 3) - frac(p, 3), quad k = 0, 1, -1
 $
 
-当 $W_j le R_d$ 或 $W_c le R_d$（弱光或极低温）时退化为二次方程（$g_s = g_0$）。
+当 $W_j < R_d$ 或 $W_c < R_d$（弱光或极低温）时退化为二次方程（$g_s = g_0$）。
 
 *优势*：给定确定的 $T_l$、$"RH"_l$ 和辐射，一次性得到精确解析解，无迭代误差。
 
@@ -288,7 +287,7 @@ $
     inset: 7pt,
     align: (left, left, left),
     table.header([*项目*], [*原始模块*], [*独立模块*]),
-    [叶片温度], [由能量平衡迭代确定 $T_l ne T_a$], [假设 $T_l = T_a$],
+    [叶片温度], [由能量平衡迭代确定 $T_l eq.not T_a$], [假设 $T_l = T_a$],
     [叶表面 RH], [由潜热通量反推：\ $rho_v = ("LE"/lambda) r_v + rho_a$], [直接使用大气 RH],
     [能量耦合], [全耦合（光合↔蒸腾↔叶温）], [解耦（无叶温反馈）],
   ),
@@ -315,7 +314,13 @@ $
 $
 
 $
-  V_("cmax,shaded") = V_(c"max",25) chi N left(frac{e^(-K_n L)}{K_n} - frac{1 - e^{-(K_n + K)L}}{K_n + K}right) / (L - frac{1 - e^{-KL}}{K})
+  V_("cmax,shaded") =
+  V_(c"max",25) chi N
+  frac(
+    frac(e^(-K_n L), K_n)
+    - frac(1 - e^(-(K_n + K) L), K_n + K),
+    L - frac(1 - e^(-K L), K)
+  )
 $
 
 其中 $chi$ 为比叶氮，$N$ 为叶片氮含量，$K = 0.5 Omega / cos theta_s$，$K_n = 0.3$ 为氮衰减系数。
@@ -369,7 +374,7 @@ $
       [独立模块 Medlyn 方案低温去活化弱\ Michaelis $K$ 较大（抵消部分增益）],
     [20–28°C],  [$A_"n,orig" > A_"n,new"$],
       [原始 TBOLTZ 最适温度附近峰值高\ 独立模块已过最适温度开始下降],
-    [> 30°C],   [基本相当，偏差 <50%],
+    [> 30°C],   [基本相当，偏差 < 50%],
       [两方案去活化均快速；\ 动力学常数差异次要],
   ),
   caption: [温度区间差异成因],
@@ -404,7 +409,7 @@ $
     columns: (auto, 2fr, 2fr, 2fr),
     inset: 7pt,
     align: (center, left, left, left),
-    table.header([*#*], [*位置*], [*原始错误*], [*修复后*]),
+    table.header([*\#*], [*位置*], [*原始错误*], [*修复后*]),
     [1], [`core.jl`\ $Gamma^*$ 公式],
       [$Gamma^* = 40.0 / tau$\ → 25°C 约 0.015 μmol mol#super[-1]],
       [$Gamma^* = 105000 / tau$\ → 25°C 约 40.4 μmol mol#super[-1]],
