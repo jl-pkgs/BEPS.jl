@@ -22,43 +22,33 @@ function _interp_invalid!(x::AbstractVector{<:AbstractFloat})
   return x
 end
 
-function sanitize_forcing!(d::AbstractDataFrame)
-  stats = (; bad_Tair=0, bad_RH=0, bad_Uz=0, bad_Rs=0, bad_Prcp=0)
+function _sanitize_column!(d::AbstractDataFrame, col::Symbol;
+  lo=-Inf, hi=Inf, fill=NaN, interp=true, clamp_lo=-Inf, clamp_hi=Inf)
 
-  if :Tair in propertynames(d)
-    bad = (.!isfinite.(d.Tair)) .| (d.Tair .< -50.0) .| (d.Tair .> 50.0)
-    d.Tair[bad] .= NaN
-    _interp_invalid!(d.Tair)
-    stats = merge(stats, (; bad_Tair=count(bad)))
+  col in propertynames(d) || return 0
+
+  x = d[!, col]
+  bad = (.!isfinite.(x)) .| (x .< lo) .| (x .> hi)
+  x[bad] .= fill
+  interp && _interp_invalid!(x)
+
+  if isfinite(clamp_lo) && isfinite(clamp_hi)
+    x .= clamp.(x, clamp_lo, clamp_hi)
+  elseif isfinite(clamp_lo)
+    x .= max.(x, clamp_lo)
+  elseif isfinite(clamp_hi)
+    x .= min.(x, clamp_hi)
   end
-  if :RH in propertynames(d)
-    bad = (.!isfinite.(d.RH)) .| (d.RH .< 0.0) .| (d.RH .> 100.0)
-    d.RH[bad] .= NaN
-    _interp_invalid!(d.RH)
-    d.RH .= clamp.(d.RH, 0.0, 100.0)
-    stats = merge(stats, (; bad_RH=count(bad)))
-  end
-  if :Uz in propertynames(d)
-    bad = (.!isfinite.(d.Uz)) .| (d.Uz .< 0.0)
-    d.Uz[bad] .= NaN
-    _interp_invalid!(d.Uz)
-    d.Uz .= max.(d.Uz, 0.01)
-    stats = merge(stats, (; bad_Uz=count(bad)))
-  end
-  if :Rs in propertynames(d)
-    bad = (.!isfinite.(d.Rs)) .| (d.Rs .< 0.0)
-    d.Rs[bad] .= NaN
-    _interp_invalid!(d.Rs)
-    d.Rs .= max.(d.Rs, 0.0)
-    stats = merge(stats, (; bad_Rs=count(bad)))
-  end
-  if :Prcp in propertynames(d)
-    bad = (.!isfinite.(d.Prcp)) .| (d.Prcp .< 0.0)
-    d.Prcp[bad] .= 0.0
-    d.Prcp .= max.(d.Prcp, 0.0)
-    stats = merge(stats, (; bad_Prcp=count(bad)))
-  end
-  return stats
+  return count(bad)
+end
+
+function sanitize_forcing!(d::AbstractDataFrame)
+  bad_Tair = _sanitize_column!(d, :Tair; lo=-50.0, hi=50.0)
+  bad_RH = _sanitize_column!(d, :RH; lo=0.0, hi=100.0, clamp_lo=0.0, clamp_hi=100.0)
+  bad_Uz = _sanitize_column!(d, :Uz; lo=0.0, clamp_lo=0.01)
+  bad_Rs = _sanitize_column!(d, :Rs; lo=0.0, clamp_lo=0.0)
+  bad_Prcp = _sanitize_column!(d, :Prcp; lo=0.0, fill=0.0, interp=false, clamp_lo=0.0)
+  return (; bad_Tair, bad_RH, bad_Uz, bad_Rs, bad_Prcp)
 end
 
 function normalize_flux_obs!(d::AbstractDataFrame)
