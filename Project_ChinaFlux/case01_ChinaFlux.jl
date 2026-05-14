@@ -15,17 +15,10 @@ SITES = setdiff(unique(FORCING.site), SITES_bad)
 
 
 ##
-function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT",
-  goal=:NSE, goal_multiplier=-1)
-
-  fout = "$outdir/BEPS_$(SITE).jld2"
-  printstyled("[site]: $SITE\n", color=:blue, bold=true, underline=true)
-  isfile(fout) && return
-
-  # 率定所需数据
-  # data-raw/Daily/BEPS/DBF_天然栎林_宝天曼_FluxLAISoil_Daily_v20260511.csv
+function LoadData(SITE)
   # f = "$indir/data-raw/BEPS/Fluxes/$(SITE)_FluxLAISoil_daily_v20260510.csv" |> path_mnt
   f = "$indir/data-raw/Daily/BEPS/$(SITE)_FluxLAISoil_Daily_v20260511.csv" |> path_mnt
+
   FluxALL = fread(f)
   replace_missing!(FluxALL)
   rename!(FluxALL, :LAI_glass_G005 => :lai, :GPP => :GPP_obs, :ET => :ET_obs, :Hs => :Hs_obs)
@@ -42,12 +35,25 @@ function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT",
   clean_stats = sanitize_forcing!(d_forcing)
   @info "Forcing quality control" clean_stats
   (; Tair, RH, Uz, Rs, Rln_in, Prcp) = d_forcing
-
-  dates_local = parse_time.(d_forcing.time)
-  dates_UTC = dates_local .- Hour(8) # [local] -> [UTC]
-  ntime = length(dates_local)
+  ntime = length(Tair)
   forcing = MetSeries(; ntime, Rs, Rln_in, Tair, RH, Uz, Prcp)
+  dates_local = parse_time.(d_forcing.time)
 
+  dates_local, forcing, lai, FluxALL
+end
+
+
+function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT",
+  goal=:NSE, goal_multiplier=-1)
+
+  fout = "$outdir/BEPS_$(SITE).jld2"
+  printstyled("[site]: $SITE\n", color=:blue, bold=true, underline=true)
+  # isfile(fout) && return
+
+  # 率定所需数据
+  # data-raw/Daily/BEPS/DBF_天然栎林_宝天曼_FluxLAISoil_Daily_v20260511.csv
+  dates_local, forcing, lai, FluxALL = LoadData(SITE)
+  dates_UTC = dates_local .- Hour(8) # [local] -> [UTC]
 
   ## 2. 初始化模型参数和状态变量
   st = st_full[findfirst(st_full.site .== SITE), :]
@@ -65,9 +71,8 @@ function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT",
   @time gof, data_sim, data_obs = BEPS_GOF(df_fluxes, states, dates_local, FluxALL;
     depths_SM, depths_TS)
   gof
-
   # fwrite(cbind(; time=dates, df_ET = df_ET .* 3600), "./Project_ChinaFlux/df_ET.csv")
-  ## 加入参数优化模块
+  ## 参数优化模块
   opts = [
     (; path=[:r_drainage], name=:r_drainage, value=model.r_drainage),
     (; path=[:veg, :Ω], name=:Ω, value=model.veg.Ω),
@@ -76,7 +81,7 @@ function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT",
     (; path=[:veg, :VCmax25], name=:VCmax25, value=model.veg.VCmax25),
   ] |> DataFrame
   paths = opts.path
-  
+
   kw_loss = (; lon, lat, depths_SM, depths_TS, FluxDay=FluxALL,
     goal, goal_multiplier)
 
@@ -88,6 +93,7 @@ function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT",
   gof_opt
   jldsave(fout; gof_opt, gof, theta_opt, data_sim, data_obs)
 end
+
 
 for SITE in SITES
   try
