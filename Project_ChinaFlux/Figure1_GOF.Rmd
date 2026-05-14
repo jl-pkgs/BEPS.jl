@@ -8,10 +8,11 @@ jld_setup()
 
 check_var <- function(d) {
   if ("var" %in% names(d)) {
-    d$var <- julia_call("String.", d)
+    d$var <- julia_call("String.", d$var)
   }
   data.table(d)
 }
+
 ```
 
 ```{r}
@@ -32,10 +33,12 @@ lst <- map(fs, jld_load)
 # l = jld_load(fs[1])
 ```
 
-```{r}
-gof_prev <- map(lst, \(l) l$gof$Flux) %>% melt_list("site")
-gof_optim <- map(lst, \(l) l$gof_opt$Flux) %>% melt_list("site")
+## SM
 
+```{r}
+l = lst[[1]]
+gof_prev <- map(lst, \(l) check_var(l$gof$SM)) %>% melt_list("site")
+gof_optim <- map(lst, \(l) check_var(l$gof_opt$SM)) %>% melt_list("site")
 gof <- list("Original" = gof_prev, "Optimized" = gof_optim) %>% melt_list("type")
 
 dat <- melt(gof, c("type", "site", "var", "n_valid"), variable.name = "index") %>%
@@ -44,23 +47,35 @@ dat <- melt(gof, c("type", "site", "var", "n_valid"), variable.name = "index") %
 ```
 
 ```{r}
-
-Table1 <- function(VAR = "GPP", INDEX = "NSE") {
+Table1 <- function(INDEX = "NSE") {
   mutate(dat, diff = Optimized - Original) %>%
     relocate(I, site, var, index, Original) %>%
     arrange(I) %>%
-    subset(var == VAR & index == INDEX) %>%
-    select(-label, -index) %>% 
+    subset(index == INDEX) %>%
+    select(-label, -index) %>%
     dt_round(3)
 }
 
 tbl <- list(
-  NSE = cbind(Table1("GPP", "NSE"), Table1("ET", "NSE")[, -(1:2)]), 
-  KGE = cbind(Table1("GPP", "KGE"), Table1("ET", "KGE")[, -(1:2)]),
-  R2 = cbind(Table1("GPP", "R2"), Table1("ET", "R2")[, -(1:2)])
+  NSE = Table1("NSE"),
+  KGE = Table1("KGE"),
+  R2 = Table1("R2")
 )
+```
 
-write_list2xlsx(tbl, "Table1_GOF_V3.xlsx", show = TRUE)
+
+
+## Flux
+
+```{r}
+gof_prev <- map(lst, \(l) l$gof$Flux) %>% melt_list("site")
+gof_optim <- map(lst, \(l) l$gof_opt$Flux) %>% melt_list("site")
+
+gof <- list("Original" = gof_prev, "Optimized" = gof_optim) %>% melt_list("type")
+dat <- melt(gof, c("type", "site", "var", "n_valid"), variable.name = "index") %>%
+  dcast(site + var + index ~ type, value.var = "value") %>%
+  merge(st, by = "site")
+
 ```
 
 ```{r}
