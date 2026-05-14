@@ -10,11 +10,14 @@ st_full = fread("$indir/data/st_flux12.csv")
 f = "$indir/data-raw/BEPS/Forcing_Met_Hourly_BEPS_Forest_sp12_hourly_v20260507.csv"
 @time FORCING = fread("$indir/data-raw/BEPS/Forcing_Met_Hourly_BEPS_Forest_sp12_hourly_v20260507.csv")
 replace_missing!(FORCING)
-SITES = unique(FORCING.site)
+SITES_bad = ["MF_乔灌混交林_燕山"]
+SITES = setdiff(unique(FORCING.site), SITES_bad)
 
 
 ##
-function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT")
+function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT",
+  goal=:NSE, goal_multiplier=-1)
+
   fout = "$outdir/BEPS_$(SITE).jld2"
   printstyled("[site]: $SITE\n", color=:blue, bold=true, underline=true)
   isfile(fout) && return
@@ -75,7 +78,7 @@ function RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT")
   paths = opts.path
   
   kw_loss = (; lon, lat, depths_SM, depths_TS, FluxDay=FluxALL,
-    goal=:KGE, goal_multiplier=-1)
+    goal, goal_multiplier)
 
   @time theta_opt = optim(model, forcing, lai, dates_UTC; paths, maxn, kw_loss...)
   opts.theta_opt = theta_opt
@@ -88,7 +91,7 @@ end
 
 for SITE in SITES
   try
-    RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT")
+    RunModel(SITE; maxn=1000, outdir="Project_ChinaFlux/OUTPUT/NSE", goal=:NSE, goal_multiplier=-1)
   catch ex
     @error "Error processing site $SITE: $ex"
   end

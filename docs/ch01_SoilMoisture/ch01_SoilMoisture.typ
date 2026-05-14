@@ -1,5 +1,5 @@
 #import "@preview/modern-cug-report:0.1.3": *
-#show: doc => template(doc, footer: "ModernBEPS.jl", header: "")
+// #show: doc => template(doc, footer: "ModernBEPS.jl", header: "")
 
 #show "{": "{"
 #show "}": "}"

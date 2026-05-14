@@ -1,5 +1,5 @@
 #import "@preview/modern-cug-report:0.1.3": *
-#show: doc => template(doc, footer: "BEPS.jl", header: "")
+// #show: doc => template(doc, footer: "ModernBEPS.jl", header: "")
 
 #set par(first-line-indent: 2em)
 
@@ -9,13 +9,16 @@
 #let LE = "LE"
 #let RH = "RH"
 
-= 1 植被光合
+// =
+// =
+// =
+= 4 植被光合
 
-BEPS.jl 的光合模块基于 Farquhar-Ball-Berry 耦合框架，描述 CO#sub[2] 从大气扩散至叶绿体、
-羧化反应产生光合产物、以及气孔动态响应的完整过程。
+ModernBEPS.jl 的光合模块基于 Farquhar-Ball-Berry 耦合框架，描述 CO#sub[2] 从大气扩散至叶片胞间、
+羧化反应产生光合产物、以及气孔动态响应的过程。
 
 
-== 1.1 CO#sub[2] 扩散路径
+== 4.1 CO#sub[2] 扩散路径
 
 CO#sub[2] 从大气（$c_a$）经边界层和气孔向胞间扩散，服从菲克扩散定律：
 
@@ -27,8 +30,9 @@ $
   c_i = c_a - A (1/g_b + 1/g_s)
 $
 
-其中 $c_a$（ppm）为大气 CO#sub[2] 浓度，$c_s$ 为叶表面浓度，$c_i$ 为胞间浓度，
-$g_b$（$mu$mol m#super[-2] s#super[-1]）为边界层导度，$g_s$ 为气孔导度，
+其中，$c_a$（ppm）为大气 CO#sub[2] 浓度，$c_s$ 为叶表面浓度，$c_i$ 为胞间浓度。
+在扩散方程中，$g_b$ 和 $g_s$ 均指 CO#sub[2] 摩尔导度（mol m#super[-2] s#super[-1]）；
+代码输入的水汽导度会先除以 1.6 再参与求解。
 $A$（$mu$mol m#super[-2] s#super[-1]）为净光合速率。
 
 净光合与总光合的关系：
@@ -37,7 +41,7 @@ $
   A = A_g - R_d
 $
 
-$R_d$ 为暗呼吸速率。光照条件下暗呼吸按 Amthor 建议降低 40%：
+$R_d$ 为暗呼吸速率。光照条件下暗呼吸按 Amthor 建议降至暗适应值的 40%：
 
 $
   R_d = cases(
@@ -49,9 +53,9 @@ $
 其中 $R_(d,25) = 0.004657 dot V_(c"max",25)$。
 
 
-== 1.2 Farquhar 光合模型
+== 4.2 Farquhar 光合模型
 
-=== 1.2.1 统一形式
+=== 4.2.1 统一形式
 
 Rubisco 限制（$W_c$）和光能限制（$W_j$）均可写成同一结构：
 
@@ -79,7 +83,7 @@ $
 
 $K = K_c (1 + O_2 / K_o)$ 为表观 Michaelis-Menten 常数，综合了 CO#sub[2] 和 O#sub[2] 的竞争。
 
-=== 1.2.2 极限行为分析
+=== 4.2.2 极限行为分析
 
 $
   c_i = Gamma => A_g = 0 quad ("CO"_2 "补偿点，羧化 = 光呼吸")
@@ -88,7 +92,7 @@ $
   c_i -> infinity => A_g -> a/e quad ("底物饱和，Rubisco 全部占满")
 $
 
-=== 1.2.3 光能限制项
+=== 4.2.3 光能限制项
 
 电子传递速率 $J_x$ 由入射光（PPFD）和 $J_"max"$ 共同决定（Chen 1999, Eq. 6）：
 
@@ -98,7 +102,7 @@ $
 
 PPFD 由太阳短波辐射换算：$"PPFD" = 4.55 times 0.5 times R_"sn"$（$mu$mol m#super[-2] s#super[-1]）。
 
-=== 1.2.4 蔗糖合成限制
+=== 4.2.4 蔗糖合成限制
 
 Collatz 建议额外考虑蔗糖输出对光合的限制（第三限制）：
 
@@ -106,25 +110,27 @@ $
   A_"sucrose" = V_"cmax" / 2 - R_d
 $
 
-最终净光合取三者中最小值：
+理论上净光合受 Rubisco、电子传递和蔗糖输出三类过程限制：
 
 $
   A = min(W_c - R_d, quad W_j - R_d, quad A_"sucrose")
 $
 
+在当前代码中，先用上一轮 $c_i$ 估计 $W_c$ 与 $W_j$ 并选择限制项，解析求解气孔-光合耦合方程后，再用 $A_"sucrose"$ 对结果截断。
 
-== 1.3 温度响应
 
-=== 1.3.1 Arrhenius 函数（$K_c$, $K_o$, $tau$, $R_d$）
+== 4.3 温度响应
+
+=== 4.3.1 Arrhenius 函数（$K_c$, $K_o$, $tau$, $R_d$）
 
 $
-  f_T (e_"act") = exp((T_l - 25) dot e_"act" / (T_(K,25) dot R dot T_l))
+  f_T (e_"act") = exp((T_l - T_(K,25)) dot e_"act" / (T_(K,25) dot R dot T_l))
 $
 
 其中 $T_l$（K）为叶温，$R = 8.314$ J mol#super[-1] K#super[-1] 为气体常数，
-$e_"act"$ 为活化能（J mol#super[-1]）。
+$T_(K,25)$ 为 25°C 对应的绝对温度，$e_"act"$ 为活化能（J mol#super[-1]）。
 
-=== 1.3.2 Maxwell-Boltzmann 函数（$V_"cmax"$, $J_"max"$）
+=== 4.3.2 Maxwell-Boltzmann 函数（$V_"cmax"$, $J_"max"$）
 
 具有温度最适点的钟形温度响应（Harley & Tenhunen 1991）：
 
@@ -141,7 +147,7 @@ $
 $
 
 
-== 1.4 Ball-Berry 气孔导度模型
+== 4.4 Ball-Berry 气孔导度模型
 
 气孔对光合、湿度和 CO#sub[2] 的综合响应（Ball et al. 1987）：
 
@@ -149,20 +155,22 @@ $
   g_(s,w) = g_(0,w) + g_(1,w) dot "RH"_l dot beta_"soil" dot A / c_s
 $
 
-其中 $g_0$（最小导度）、$g_1$（斜率）为植被参数，$"RH"_l$ 为叶表面相对湿度，$beta_"soil"$ 为土壤水分胁迫因子（0–1）。$g_(s,c) = g_(s,w) / 1.6$（H#sub[2]O 与 CO#sub[2] 扩散比）。
+其中 $g_0$（最小导度）、$g_1$（斜率）为植被参数，$"RH"_l$ 为叶表面相对湿度，$beta_"soil"$ 为土壤水分胁迫因子（0–1）。$g_(s,c) = g_(s,w) / 1.6$（H#sub[2]O 与 CO#sub[2] 扩散比）。下文推导默认 $g_0$、$g_1$、$g_b$ 已换算为 CO#sub[2] 导度。
 
 叶表面相对湿度由叶温处饱和水汽压与潜热通量反推：
 
 $
-  rho_v = (LE / lambda) dot r_v + rho_a, quad
+  rho_v = (LE / lambda) dot r_v + rho_(v,a), quad
   e = rho_v T_l / 0.2165, quad
   "RH"_l = 1 - (e_s - e) / e_s
 $
 
+其中 $rho_(v,a)$ 为环境绝对湿度，$r_v = 1 / g_(b,w)$ 为水汽边界层阻力。
 
-== 1.5 耦合方程的推导与求解
 
-=== 1.5.1 二次方程推导（$g_s = g_0$，弱光或 $A < 0$）
+== 4.5 耦合方程的推导与求解
+
+=== 4.5.1 二次方程推导（$g_s = g_0$，弱光或 $A < 0$）
 
 $
   cases(
@@ -174,17 +182,17 @@ $
   )
 $
 
-当 $A < 0$ 时，气孔导度退化为纯截距 $g_s = g_0$。同时，将 $alpha = 1/g_b + 1/g_0$, $c_i = c_a - A alpha$ 代入 Farquhar 方程 $(A + R_d)(e c_i + b) = a(c_i - Gamma)$：
+当 $A < 0$ 时，气孔导度退化为纯截距 $g_s = g_0$。同时，将 $D = 1/g_b + 1/g_0$, $c_i = c_a - A D$ 代入 Farquhar 方程 $(A + R_d)(e c_i + b) = a(c_i - Gamma)$：
 
 $
-  (A + R_d)[e(c_a - A alpha) + b] = a(c_a - A alpha - Gamma)
+  (A + R_d)[e(c_a - A D) + b] = a(c_a - A D - Gamma)
 $
 
 左侧展开并移项，按 $A$ 的次幂整理：
 
 $
-  underbrace(-e alpha)_(alpha_2) A^2
-  + underbrace((e c_a + b + alpha(a - e R_d)))_(beta_2) A
+  underbrace(-e D)_(alpha_2) A^2
+  + underbrace((e c_a + b + D(a - e R_d)))_(beta_2) A
   + underbrace(R_d(e c_a + b) - a(c_a - Gamma))_(gamma_2) = 0
 $
 
@@ -194,18 +202,18 @@ $
   A = frac(-beta_2 + sqrt(Delta), 2 alpha_2)
 $
 
-注意 $alpha_2 = -e alpha < 0$，抛物线开口向下，上式给出较小的正根，与弱光条件吻合。
+注意 $alpha_2 = -e D < 0$，抛物线开口向下，上式给出较小的正根，与弱光条件吻合。
 
-=== 1.5.2 三次方程推导（Ball-Berry 耦合）
+=== 4.5.2 三次方程推导（Ball-Berry 耦合）
 
-方程组为（$c = g_1 dot RH dot beta_"soil"$，以 CO#sub[2] 导度计）：
+方程组为（$c = g_1 dot RH dot beta_"soil"$，其中 $g_1$ 已按 CO#sub[2] 导度换算）：
 
 $
   cases(
     c_s = c_a - A / g_b,
     g_s = g_0 + c A / c_s,
     c_i = c_s - A / g_s,
-    A_g = (a (c_i - Gamma)) / (e c_i + b)\,,
+    A_g = (a (c_i - Gamma)) / (e c_i + b),
     A = A_g - R_d
   )
 $
@@ -319,7 +327,7 @@ $
   r &= frac(-a gamma + a Gamma gamma/c_a + e R_d gamma + R_d b gamma/c_a, e alpha)
 $
 
-=== 1.5.3 三次方程的三角解法
+=== 4.5.3 三次方程的三角解法
 
 令 $A = x - p/3$ 消去二次项，得压缩三次方程 $x^3 + alpha' x + beta' = 0$。
 定义：
@@ -328,7 +336,7 @@ $
   Q = (p^2 - 3q)/9, quad U = (2p^3 - 9 p q + 27 r)/54
 $
 
-当 $U^2 <= Q^3$ 时方程有三个实根（Press, _Numerical Recipes_，三角解法）：
+当 $U^2 <= Q^3$ 时方程有三个实根（Press, _Numerical Recipes_，三角解法）。代码中会将 $U / sqrt(Q^3)$ 截断到 $[-1, 1]$，避免浮点误差导致反余弦越界：
 
 $
   psi = arccos(U / sqrt(Q^3))
@@ -353,24 +361,22 @@ $
   caption: [三次方程物理根选取规则],
 )
 
+// == 4.6 计算流程
+// ```
+// 输入: T_leaf_p(K), Rsn, ea, gb_w, Vcmax25, β_soil, g0_w, g1_w, ci_old, T_leaf(°C), LH_leaf, ca
+//   │
+//   ├─ 1. 温度响应: Kc, Ko, τ → Γ, K, Rd, Vcmax, Jmax
+//   ├─ 2. 光能: PPFD → Jx
+//   ├─ 3. 初始 ci 估算 Wc, Wj → 选择限制项 (a, b, e)
+//   ├─ 4. 叶面湿度: LE → RH_leaf → Ball-Berry 参数
+//   ├─ 5. 求解耦合方程:
+//   │     if Wj > Rd && Wc > Rd → solve_cubic (Ball-Berry)
+//   │     else                   → solve_quad  (gs = g0)
+//   │     An = min(An, j_sucrose); An = max(An, 0)
+//   └─ 6. 后处理: cs = ca - An/gb; gs_w; ci = cs - An/gs_c
 
-== 1.6 计算流程
+// 输出: gs_w [m s⁻¹], An [μmol m⁻² s⁻¹], ci [ppm]
+// ```
 
-```
-输入: T_leaf, Rsn, ea, gb_w, Vcmax25, β_soil, g0_w, g1_w, ci_old, LH_leaf, ca
-  │
-  ├─ 1. 温度响应: Kc, Ko, τ → Γ, K, Rd, Vcmax, Jmax
-  ├─ 2. 光能: PPFD → Jx
-  ├─ 3. 初始 ci 估算 Wc, Wj → 选择限制项 (a, b, e)
-  ├─ 4. 叶面湿度: LE → RH_leaf → Ball-Berry 参数
-  ├─ 5. 求解耦合方程:
-  │     if Wj > Rd && Wc > Rd → solve_cubic (Ball-Berry)
-  │     else                   → solve_quad  (gs = g0)
-  │     An = min(An, j_sucrose); An = max(An, 0)
-  └─ 6. 后处理: cs = ca - An/gb; gs_w; ci = cs - An/gs_c
-
-输出: gs_w [s m⁻¹], An [μmol m⁻² s⁻¹], ci [ppm]
-```
-
-四类叶片（冠层/下木 × 阳叶/阴叶）分别调用 `photosynthesis_jl`，
-阳叶/阴叶使用不同 $V_"cmax"$，冠层/下木使用不同边界层导度 $g_b$。
+// 四类叶片（冠层/下木 × 阳叶/阴叶）分别调用 `photosynthesis_jl`，
+// 阳叶/阴叶使用不同 $V_"cmax"$，冠层/下木使用不同边界层导度 $g_b$。

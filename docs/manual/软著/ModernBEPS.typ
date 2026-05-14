@@ -1,5 +1,5 @@
 #import "@preview/modern-cug-report:0.1.3": *
-#show: doc => template(doc, footer: "BEPS.jl", header: "")
+#show: doc => template(doc, footer: "", header: "ModernBEPS.jl核心代码")
 
 // #import "@preview/codly:1.0.0": *// 
 // #import "@preview/codedis:0.1.0": code
@@ -15,16 +15,16 @@
 
 
 #let disp(f) = {
-  let dir-root = "../../src/"
+  let dir-root = "../../../src/"
   let file = dir-root + f
   let evap = read(file)
   raw(evap, lang: "julia")
   v(1em)
 }
 
-= BEPS.jl  // <!-- omit in toc -->
+= ModernBEPS.jl  // <!-- omit in toc -->
 
-版本：0.1.9，2026-3-25
+版本：0.1.9，2026-05-12
 
 作者：Dongdong Kong, #link("kongdongdong@cug.edu.cn")
 
@@ -40,7 +40,7 @@
 
 #disp("BEPS_modules.jl")
 #disp("aerodynamic_conductance_V2.jl")
-#disp("beps_optimize.jl")
+// #disp("beps_optimize.jl")
 #disp("evaporation_canopy.jl")
 #disp("evaporation_soil.jl")
 
@@ -58,6 +58,7 @@
 = 3 模型数据类型
 
 #disp("DataType/BEPS_State.jl")
+#disp("DataType/BEPS_Param.jl")
 #disp("DataType/CanopyLayer.jl")
 #disp("DataType/Constant.jl")
 #disp("DataType/DataType.jl")
@@ -67,7 +68,6 @@
 
 = 4 模型参数管理
 
-#disp("DataType/Params/BEPS_Param.jl")
 #disp("DataType/Params/GlobalData.jl")
 #disp("DataType/Params/macro.jl")
 #disp("DataType/Params/Param_Init.jl")
