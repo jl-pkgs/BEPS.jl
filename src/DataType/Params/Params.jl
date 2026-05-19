@@ -5,8 +5,7 @@ export ParamBEPS
 
 
 using Parameters, DataFrames
-import FieldMetadata: @metadata, @units, units
-@metadata bounds nothing
+import ModelParams: @metadata, @units, units, @bounds, bounds, split_bounds
 
 include("macro.jl")
 

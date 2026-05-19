@@ -51,16 +51,6 @@ has_definedbounds(x) = false
 
 
 ## 把 bounds 分解成字段路径和对应的约束
-function split_bounds(x::S) where {S}
-  function use_predef(field)
-    # 如果是一个结构体，则采用递归的方式
-    value = getfield(x, field)
-    has_definedbounds(value) || isstructtype(typeof(value))
-  end
-  fields = fieldnames(S)
-  (filter(use_predef, fields), filter(!use_predef, fields))
-end
-
 
 function get_params(x::S; path=[]) where {S}
   fs_predef, fs_macro = split_bounds(x)
